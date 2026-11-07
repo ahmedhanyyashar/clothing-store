@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { CartButton } from "@/components/cart/CartButton"
 import { Container } from "@/components/layout/Container"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { UserMenu } from "@/components/layout/UserMenu"
@@ -24,6 +25,7 @@ export function Header() {
         </nav>
         <div className="flex items-center gap-2">
           <UserMenu />
+          <CartButton />
           <ThemeToggle />
         </div>
       </Container>

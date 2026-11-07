@@ -193,3 +193,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** A view can be shared, bookmarked and reloaded, and the back button works. Sharing the parsers means a link and the controls cannot disagree. Native controls are accessible and work well on phones without extra code.
 
 **Cost.** Every change is a navigation that renders on the server, so a skeleton shows briefly while results load.
+
+## 25. The cart is client state that holds ids, and the server prices it
+
+**Decision.** The cart is a persisted Zustand store in `localStorage`. A line is a product id, a size and a quantity, and nothing else. Whenever the cart is shown, the current name, image, price and stock are read from the server, and a line that cannot be bought (sold out, or gone) is flagged and left out of the total. Whatever is read back from storage is validated, and a cart that does not match is dropped. The cart empties when the signed-in person changes, but a visitor who signs in keeps what they filled.
+
+**Why.** Guests can shop before they have an account, and no schema or migration is needed. Storing only ids means a stored price can never be stale or edited, and the total always comes from the data the store actually charges. A cart that is wiped when a guest signs in would lose the work of exactly the people about to buy.
+
+**Cost.** The cart does not follow the shopper to another device, and showing it needs one request to the server. Moving to a database cart later is an addition: the same store can sync to it on sign-in without changing the screens. Checkout must read prices and stock again, because the browser's cart is only a wish.

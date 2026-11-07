@@ -1,3 +1,4 @@
+import { AddToCart } from "@/components/cart/AddToCart"
 import { formatPrice } from "@/lib/catalog/format"
 import type { ProductDetails } from "@/lib/catalog/queries"
 import {
@@ -41,34 +42,10 @@ export function ProductInfo({
         {product.description}
       </p>
 
-      <section
-        aria-labelledby="sizes-heading"
-        className="mt-8"
-      >
-        <h2
-          id="sizes-heading"
-          className="text-sm font-semibold"
-        >
-          Sizes
-        </h2>
-        <ul className="mt-3 flex flex-wrap gap-2">
-          {product.sizes.map((size) => (
-            <li
-              key={size.label}
-              className={cn(
-                "flex h-10 min-w-12 items-center justify-center rounded-md border border-border px-3 text-sm",
-                size.stock === 0 &&
-                  "text-muted-foreground line-through opacity-60"
-              )}
-            >
-              {size.label}
-              {size.stock === 0 && (
-                <span className="sr-only"> (sold out)</span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <AddToCart
+        productId={product.id}
+        sizes={product.sizes}
+      />
 
       {product.colors.length > 0 && (
         <section
