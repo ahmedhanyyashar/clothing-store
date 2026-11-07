@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. Human contributors sho
 
 ## Project
 
-A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, with Better Auth for authentication and SMTP for email. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db/client.ts`, and the Prisma schema holds the authentication and catalog models, the product queries are in `src/lib/catalog/`, and the cart is in `src/lib/cart/` and `src/components/cart/`. Security headers are set in `next.config.ts`.
+A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, with Better Auth for authentication and SMTP for email. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db/client.ts`, and the Prisma schema holds the authentication and catalog models, the product queries are in `src/lib/catalog/`, the cart is in `src/lib/cart/` and `src/components/cart/`, and saved addresses are in `src/lib/address/` and `src/components/address/`. Security headers are set in `next.config.ts`.
 
 ## Commands
 
@@ -66,6 +66,14 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - Add to a line only through `add(item, quantity, limit)`, passing the stock as `limit`. Show cart state only after `useHydrated()`, because the server cannot know what the browser holds.
 - `CartSession` empties the cart when the signed-in person changes. A visitor who signs in keeps theirs.
 - `loadCartProducts` is a server action without `requireUser`, on purpose: it returns only what the shop pages already show.
+
+### Addresses
+
+- A user's saved addresses are read and written only through `@/lib/address/queries`, and every function takes the user's id and filters by it. Someone else's address is "not found", never "forbidden". Server actions in `@/lib/address/actions` call `requireUser` and validate again with `addressSchema`.
+- The countries we deliver to, and their postal code, region and phone rules, are one table in `@/lib/address/countries`. A new country is a new entry there; the compiler rejects a code without one. Do not write country rules in a component.
+- Store addresses with `normalizeAddress` (phone in international form, postal code upper-cased, empty optionals as null). Print them with `addressLines`.
+- A user has at most one default address. The database enforces it with a partial unique index, and the queries take a per-user advisory lock so two requests cannot break the "at most 10" or "one default" rules. Do not bypass `queries.ts` with raw Prisma calls.
+- An order must copy the address it ships to, not point at the saved row, which the user can edit or delete.
 
 ### Auth
 
