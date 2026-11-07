@@ -4,7 +4,7 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, the product catalog with its shop pages, and the shopping cart. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, the product catalog with its shop pages, the shopping cart, and an account area. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
@@ -103,6 +103,14 @@ public/products/  sample product photos, with their credits
 - **Responses never reveal** whether an email address has an account.
 - **Access control** is checked on the server with `requireUser` and `requireRole` from `src/lib/auth/session.ts`. The proxy only redirects early.
 - **Roles** are `USER` and `ADMIN`. A role cannot be set from a request.
+
+## Account
+
+- `/account` shows the signed-in user's email and changes their name.
+- `/account/security` changes the password: it needs the current one, can sign out the other devices, and emails the owner a notice with a reset link in case it was not them. Someone who only uses Google has no password, so that card says so.
+- Deleting the account needs the password again (or a recently created session for Google-only users) and removes the user, their sessions and linked accounts.
+- The email address is the account's identity and cannot be changed (see decision 26).
+- Both the password change and the deletion are rate limited to 5 attempts a minute.
 
 ## Testing
 

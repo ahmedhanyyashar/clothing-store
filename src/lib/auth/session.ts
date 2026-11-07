@@ -4,6 +4,7 @@ import { cache } from "react"
 
 import type { Role } from "@/generated/prisma/enums"
 import { auth } from "@/lib/auth/auth"
+import { prisma } from "@/lib/db/client"
 
 /**
  * The current session, or null when signed out. Cached per request, so any
@@ -39,4 +40,15 @@ export async function requireRole(
   const user = await requireUser(returnTo)
   if (user.role !== role) notFound()
   return user
+}
+
+/**
+ * Whether the user signs in with a password. Someone who only uses Google has
+ * none, so password screens do not apply to them.
+ */
+export async function hasPassword(userId: string) {
+  const count = await prisma.account.count({
+    where: { userId, providerId: "credential" },
+  })
+  return count > 0
 }
