@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 
 const SECTIONS = [
   { href: "/account", label: "Profile" },
+  { href: "/account/addresses", label: "Addresses" },
   { href: "/account/security", label: "Security" },
 ] as const satisfies readonly {
   href: Route

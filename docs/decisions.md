@@ -209,3 +209,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** The address is what proves who someone is: sign-in, verification and password reset all depend on it. A change-of-email flow is a way to take over an account, so it needs its own careful design and nothing in the shop needs it. A notice by email means a password changed by someone else is noticed. Re-asking for the password before deleting means a left-open browser cannot destroy an account.
 
 **Cost.** Someone who loses access to their address cannot move the account to a new one; they create a new account instead.
+
+## 27. Saved addresses are validated by country rules, with no outside service
+
+**Decision.** A user keeps up to 3 addresses with one default. What counts as a valid address depends on the country, and the rules (the postal code format with an example, the list of states or provinces where one exists, whether a region is required) are one table that the form and the server share. Phone numbers are checked for the chosen country with `libphonenumber-js` and stored in international form. No address autocomplete or map is used.
+
+**Why.** A parcel that cannot be delivered costs more than a form that asks for the right things, and the same rules in the browser and on the server cannot disagree. Autocomplete and maps need a paid provider, a key, and a consent and Content-Security-Policy decision, and the form works well without them. It is written so a provider can fill the same fields later. "At most one default" is enforced by the database, and a per-user lock keeps simultaneous requests from breaking it or the limit of 3.
+
+**Cost.** Adding a country is a code change. Postal code patterns check the format, not that the code exists. Typing a whole address is slower than choosing one from suggestions.

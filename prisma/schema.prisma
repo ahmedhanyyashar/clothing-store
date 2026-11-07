@@ -23,6 +23,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  addresses     Address[]
 
   @@unique([email])
   @@map("user")
@@ -157,4 +158,27 @@ model ProductColor {
 
   @@index([productId])
   @@map("product_color")
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String?
+  fullName   String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  region     String?
+  postalCode String?
+  // ISO 3166-1 alpha-2; the countries we ship to are listed in src/lib/address/countries.ts
+  country    String
+  notes      String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@map("address")
 }
