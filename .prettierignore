@@ -1,0 +1,4 @@
+# generated or tool-owned: never hand-format
+pnpm-lock.yaml
+.next
+.reports
