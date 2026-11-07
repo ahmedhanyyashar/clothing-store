@@ -4,7 +4,7 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, and the authentication backend. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, and authentication. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
@@ -34,7 +34,7 @@ pnpm db:deploy      # applies the migrations to the development database
 pnpm dev
 ```
 
-The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) and the Google credentials (see the comments in `.env.example`). Every email the app sends, such as the verification link, lands in Mailpit at http://localhost:8025.
+The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) and the Google credentials (see the comments in `.env.example`). Every email the app sends, such as verification and password-reset links, lands in Mailpit at http://localhost:8025.
 
 | Endpoint          | Meaning                                                        |
 | ----------------- | -------------------------------------------------------------- |
@@ -64,8 +64,9 @@ src/app/          routes, layouts, error and not-found pages, route handlers
 src/components/   ui/ holds shadcn primitives, layout/ the page shell
 src/env.ts        the validated environment, the only place variables are read
 src/lib/db/       the Prisma client
-src/lib/auth/     Better Auth configuration
+src/lib/auth/     Better Auth setup, server-side guards and form schemas
 src/lib/email/    SMTP mailer and email templates
+src/proxy.ts      redirects for signed-out and signed-in visitors
 src/test/         test helpers and global setup
 prisma/           schema and migrations
 docker/           local PostgreSQL (development and test databases) and the mail catcher
@@ -77,8 +78,9 @@ docs/             design decisions
 ## Authentication
 
 - **Sign-up** needs a verified email address: the account cannot sign in until the emailed link is used. Google sign-in is also available.
-- **Passwords** must be at least 12 characters.
+- **Passwords** must be at least 12 characters. A reset link signs the user out everywhere.
 - **Responses never reveal** whether an email address has an account.
+- **Access control** is checked on the server with `requireUser` and `requireRole` from `src/lib/auth/session.ts`. The proxy only redirects early.
 - **Roles** are `USER` and `ADMIN`. A role cannot be set from a request.
 
 ## Testing

@@ -1,10 +1,19 @@
 import { render } from "@testing-library/react"
 import { axe } from "jest-axe"
 import { ThemeProvider } from "next-themes"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { Footer } from "./Footer"
 import { Header } from "./Header"
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}))
+vi.mock("@/lib/auth/client", () => ({
+  authClient: {
+    useSession: () => ({ data: null, isPending: false }),
+  },
+}))
 
 describe("page shell", () => {
   it("has no accessibility violations", async () => {

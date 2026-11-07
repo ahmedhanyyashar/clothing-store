@@ -48,9 +48,11 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 
 ### Auth
 
+- Protect every page, route handler and action by calling `requireUser` or `requireRole` from `@/lib/auth/session` inside it. The proxy is only an early redirect and is never the access check.
 - The role on the client session is for display. Never authorize from it in the browser.
 - Responses must not reveal whether an email address has an account.
 - Do not await `sendEmail` inside an auth callback: a slow mail server would make the response time reveal whether an address is registered.
+- Forms use react-hook-form with a zod schema from `@/lib/auth/validations`, set `noValidate`, and show server errors in a `role="alert"` element.
 
 ### UI
 

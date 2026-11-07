@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { Container } from "@/components/layout/Container"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
+import { UserMenu } from "@/components/layout/UserMenu"
 
 export function Header() {
   return (
@@ -13,7 +14,10 @@ export function Header() {
         >
           Clothing Store
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <UserMenu />
+          <ThemeToggle />
+        </div>
       </Container>
     </header>
   )
