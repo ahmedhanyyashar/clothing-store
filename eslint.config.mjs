@@ -2,6 +2,8 @@ import nextConfig from "eslint-config-next"
 import prettierConfig from "eslint-config-prettier"
 
 const eslintConfig = [
+  { ignores: ["src/generated/**"] },
+
   // Next.js core-web-vitals + typescript-eslint "recommended", as native
   // flat configs. This alone already wires up react, react-hooks
   // (rules-of-hooks/exhaustive-deps + the newer compiler-safety rules),

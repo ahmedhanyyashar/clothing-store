@@ -1,0 +1,8 @@
+# Dependency install scripts are opt-in. Prisma's download its query and schema
+# engines; esbuild ships a prebuilt binary, and workerd is only pulled in by
+# Prisma's dev tooling, so neither needs to run.
+allowBuilds:
+  "@prisma/engines": true
+  prisma: true
+  esbuild: false
+  workerd: false
