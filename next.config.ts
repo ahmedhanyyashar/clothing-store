@@ -19,6 +19,8 @@ export const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // lets another build, such as the end-to-end tests, use its own directory
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   typedRoutes: true,
   headers: () =>
     Promise.resolve([

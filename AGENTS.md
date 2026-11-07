@@ -16,6 +16,7 @@ A clothing store built with Next.js (App Router), React and TypeScript, backed b
 | `pnpm typecheck`        | Route type generation and `tsc --noEmit`           |
 | `pnpm test`             | Unit and component tests, single run               |
 | `pnpm test:integration` | Integration tests (databases must be up)           |
+| `pnpm test:e2e`         | Browser tests (databases and mail catcher up)      |
 | `pnpm compose`          | Start the development and test databases           |
 | `pnpm db:generate`      | Generate the Prisma client after a schema change   |
 | `pnpm db:migrate`       | Create and apply a migration after a schema change |
@@ -64,6 +65,8 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 ### Tests
 
 - Tests sit next to the code. `*.test.ts` is a unit test: fast, isolated, no database. `*.test.tsx` is a component test: it runs in jsdom and should include an axe accessibility check for new UI. `*.integration.test.ts` talks to the real test database.
+- `e2e/*.spec.ts` are Playwright tests against a production build on port 3100. Import `test` and `expect` from `e2e/support/test`: its fixtures give every test a new user and its own client address, so tests share no state and never trip the rate limiter. Navigate with `open()` from `e2e/support/flows`, which waits for hydration; typing into a form earlier is lost. Read emails through `waitForLink` from `e2e/support/mailpit`.
+- Do not run integration and end-to-end tests at the same time: they share the test database, and the integration helper empties it.
 - Integration tests that write data call `resetDb()` from `@/test/reset-db` in `beforeEach`.
 
 ## Git
