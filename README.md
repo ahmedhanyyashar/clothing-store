@@ -52,6 +52,7 @@ The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRE
 | `pnpm typecheck`                     | Generate route types and run `tsc`          |
 | `pnpm test` / `pnpm test:watch`      | Unit and component tests, once or watching  |
 | `pnpm test:integration`              | Integration tests (needs `pnpm compose`)    |
+| `pnpm test:e2e`                      | End-to-end tests in a browser (see Testing) |
 | `pnpm compose` / `pnpm compose:down` | Start or stop the local databases           |
 | `pnpm db:generate`                   | Generate the Prisma client                  |
 | `pnpm db:migrate` / `pnpm db:deploy` | Create and apply, or only apply, migrations |
@@ -70,6 +71,7 @@ src/proxy.ts      redirects for signed-out and signed-in visitors
 src/test/         test helpers and global setup
 prisma/           schema and migrations
 docker/           local PostgreSQL (development and test databases) and the mail catcher
+e2e/              end-to-end tests (Playwright)
 docs/             design decisions
 .github/          CI workflow, shared setup action, Dependabot, PR template
 .husky/           Git hooks: lint-staged on commit, commitlint on message
@@ -85,10 +87,10 @@ docs/             design decisions
 
 ## Testing
 
-Unit tests (`*.test.ts`) need nothing running. Component tests (`*.test.tsx`) render React in a simulated browser and include an accessibility check with axe. Integration tests (`*.integration.test.ts`) use the real test database from `pnpm compose`, run one file at a time, and have their migrations applied automatically before the run.
+Unit tests (`*.test.ts`) need nothing running. Component tests (`*.test.tsx`) render React in a simulated browser and include an accessibility check with axe. Integration tests (`*.integration.test.ts`) use the real test database from `pnpm compose`, run one file at a time, and have their migrations applied automatically before the run. End-to-end tests (`e2e/*.spec.ts`) drive a real browser through sign-up, email verification, sign-in and password reset against a production build, reading the emails from Mailpit. They need `pnpm compose` running and, the first time, `pnpm exec playwright install chromium`. They use the test database, so do not run them at the same time as the integration tests.
 
 ## Quality gates
 
-Locally, a pre-commit hook lints and formats staged files, and a commit-msg hook enforces [Conventional Commits](https://www.conventionalcommits.org). CI runs lint, format, typecheck, unit, component and integration tests and a build on every pull request, and checks every commit message in it.
+Locally, a pre-commit hook lints and formats staged files, and a commit-msg hook enforces [Conventional Commits](https://www.conventionalcommits.org). CI runs lint, format, typecheck, unit, component, integration and end-to-end tests and a build on every pull request, and checks every commit message in it.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow, and [docs/decisions.md](docs/decisions.md) for the reasoning behind the main choices.

@@ -145,3 +145,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Reading cookies on the server would make every page dynamic, including those that could be cached.
 
 **Cost.** A short moment before the sign-in links or the user's name appear.
+
+## 19. End-to-end tests drive a production build with real email and a client of their own
+
+**Decision.** Playwright tests run against `next build` output on a separate port and build directory, with real SMTP into Mailpit, whose HTTP API the tests read links from. Each test gets a new user and its own client address.
+
+**Why.** Only a browser test exercises the whole path: form, HTTP API, email, link, cookie and guard. The production build is what ships. A user per test removes the need for cleanup, and a client address per test keeps the auth rate limiter, which is on, from coupling tests together.
+
+**Cost.** Slower than the other suites, and the browser must wait for hydration before typing, which the `open()` helper does.
