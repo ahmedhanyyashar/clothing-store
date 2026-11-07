@@ -40,7 +40,7 @@ type Tx = Prisma.TransactionClient
 
 /**
  * Runs `work` with this user's addresses locked against other requests, so two
- * of them cannot both pass the "at most 10" check or both set a default. The
+ * of them cannot both pass the "at most MAX_ADDRESSES" check or both set a default. The
  * lock is released when the transaction ends.
  */
 function withUserLock<T>(

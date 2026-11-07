@@ -176,7 +176,7 @@ describe("AddressForm", () => {
     vi.mocked(saveAddress).mockResolvedValue({
       ok: false,
       message:
-        "You can save up to 10 addresses. Delete one to add another.",
+        "You can save up to 3 addresses. Delete one to add another.",
     })
     render(<AddressForm />)
 
@@ -184,7 +184,7 @@ describe("AddressForm", () => {
 
     expect(
       await screen.findByRole("alert")
-    ).toHaveTextContent("up to 10 addresses")
+    ).toHaveTextContent("up to 3 addresses")
   })
 
   it("makes the first address the default, without a choice", () => {

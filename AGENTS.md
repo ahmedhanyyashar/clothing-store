@@ -72,7 +72,7 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - A user's saved addresses are read and written only through `@/lib/address/queries`, and every function takes the user's id and filters by it. Someone else's address is "not found", never "forbidden". Server actions in `@/lib/address/actions` call `requireUser` and validate again with `addressSchema`.
 - The countries we deliver to, and their postal code, region and phone rules, are one table in `@/lib/address/countries`. A new country is a new entry there; the compiler rejects a code without one. Do not write country rules in a component.
 - Store addresses with `normalizeAddress` (phone in international form, postal code upper-cased, empty optionals as null). Print them with `addressLines`.
-- A user has at most one default address. The database enforces it with a partial unique index, and the queries take a per-user advisory lock so two requests cannot break the "at most 10" or "one default" rules. Do not bypass `queries.ts` with raw Prisma calls.
+- A user has at most one default address. The database enforces it with a partial unique index, and the queries take a per-user advisory lock so two requests cannot break the address limit or the "one default" rule. Do not bypass `queries.ts` with raw Prisma calls.
 - An order must copy the address it ships to, not point at the saved row, which the user can edit or delete.
 
 ### Auth

@@ -10,7 +10,9 @@ import {
 } from "./countries"
 
 /** The most addresses one account can save. */
-export const MAX_ADDRESSES = 10
+// Home, work and one more cover nearly everyone. The cap also bounds how many
+// rows one account can create.
+export const MAX_ADDRESSES = 3
 
 export const addressSchema = z
   .object({

@@ -109,7 +109,7 @@ public/products/  sample product photos, with their credits
 
 - `/account` shows the signed-in user's email and changes their name.
 - `/account/security` changes the password: it needs the current one, can sign out the other devices, and emails the owner a notice with a reset link in case it was not them. Someone who only uses Google has no password, so that card says so.
-- `/account/addresses` keeps up to 10 saved delivery addresses, one of them the default (the first is, automatically). Each has a label, recipient, phone, street, city, region, postal code, country and delivery notes. The form follows the country: a list of states or provinces where there is one, a postal code checked against that country's format (with an example), and a phone number checked for that country and stored in international form.
+- `/account/addresses` keeps up to 3 saved delivery addresses, one of them the default (the first is, automatically). Each has a label, recipient, phone, street, city, region, postal code, country and delivery notes. The form follows the country: a list of states or provinces where there is one, a postal code checked against that country's format (with an example), and a phone number checked for that country and stored in international form.
 - Deleting the account needs the password again (or a recently created session for Google-only users) and removes the user, their sessions and linked accounts.
 - The email address is the account's identity and cannot be changed (see decision 26).
 - Both the password change and the deletion are rate limited to 5 attempts a minute.

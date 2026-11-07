@@ -129,9 +129,11 @@ describe("defaults", () => {
   it("never leaves two defaults, even when requests race", async () => {
     await add("ada")
 
+    // more are asked for than fit: the extra ones are refused, and every
+    // one that is saved wants to be the default
     await Promise.all(
-      Array.from({ length: 6 }, () =>
-        add("ada", { isDefault: true })
+      Array.from({ length: MAX_ADDRESSES + 3 }, () =>
+        createAddress("ada", data({ isDefault: true }))
       )
     )
 
@@ -139,7 +141,7 @@ describe("defaults", () => {
       await prisma.address.count({
         where: { userId: "ada" },
       })
-    ).toBe(7)
+    ).toBe(MAX_ADDRESSES)
     expect(await defaults("ada")).toHaveLength(1)
   })
 
