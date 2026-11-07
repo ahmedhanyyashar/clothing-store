@@ -1,5 +1,6 @@
 import path from "node:path"
 
+import react from "@vitejs/plugin-react"
 import { config } from "dotenv"
 import { configDefaults, defineConfig } from "vitest/config"
 
@@ -17,16 +18,27 @@ export default defineConfig({
   test: {
     projects: [
       {
-        // fast and isolated, needs nothing running: the default `pnpm test`
+        // fast and isolated, needs nothing running: part of `pnpm test`
         extends: true,
         test: {
           name: "unit",
           environment: "node",
-          include: ["src/**/*.test.{ts,tsx}"],
+          include: ["src/**/*.test.ts"],
           exclude: [
             ...configDefaults.exclude,
-            "src/**/*.integration.test.{ts,tsx}",
+            "src/**/*.integration.test.ts",
           ],
+        },
+      },
+      {
+        // React components in a simulated browser: part of `pnpm test`
+        extends: true,
+        plugins: [react()],
+        test: {
+          name: "component",
+          environment: "jsdom",
+          include: ["src/**/*.test.tsx"],
+          setupFiles: ["./src/test/vitest.setup.ts"],
         },
       },
       {
@@ -35,7 +47,7 @@ export default defineConfig({
         test: {
           name: "integration",
           environment: "node",
-          include: ["src/**/*.integration.test.{ts,tsx}"],
+          include: ["src/**/*.integration.test.ts"],
           globalSetup: ["./src/test/global-setup.ts"],
           fileParallelism: false,
         },

@@ -4,18 +4,19 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, and a PostgreSQL database wired in with Prisma. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, and the design system with the page shell. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
 | Area            | Choice                                         |
 | --------------- | ---------------------------------------------- |
 | Framework       | Next.js (App Router), React, TypeScript strict |
+| Styling         | Tailwind CSS 4, shadcn/ui (Radix), Lucide      |
 | Database        | PostgreSQL 16, Prisma 7                        |
 | Configuration   | Environment validated at startup (zod)         |
 | Package manager | pnpm                                           |
 | Linting         | ESLint (Next.js config) and Prettier           |
-| Tests           | Vitest (unit and integration)                  |
+| Tests           | Vitest, Testing Library, axe                   |
 | Git workflow    | Husky, lint-staged, commitlint                 |
 | CI              | GitHub Actions                                 |
 
@@ -46,7 +47,7 @@ The app runs on http://localhost:3000.
 | `pnpm lint` / `pnpm lint:fix`        | Check, or fix, lint errors                  |
 | `pnpm format` / `pnpm format:check`  | Write, or check, formatting                 |
 | `pnpm typecheck`                     | Generate route types and run `tsc`          |
-| `pnpm test` / `pnpm test:watch`      | Unit tests, once or in watch mode           |
+| `pnpm test` / `pnpm test:watch`      | Unit and component tests, once or watching  |
 | `pnpm test:integration`              | Integration tests (needs `pnpm compose`)    |
 | `pnpm compose` / `pnpm compose:down` | Start or stop the local databases           |
 | `pnpm db:generate`                   | Generate the Prisma client                  |
@@ -57,6 +58,7 @@ The app runs on http://localhost:3000.
 
 ```text
 src/app/          routes, layouts, error and not-found pages, route handlers
+src/components/   ui/ holds shadcn primitives, layout/ the page shell
 src/env.ts        the validated environment, the only place variables are read
 src/lib/db.ts     the Prisma client
 src/test/         test helpers and global setup
@@ -69,10 +71,10 @@ docs/             design decisions
 
 ## Testing
 
-Unit tests (`*.test.ts`) need nothing running. Integration tests (`*.integration.test.ts`) use the real test database from `pnpm compose`, run one file at a time, and have their migrations applied automatically before the run.
+Unit tests (`*.test.ts`) need nothing running. Component tests (`*.test.tsx`) render React in a simulated browser and include an accessibility check with axe. Integration tests (`*.integration.test.ts`) use the real test database from `pnpm compose`, run one file at a time, and have their migrations applied automatically before the run.
 
 ## Quality gates
 
-Locally, a pre-commit hook lints and formats staged files, and a commit-msg hook enforces [Conventional Commits](https://www.conventionalcommits.org). CI runs lint, format, typecheck, unit and integration tests and a build on every pull request, and checks every commit message in it.
+Locally, a pre-commit hook lints and formats staged files, and a commit-msg hook enforces [Conventional Commits](https://www.conventionalcommits.org). CI runs lint, format, typecheck, unit, component and integration tests and a build on every pull request, and checks every commit message in it.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow, and [docs/decisions.md](docs/decisions.md) for the reasoning behind the main choices.

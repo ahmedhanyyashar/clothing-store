@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. Human contributors sho
 
 ## Project
 
-A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the validated environment is in `src/env.ts`, the database client is in `src/lib/db.ts`, and the Prisma schema has no models yet. Security headers are set in `next.config.ts`.
+A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma and styled with Tailwind CSS 4 and shadcn/ui. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db.ts`, and the Prisma schema has no models yet. Security headers are set in `next.config.ts`.
 
 ## Commands
 
@@ -14,7 +14,7 @@ A clothing store built with Next.js (App Router), React and TypeScript, backed b
 | `pnpm lint`             | ESLint                                             |
 | `pnpm format:check`     | Prettier check (`pnpm format` to fix)              |
 | `pnpm typecheck`        | Route type generation and `tsc --noEmit`           |
-| `pnpm test`             | Unit tests, single run                             |
+| `pnpm test`             | Unit and component tests, single run               |
 | `pnpm test:integration` | Integration tests (databases must be up)           |
 | `pnpm compose`          | Start the development and test databases           |
 | `pnpm db:generate`      | Generate the Prisma client after a schema change   |
@@ -41,9 +41,16 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - Use the shared client from `@/lib/db`. Do not create another `PrismaClient`.
 - A schema change needs a migration (`pnpm db:migrate`), committed with the change. The generated client in `src/generated` is never committed.
 
+### UI
+
+- Style with Tailwind utilities and the tokens from `src/app/globals.css` (`bg-background`, `text-muted-foreground`, and so on). Never use raw colors; every color must work in light and dark mode.
+- Add a primitive with the shadcn CLI only when a feature needs it, so `src/components/ui/` holds nothing unused. Do not edit it for feature styling; compose it instead.
+- Join class names with `cn()` from `@/lib/utils`. Prettier sorts Tailwind classes.
+- Compose pages inside `Container`. Interactive elements need an accessible name.
+
 ### Tests
 
-- Tests sit next to the code. `*.test.ts(x)` is a unit test: fast, isolated, no database. `*.integration.test.ts(x)` talks to the real test database.
+- Tests sit next to the code. `*.test.ts` is a unit test: fast, isolated, no database. `*.test.tsx` is a component test: it runs in jsdom and should include an axe accessibility check for new UI. `*.integration.test.ts` talks to the real test database.
 - Integration tests that write data call `resetDb()` from `@/test/reset-db` in `beforeEach`.
 
 ## Git

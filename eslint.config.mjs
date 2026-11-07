@@ -52,34 +52,10 @@ const eslintConfig = [
       // Keep stray debugging logs out of commits; warn/error are fine for real diagnostics.
       "no-console": ["warn", { allow: ["warn", "error"] }],
 
-      // Group + alphabetize imports: node builtins, then external packages,
-      // then internal "@/..." aliases, then relative imports — with a
-      // blank line between each group. Makes diffs and merges saner.
-      "import/order": [
-        "warn",
-        {
-          groups: [
-            "builtin",
-            "external",
-            "internal",
-            "parent",
-            "sibling",
-            "index",
-          ],
-          pathGroups: [
-            {
-              pattern: "@/**",
-              group: "internal",
-              position: "before",
-            },
-          ],
-          "newlines-between": "always",
-          alphabetize: {
-            order: "asc",
-            caseInsensitive: true,
-          },
-        },
-      ],
+      // Import order is owned by Prettier (@ianvs/prettier-plugin-sort-imports).
+      // Two tools ordering the same lines disagree on edge cases like
+      // "next-themes" vs "next/font", so this rule stays off.
+      "import/order": "off",
       // Two `import { x } from "y"` statements for the same module should
       // be merged into one.
       "import/no-duplicates": "warn",

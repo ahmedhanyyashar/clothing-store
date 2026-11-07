@@ -4,7 +4,10 @@
   "tabWidth": 2,
   "printWidth": 60,
   "trailingComma": "es5",
-  "plugins": ["@ianvs/prettier-plugin-sort-imports"],
+  "plugins": [
+    "@ianvs/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss"
+  ],
   "importOrder": [
     "<BUILTIN_MODULES>",
     "",
@@ -14,5 +17,6 @@
     "",
     "^[./]"
   ],
-  "importOrderParserPlugins": ["typescript", "jsx"]
+  "importOrderParserPlugins": ["typescript", "jsx"],
+  "tailwindStylesheet": "./src/app/globals.css"
 }
