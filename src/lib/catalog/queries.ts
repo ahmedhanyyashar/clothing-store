@@ -80,8 +80,12 @@ function escapeLike(text: string) {
 /** One page of the shop, with the filters, search and sort already applied. */
 export async function listProducts(query: ShopQuery) {
   const where: Prisma.ProductWhereInput = {
-    category: query.category,
-    type: query.type,
+    category: query.categories.length
+      ? { in: query.categories }
+      : undefined,
+    type: query.types.length
+      ? { in: query.types }
+      : undefined,
     name: query.q
       ? {
           contains: escapeLike(query.q),

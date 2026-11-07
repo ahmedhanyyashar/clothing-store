@@ -12,9 +12,15 @@ import {
 } from "./queries"
 import type { ShopQuery } from "./search-params"
 
-const all: ShopQuery = { q: "", sort: "newest", page: 1 }
+const all: ShopQuery = {
+  categories: [],
+  types: [],
+  q: "",
+  sort: "newest",
+  page: 1,
+}
 
-/** Products created `daysAgo` days ago, so the newest-first order is known. */
+/** A date `days` days ago, so the newest-first order in a test is known. */
 function daysAgo(days: number) {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000)
 }
@@ -80,17 +86,50 @@ describe("listProducts", () => {
         .map((item) => item.name)
         .sort()
 
-    expect(await names({ category: "MEN" })).toEqual([
+    expect(await names({ categories: ["MEN"] })).toEqual([
       "Men jeans",
       "Men tee",
     ])
-    expect(await names({ type: "T_SHIRTS" })).toEqual([
+    expect(await names({ types: ["T_SHIRTS"] })).toEqual([
       "Men tee",
       "Women tee",
     ])
     expect(
-      await names({ category: "MEN", type: "T_SHIRTS" })
+      await names({
+        categories: ["MEN"],
+        types: ["T_SHIRTS"],
+      })
     ).toEqual(["Men tee"])
+  })
+
+  it("accepts several categories or types at once", async () => {
+    await createProduct({
+      name: "Men tee",
+      category: "MEN",
+      type: "T_SHIRTS",
+    })
+    await createProduct({
+      name: "Women jeans",
+      category: "WOMEN",
+      type: "JEANS",
+    })
+    await createProduct({
+      name: "Kids hoodie",
+      category: "CHILDREN",
+      type: "HOODIES",
+    })
+
+    const names = async (query: Partial<ShopQuery>) =>
+      (await listProducts({ ...all, ...query })).items
+        .map((item) => item.name)
+        .sort()
+
+    expect(
+      await names({ categories: ["MEN", "WOMEN"] })
+    ).toEqual(["Men tee", "Women jeans"])
+    expect(
+      await names({ types: ["JEANS", "HOODIES"] })
+    ).toEqual(["Kids hoodie", "Women jeans"])
   })
 
   it("searches names without regard to case", async () => {

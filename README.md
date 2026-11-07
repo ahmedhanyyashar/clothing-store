@@ -4,7 +4,7 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, and the product catalog data. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, and the product catalog with its shop pages. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
@@ -64,7 +64,7 @@ The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRE
 
 ```text
 src/app/          routes, layouts, error and not-found pages, route handlers
-src/components/   ui/ holds shadcn primitives, layout/ the page shell
+src/components/   ui/ holds shadcn primitives, layout/ the page shell, catalog/ the shop
 src/env.ts        the validated environment, the only place variables are read
 src/lib/db/       the Prisma client
 src/lib/catalog/  product queries, shop URL parsing, price formatting
@@ -81,6 +81,13 @@ public/products/  sample product photos, with their credits
 .husky/           Git hooks: lint-staged on commit, commitlint on message
 ```
 
+## Shop
+
+- **Home** features the best sellers and the latest arrivals.
+- **Shop** (`/shop`) filters by category and type (several of each at once), searches by name, sorts by newest or price, and shows 12 products a page. Everything is in the URL, for example `/shop?category=men,women&type=jeans&page=2`, so any view can be shared.
+- **Product pages** (`/products/<id>`) show the photos, price, sizes with their availability, and colors.
+- These pages render per request, so stock is always current and the build needs no database.
+
 ## Authentication
 
 - **Sign-up** needs a verified email address: the account cannot sign in until the emailed link is used. Google sign-in is also available.
@@ -91,7 +98,7 @@ public/products/  sample product photos, with their credits
 
 ## Testing
 
-Unit tests (`*.test.ts`) need nothing running. Component tests (`*.test.tsx`) render React in a simulated browser and include an accessibility check with axe. Integration tests (`*.integration.test.ts`) use the real test database from `pnpm compose`, run one file at a time, and have their migrations applied automatically before the run. End-to-end tests (`e2e/*.spec.ts`) drive a real browser through sign-up, email verification, sign-in and password reset against a production build, reading the emails from Mailpit. They need `pnpm compose` running and, the first time, `pnpm exec playwright install chromium`. They use the test database, so do not run them at the same time as the integration tests.
+Unit tests (`*.test.ts`) need nothing running. Component tests (`*.test.tsx`) render React in a simulated browser and include an accessibility check with axe. Integration tests (`*.integration.test.ts`) use the real test database from `pnpm compose`, run one file at a time, and have their migrations applied automatically before the run. End-to-end tests (`e2e/*.spec.ts`) drive a real browser through sign-up, email verification, sign-in, password reset and browsing the sample catalog against a production build, reading the emails from Mailpit. They need `pnpm compose` running and, the first time, `pnpm exec playwright install chromium`. They use the test database, so do not run them at the same time as the integration tests.
 
 ## Quality gates
 

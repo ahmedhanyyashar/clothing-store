@@ -10,6 +10,7 @@ const baseURL = `http://localhost:${port}`
 
 export default defineConfig({
   testDir: "e2e",
+  globalSetup: "./e2e/support/global-setup.ts",
   outputDir: ".reports/playwright/results",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
