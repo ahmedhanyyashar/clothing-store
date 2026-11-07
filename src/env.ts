@@ -7,12 +7,18 @@ import { z } from "zod"
 export const env = createEnv({
   server: {
     DATABASE_URL: z.url(),
+    // SMTP connection URL, e.g. smtp://user:pass@host:587
+    SMTP_URL: z.url(),
+    // sender address for transactional email
+    EMAIL_FROM: z.email(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
+    SMTP_URL: process.env.SMTP_URL,
+    EMAIL_FROM: process.env.EMAIL_FROM,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
   emptyStringAsUndefined: true,

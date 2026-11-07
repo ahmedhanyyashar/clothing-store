@@ -97,3 +97,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Two tools sorting the same lines disagree on edge cases, such as `next-themes` against `next/font`, and every commit would end up fighting itself.
 
 **Cost.** Import order is applied by formatting, not reported by lint.
+
+## 13. Email is sent over SMTP
+
+**Decision.** `sendEmail` delivers through an SMTP connection URL: Mailpit locally, and whichever provider is chosen in production. Templates are plain typed functions that return a subject, HTML and text.
+
+**Why.** SMTP is the one protocol every provider accepts, so changing provider is a configuration change and not a code change. Plain functions need no templating dependency, and escaping user-supplied text is done in one place.
+
+**Cost.** SMTP does not report bounces or complaints. If the product needs them, that is added for the chosen provider.

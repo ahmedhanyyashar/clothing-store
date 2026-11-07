@@ -19,6 +19,8 @@ concurrency:
 env:
   NEXT_PUBLIC_APP_URL: http://localhost:3000
   DATABASE_URL: postgresql://root:password@localhost:5433/clothing_store_test
+  SMTP_URL: smtp://localhost:1025
+  EMAIL_FROM: no-reply@clothing-store.example
 
 jobs:
   verify:
