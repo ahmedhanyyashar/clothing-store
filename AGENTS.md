@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. Human contributors sho
 
 ## Project
 
-A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, and sending email over SMTP. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db.ts`, and the Prisma schema has no models yet. Security headers are set in `next.config.ts`.
+A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, with Better Auth for authentication and SMTP for email. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db/client.ts`, and the Prisma schema holds the authentication models. Security headers are set in `next.config.ts`.
 
 ## Commands
 
@@ -19,6 +19,7 @@ A clothing store built with Next.js (App Router), React and TypeScript, backed b
 | `pnpm compose`          | Start the development and test databases           |
 | `pnpm db:generate`      | Generate the Prisma client after a schema change   |
 | `pnpm db:migrate`       | Create and apply a migration after a schema change |
+| `pnpm db:deploy`        | Apply existing migrations                          |
 | `pnpm build`            | Production build                                   |
 
 Run lint, format check, typecheck and tests before declaring a change done. Run the integration tests whenever the change touches the database.
@@ -38,12 +39,18 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 
 ### Database
 
-- Use the shared client from `@/lib/db`. Do not create another `PrismaClient`.
+- Use the shared client from `@/lib/db/client`. Do not create another `PrismaClient`.
 - A schema change needs a migration (`pnpm db:migrate`), committed with the change. The generated client in `src/generated` is never committed.
 
 ### Email
 
 - Send email only through `sendEmail` from `@/lib/email/mailer`, with a template from `@/lib/email/templates`. Locally every message lands in Mailpit at http://localhost:8025.
+
+### Auth
+
+- The role on the client session is for display. Never authorize from it in the browser.
+- Responses must not reveal whether an email address has an account.
+- Do not await `sendEmail` inside an auth callback: a slow mail server would make the response time reveal whether an address is registered.
 
 ### UI
 

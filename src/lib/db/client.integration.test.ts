@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { prisma } from "@/lib/db"
+import { prisma } from "@/lib/db/client"
 
 describe("database connection", () => {
   it("runs a query against the test database", async () => {

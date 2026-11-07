@@ -6,7 +6,7 @@ import {
   it,
 } from "vitest"
 
-import { prisma } from "@/lib/db"
+import { prisma } from "@/lib/db/client"
 
 import { resetDb } from "./reset-db"
 
