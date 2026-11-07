@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. Human contributors sho
 
 ## Project
 
-A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma and styled with Tailwind CSS 4 and shadcn/ui. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db.ts`, and the Prisma schema has no models yet. Security headers are set in `next.config.ts`.
+A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, and sending email over SMTP. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db.ts`, and the Prisma schema has no models yet. Security headers are set in `next.config.ts`.
 
 ## Commands
 
@@ -40,6 +40,10 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 
 - Use the shared client from `@/lib/db`. Do not create another `PrismaClient`.
 - A schema change needs a migration (`pnpm db:migrate`), committed with the change. The generated client in `src/generated` is never committed.
+
+### Email
+
+- Send email only through `sendEmail` from `@/lib/email/mailer`, with a template from `@/lib/email/templates`. Locally every message lands in Mailpit at http://localhost:8025.
 
 ### UI
 

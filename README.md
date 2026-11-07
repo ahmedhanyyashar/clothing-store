@@ -4,7 +4,7 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, and the design system with the page shell. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
@@ -12,6 +12,7 @@ Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in 
 | --------------- | ---------------------------------------------- |
 | Framework       | Next.js (App Router), React, TypeScript strict |
 | Styling         | Tailwind CSS 4, shadcn/ui (Radix), Lucide      |
+| Email           | Nodemailer over SMTP, Mailpit locally          |
 | Database        | PostgreSQL 16, Prisma 7                        |
 | Configuration   | Environment validated at startup (zod)         |
 | Package manager | pnpm                                           |
@@ -27,11 +28,11 @@ Requires [Node.js](https://nodejs.org) 24, [pnpm](https://pnpm.io) 12 (`corepack
 ```bash
 pnpm install
 cp .env.example .env
-pnpm compose        # starts the development and test databases
+pnpm compose        # starts the databases and the local mail catcher
 pnpm dev
 ```
 
-The app runs on http://localhost:3000.
+The app runs on http://localhost:3000. Every email the app sends lands in Mailpit at http://localhost:8025.
 
 | Endpoint          | Meaning                                                        |
 | ----------------- | -------------------------------------------------------------- |
@@ -61,9 +62,10 @@ src/app/          routes, layouts, error and not-found pages, route handlers
 src/components/   ui/ holds shadcn primitives, layout/ the page shell
 src/env.ts        the validated environment, the only place variables are read
 src/lib/db.ts     the Prisma client
+src/lib/email/    SMTP mailer and email templates
 src/test/         test helpers and global setup
 prisma/           schema and migrations
-docker/           local PostgreSQL (development and test databases)
+docker/           local PostgreSQL (development and test databases) and the mail catcher
 docs/             design decisions
 .github/          CI workflow, shared setup action, Dependabot, PR template
 .husky/           Git hooks: lint-staged on commit, commitlint on message

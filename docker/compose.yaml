@@ -45,6 +45,19 @@ services:
       timeout: 5s
       retries: 5
 
+  # Catches outgoing email. Read it at http://localhost:8025.
+  mail:
+    image: axllent/mailpit:v1.33.0
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   postgres_test_data:
