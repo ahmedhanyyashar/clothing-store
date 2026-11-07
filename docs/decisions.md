@@ -121,3 +121,27 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Length is what makes passwords hard to guess, and composition rules push people to predictable patterns. Database-backed limits hold across server instances, where in-memory ones would reset per instance.
 
 **Cost.** A longer minimum than many sites ask for, and an extra table written on auth requests.
+
+## 16. A password reset ends every session, and sign-in checks only that a password was entered
+
+**Decision.** Resetting a password revokes all of the user's sessions. The sign-in form checks that a password was typed, not its length; the length rule applies where passwords are chosen.
+
+**Why.** Revoking sessions removes anyone who held the old password. A rule that only applies when a password is set can never lock out an existing user if it later changes.
+
+**Cost.** A user who resets their password has to sign in again on every device.
+
+## 17. Access is checked on the server; the proxy only redirects early
+
+**Decision.** `requireUser` and `requireRole` run inside every protected page, route and action. `proxy.ts` checks only that a session cookie exists and redirects signed-out visitors before the page renders. A signed-in user without the required role gets a 404.
+
+**Why.** A cookie's presence proves nothing, and a proxy matcher can miss a route, so the check that counts has to sit next to the data. Answering 404 keeps role-only areas from being discovered.
+
+**Cost.** Each protected entry point must remember to call the guard.
+
+## 18. The header reads the session in the browser
+
+**Decision.** `UserMenu` calls `authClient.useSession()` on the client and reserves its space while loading, instead of reading the session in the server-rendered header.
+
+**Why.** Reading cookies on the server would make every page dynamic, including those that could be cached.
+
+**Cost.** A short moment before the sign-in links or the user's name appear.

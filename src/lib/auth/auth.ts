@@ -5,7 +5,10 @@ import { env } from "@/env"
 import { PASSWORD_MIN_LENGTH } from "@/lib/auth/validations"
 import { prisma } from "@/lib/db/client"
 import { sendEmail } from "@/lib/email/mailer"
-import { verificationEmail } from "@/lib/email/templates"
+import {
+  passwordResetEmail,
+  verificationEmail,
+} from "@/lib/email/templates"
 
 export const auth = betterAuth({
   baseURL: env.NEXT_PUBLIC_APP_URL,
@@ -18,6 +21,16 @@ export const auth = betterAuth({
     minPasswordLength: PASSWORD_MIN_LENGTH,
     // an account that cannot prove its address cannot sign in
     requireEmailVerification: true,
+    // a reset ends every session, so whoever held the old password is signed out
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      void sendEmail({
+        to: user.email,
+        ...passwordResetEmail({ name: user.name, url }),
+      }).catch((error) =>
+        console.error("password reset email failed", error)
+      )
+    },
   },
   emailVerification: {
     sendOnSignUp: true,
