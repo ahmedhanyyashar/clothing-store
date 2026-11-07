@@ -39,7 +39,7 @@ test("a shopper finds a product and reads its details", async ({
   ).toBeVisible()
   await expect(page.getByText("$24.99")).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Sizes" })
+    page.getByRole("group", { name: "Size" })
   ).toBeVisible()
   await expect(page.getByText("In stock")).toBeVisible()
 })

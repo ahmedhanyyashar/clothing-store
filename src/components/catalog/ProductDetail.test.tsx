@@ -45,13 +45,15 @@ describe("ProductInfo", () => {
     ).toBeInTheDocument()
   })
 
-  it("lists every size and tells a screen reader which are sold out", () => {
+  it("lets the shopper pick a size, and tells a screen reader which are sold out", () => {
     render(<ProductInfo product={product} />)
 
-    expect(screen.getByText("30")).toBeInTheDocument()
-    expect(screen.getByText(/32/)).toHaveTextContent(
-      "32 (sold out)"
-    )
+    expect(
+      screen.getByRole("radio", { name: "30" })
+    ).toBeEnabled()
+    expect(
+      screen.getByRole("radio", { name: "32 (sold out)" })
+    ).toBeDisabled()
     expect(screen.getByText("In stock")).toBeInTheDocument()
   })
 
@@ -68,7 +70,9 @@ describe("ProductInfo", () => {
       />
     )
 
-    expect(screen.getByText("Sold out")).toBeInTheDocument()
+    expect(
+      screen.getByText("Sold out", { selector: "p" })
+    ).toBeInTheDocument()
     expect(
       screen.queryByText("In stock")
     ).not.toBeInTheDocument()

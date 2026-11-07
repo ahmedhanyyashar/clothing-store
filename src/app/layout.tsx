@@ -5,6 +5,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app"
 
 import "./globals.css"
 
+import { CartSession } from "@/components/cart/CartSession"
 import { Footer } from "@/components/layout/Footer"
 import { Header } from "@/components/layout/Header"
 
@@ -40,6 +41,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NuqsAdapter>
+            <CartSession />
             <Header />
             <main className="flex-1">{children}</main>
             <Footer />

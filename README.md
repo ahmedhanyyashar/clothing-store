@@ -4,7 +4,7 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, and the product catalog with its shop pages. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, the product catalog with its shop pages, and the shopping cart. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
@@ -64,10 +64,11 @@ The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRE
 
 ```text
 src/app/          routes, layouts, error and not-found pages, route handlers
-src/components/   ui/ holds shadcn primitives, layout/ the page shell, catalog/ the shop
+src/components/   ui/ holds shadcn primitives, layout/ the page shell, catalog/ the shop, cart/ the cart
 src/env.ts        the validated environment, the only place variables are read
 src/lib/db/       the Prisma client
 src/lib/catalog/  product queries, shop URL parsing, price formatting
+src/lib/cart/     the cart store, its server lookup and the pure totals
 src/lib/auth/     Better Auth setup, server-side guards and form schemas
 src/lib/email/    SMTP mailer and email templates
 src/proxy.ts      redirects for signed-out and signed-in visitors
@@ -87,6 +88,13 @@ public/products/  sample product photos, with their credits
 - **Shop** (`/shop`) filters by category and type (several of each at once), searches by name, sorts by newest or price, and shows 12 products a page. Everything is in the URL, for example `/shop?category=men,women&type=jeans&page=2`, so any view can be shared.
 - **Product pages** (`/products/<id>`) show the photos, price, sizes with their availability, and colors.
 - These pages render per request, so stock is always current and the build needs no database.
+
+## Cart
+
+- A product page has a size picker, a quantity and an add button. Sold-out sizes cannot be chosen, and the quantity never goes past the stock of the chosen size.
+- The header's cart button shows the item count and opens the cart in a drawer. `/cart` is the full page, with quantity changes, removal and the subtotal.
+- The cart lives in the browser (`localStorage`) and holds only product ids, sizes and quantities. Names, images, prices and stock are read from the server whenever the cart is shown, so a price change shows up at once. A line whose size sold out, or whose product was removed, is flagged and left out of the total.
+- A visitor who signs in keeps the cart they filled. Signing out, or a different person signing in, empties it.
 
 ## Authentication
 
