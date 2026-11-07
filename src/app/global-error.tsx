@@ -2,7 +2,8 @@
 
 import { useEffect } from "react"
 
-// Replaces the root layout when it fails, so it renders its own <html>.
+// Replaces the root layout when it fails, so there is no stylesheet, theme
+// or font here: inline styles only.
 export default function GlobalError({
   error,
   retry,
@@ -16,17 +17,55 @@ export default function GlobalError({
 
   return (
     <html lang="en">
-      <body>
-        <main>
-          <h1>Something went wrong</h1>
-          <p>
-            An unexpected error occurred. Please try again.
+      <body
+        style={{
+          margin: 0,
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          padding: 24,
+          textAlign: "center",
+          fontFamily: "system-ui, sans-serif",
+          color: "#111",
+          background: "#fff",
+        }}
+      >
+        <h1 style={{ fontSize: 28, margin: 0 }}>
+          Something went wrong
+        </h1>
+        <p
+          style={{
+            maxWidth: 420,
+            margin: 0,
+            color: "#555",
+          }}
+        >
+          An unexpected error occurred. Please try again.
+        </p>
+        <button
+          type="button"
+          onClick={() => retry()}
+          style={{
+            marginTop: 12,
+            padding: "10px 20px",
+            border: 0,
+            borderRadius: 8,
+            background: "#111",
+            color: "#fff",
+            fontSize: 14,
+            cursor: "pointer",
+          }}
+        >
+          Try again
+        </button>
+        {error.digest && (
+          <p style={{ fontSize: 12, color: "#555" }}>
+            Error ID: {error.digest}
           </p>
-          <button type="button" onClick={() => retry()}>
-            Try again
-          </button>
-          {error.digest && <p>Error ID: {error.digest}</p>}
-        </main>
+        )}
       </body>
     </html>
   )

@@ -65,3 +65,35 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** A database outage should take an instance out of rotation without getting it killed and replaced, which only works if the two questions are asked separately.
 
 **Cost.** Two endpoints to keep in sync with what the platform probes.
+
+## 9. UI primitives are added only when a feature needs them
+
+**Decision.** `src/components/ui/` holds only the shadcn primitives that something uses. Each feature adds its own in the pull request that introduces it. The design tokens are the only part installed up front.
+
+**Why.** An unused component is code nobody has tested in context, and reviewing it without its consumer says little. Adding it with the feature shows exactly which components the feature needs.
+
+**Cost.** Several pull requests touch `src/components/ui/`, instead of one up-front install.
+
+## 10. Light and dark themes follow the system and never flash
+
+**Decision.** `next-themes` toggles a `dark` class on `<html>`, defaulting to the system setting. All colors are CSS variables with a value per theme, and the theme toggle renders both icons and lets CSS choose.
+
+**Why.** The theme class is set before hydration, so a returning visitor never sees the wrong theme first, and the toggle renders identically on the server and the client, so there is no hydration mismatch.
+
+**Cost.** Every new color needs a light and a dark value, and components must use the tokens instead of raw colors.
+
+## 11. Component tests run in jsdom with an accessibility check
+
+**Decision.** `*.test.tsx` files form a third Vitest project that renders React with Testing Library in jsdom and checks new UI with axe. It runs as part of `pnpm test`, and jsdom is used only here.
+
+**Why.** Interactions and accessibility regressions are cheap to catch at this level, and keeping jsdom out of the unit project keeps server code tested in a real Node environment.
+
+**Cost.** jsdom lacks some browser APIs (the setup stubs `matchMedia`), and axe covers markup rules, not visual contrast, so it does not replace a manual check.
+
+## 12. Import order is owned by Prettier
+
+**Decision.** Prettier's import-sorting plugin orders imports, and ESLint's `import/order` rule is off.
+
+**Why.** Two tools sorting the same lines disagree on edge cases, such as `next-themes` against `next/font`, and every commit would end up fighting itself.
+
+**Cost.** Import order is applied by formatting, not reported by lint.
