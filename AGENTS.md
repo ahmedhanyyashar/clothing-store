@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. Human contributors sho
 
 ## Project
 
-A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, with Better Auth for authentication and SMTP for email. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db/client.ts`, and the Prisma schema holds the authentication models. Security headers are set in `next.config.ts`.
+A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, with Better Auth for authentication and SMTP for email. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db/client.ts`, and the Prisma schema holds the authentication and catalog models, and the product queries are in `src/lib/catalog/`. Security headers are set in `next.config.ts`.
 
 ## Commands
 
@@ -21,6 +21,7 @@ A clothing store built with Next.js (App Router), React and TypeScript, backed b
 | `pnpm db:generate`      | Generate the Prisma client after a schema change   |
 | `pnpm db:migrate`       | Create and apply a migration after a schema change |
 | `pnpm db:deploy`        | Apply existing migrations                          |
+| `pnpm db:seed`          | Replace the dev catalog with sample products       |
 | `pnpm build`            | Production build                                   |
 
 Run lint, format check, typecheck and tests before declaring a change done. Run the integration tests whenever the change touches the database.
@@ -46,6 +47,14 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 ### Email
 
 - Send email only through `sendEmail` from `@/lib/email/mailer`, with a template from `@/lib/email/templates`. Locally every message lands in Mailpit at http://localhost:8025.
+
+### Catalog
+
+- Money is whole cents everywhere (`priceCents`). Turn it into text only with `formatPrice` from `@/lib/catalog/format`. Never store, add or compare prices as floating-point numbers.
+- Read products only through `@/lib/catalog/queries`. The shop's URL is read with the shared parsers in `@/lib/catalog/search-params`, so a link and the filter controls always agree.
+- Stock is per size (`ProductSize.stock`), not per product. A product is in stock while any size has stock.
+- A new category or product type needs an entry in `src/lib/catalog/taxonomy.ts`; the compiler rejects an enum value without one.
+- Create products in tests with `createProduct` from `@/test/factories`.
 
 ### Auth
 

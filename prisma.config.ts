@@ -7,6 +7,9 @@ import { defineConfig } from "prisma/config"
 // run on a fresh clone and in CI jobs that never touch a database.
 export default defineConfig({
   schema: "prisma/schema.prisma",
-  migrations: { path: "prisma/migrations" },
+  migrations: {
+    path: "prisma/migrations",
+    seed: "tsx prisma/seed.ts",
+  },
   datasource: { url: process.env.DATABASE_URL },
 })
