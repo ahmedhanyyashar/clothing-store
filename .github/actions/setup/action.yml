@@ -1,5 +1,5 @@
 name: Setup
-description: Install Node.js, pnpm and the locked dependencies
+description: Install Node.js, pnpm, the locked dependencies and the Prisma client
 
 runs:
   using: composite
@@ -10,4 +10,7 @@ runs:
         node-version-file: .node-version
         cache: pnpm
     - run: pnpm install --frozen-lockfile
+      shell: bash
+    # the client is generated, not committed, and typecheck, tests and build all import it
+    - run: pnpm db:generate
       shell: bash

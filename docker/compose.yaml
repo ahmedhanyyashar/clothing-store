@@ -1,0 +1,50 @@
+name: clothing-store
+
+services:
+  database:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: clothing_store
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U root -d clothing_store",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # A separate container and volume, so wiping the test data can never touch
+  # development data.
+  database-test:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: clothing_store_test
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U root -d clothing_store_test",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  postgres_test_data:

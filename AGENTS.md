@@ -4,35 +4,53 @@ Guidance for AI coding agents working in this repository. Human contributors sho
 
 ## Project
 
-A clothing store built with Next.js (App Router), React and TypeScript. Only the scaffold exists so far: routes live in `src/app/`, and there is a single `GET /api/health` route handler, plus the error and not-found pages. Security headers are set in `next.config.ts`.
+A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the validated environment is in `src/env.ts`, the database client is in `src/lib/db.ts`, and the Prisma schema has no models yet. Security headers are set in `next.config.ts`.
 
 ## Commands
 
-| Command             | Use                                      |
-| ------------------- | ---------------------------------------- |
-| `pnpm dev`          | Development server on port 3000          |
-| `pnpm lint`         | ESLint                                   |
-| `pnpm format:check` | Prettier check (`pnpm format` to fix)    |
-| `pnpm typecheck`    | Route type generation and `tsc --noEmit` |
-| `pnpm test`         | Vitest, single run                       |
-| `pnpm build`        | Production build                         |
+| Command                 | Use                                                |
+| ----------------------- | -------------------------------------------------- |
+| `pnpm dev`              | Development server on port 3000                    |
+| `pnpm lint`             | ESLint                                             |
+| `pnpm format:check`     | Prettier check (`pnpm format` to fix)              |
+| `pnpm typecheck`        | Route type generation and `tsc --noEmit`           |
+| `pnpm test`             | Unit tests, single run                             |
+| `pnpm test:integration` | Integration tests (databases must be up)           |
+| `pnpm compose`          | Start the development and test databases           |
+| `pnpm db:generate`      | Generate the Prisma client after a schema change   |
+| `pnpm db:migrate`       | Create and apply a migration after a schema change |
+| `pnpm build`            | Production build                                   |
 
-Run lint, format check, typecheck and tests before declaring a change done.
+Run lint, format check, typecheck and tests before declaring a change done. Run the integration tests whenever the change touches the database.
 
 ## Conventions
 
 - Strict TypeScript. No `any`, no unused variables (prefix with `_` when intentional).
 - Use the `@/` alias for imports from `src/`. Import order is applied by Prettier, so run `pnpm format` instead of ordering by hand.
 - No `console.log`.
-- Tests sit next to the code as `*.test.ts(x)` and run in Node by default.
 - Record a design decision in `docs/decisions.md` in the same pull request that makes it.
 - Add a dependency only when the platform and the existing dependencies do not cover the need.
+
+### Environment
+
+- Read configuration only through `env` from `@/env`, never `process.env`.
+- Add a new variable in the same change in three places: the schema and `runtimeEnv` in `src/env.ts`, `.env.example`, and `.env.test` when tests need it.
+
+### Database
+
+- Use the shared client from `@/lib/db`. Do not create another `PrismaClient`.
+- A schema change needs a migration (`pnpm db:migrate`), committed with the change. The generated client in `src/generated` is never committed.
+
+### Tests
+
+- Tests sit next to the code. `*.test.ts(x)` is a unit test: fast, isolated, no database. `*.integration.test.ts(x)` talks to the real test database.
+- Integration tests that write data call `resetDb()` from `@/test/reset-db` in `beforeEach`.
 
 ## Git
 
 - Conventional Commits, small pull requests, squash merge. Details are in [CONTRIBUTING.md](CONTRIBUTING.md).
 - Never bypass the hooks (`--no-verify`).
-- Do not commit environment files, and do not edit `pnpm-lock.yaml` by hand.
+- Do not commit environment files other than `.env.example` and `.env.test`, and do not edit `pnpm-lock.yaml` by hand.
 
 ## Next.js
 
