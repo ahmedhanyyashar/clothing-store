@@ -15,36 +15,36 @@ function parse(query: string) {
 describe("the shop URL", () => {
   it("uses sensible defaults for an empty query string", () => {
     expect(parse("")).toEqual({
-      category: undefined,
-      type: undefined,
+      categories: [],
+      types: [],
       q: "",
       sort: "newest",
       page: 1,
     })
   })
 
-  it("reads filters by their slugs", () => {
+  it("reads several filters of each kind by their slugs", () => {
     expect(
       parse(
-        "category=women&type=t-shirts&sort=price-asc&page=3&q=tee"
+        "category=men,women&type=t-shirts,jeans&sort=price-asc&page=3&q=tee"
       )
     ).toEqual({
-      category: "WOMEN",
-      type: "T_SHIRTS",
+      categories: ["MEN", "WOMEN"],
+      types: ["T_SHIRTS", "JEANS"],
       q: "tee",
       sort: "price-asc",
       page: 3,
     })
   })
 
-  it("drops values it does not know instead of failing", () => {
-    const query = parse(
-      "category=pets&type=capes&sort=cheapest&page=abc"
-    )
-
-    expect(query).toMatchObject({
-      category: undefined,
-      type: undefined,
+  it("drops values it does not know and keeps the rest", () => {
+    expect(
+      parse("category=men,pets&type=capes")
+    ).toMatchObject({
+      categories: ["MEN"],
+      types: [],
+    })
+    expect(parse("sort=cheapest&page=abc")).toMatchObject({
       sort: "newest",
       page: 1,
     })

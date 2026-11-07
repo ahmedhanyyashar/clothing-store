@@ -177,3 +177,19 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** A fresh clone gets a working, good-looking shop offline, and tests and CI never depend on an outside image host.
 
 **Cost.** The photos are permanent in git history, and running the seed replaces every product in the development database.
+
+## 23. Catalog pages render per request
+
+**Decision.** The home page, the shop and the product pages read the database on every request. The home page opts in with `connection()`, and the other two are dynamic by their parameters.
+
+**Why.** Stock must be current, and a page that reads the database at build time freezes whatever it found: an end-to-end test caught the home page prerendered with an empty catalog. It also keeps the build independent of any database, so CI's build job needs none.
+
+**Cost.** A database read per page view. Caching is added when a measurement shows it is needed, not before.
+
+## 24. Filters, search, sort and page live in the URL
+
+**Decision.** The shop's state is the query string (`?category=men,women&type=jeans&q=denim&sort=price-asc&page=2`), read by one set of parsers on the server and the client. Values are readable slugs, several categories or types can be chosen at once, unknown values are dropped, and changing a filter returns to page 1. Controls are native checkboxes and a native select.
+
+**Why.** A view can be shared, bookmarked and reloaded, and the back button works. Sharing the parsers means a link and the controls cannot disagree. Native controls are accessible and work well on phones without extra code.
+
+**Cost.** Every change is a navigation that renders on the server, so a skeleton shows briefly while results load.

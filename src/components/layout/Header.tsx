@@ -14,6 +14,14 @@ export function Header() {
         >
           Clothing Store
         </Link>
+        <nav aria-label="Main" className="mr-auto ml-8">
+          <Link
+            href="/shop"
+            className="text-sm font-medium hover:underline"
+          >
+            Shop
+          </Link>
+        </nav>
         <div className="flex items-center gap-2">
           <UserMenu />
           <ThemeToggle />

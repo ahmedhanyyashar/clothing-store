@@ -55,6 +55,9 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - Stock is per size (`ProductSize.stock`), not per product. A product is in stock while any size has stock.
 - A new category or product type needs an entry in `src/lib/catalog/taxonomy.ts`; the compiler rejects an enum value without one.
 - Create products in tests with `createProduct` from `@/test/factories`.
+- A page that reads the database must render per request: call `await connection()` from `next/server` before the first query. Otherwise Next prerenders it at build time and freezes whatever the database held then.
+- Shop filters live in the URL. Add a filter to `shopParsers` and read it with the same parsers on the server and the client. Build links with `shopHref` so they keep the current view, and reset `page` whenever a filter changes.
+- Product cards have one link each, with the image marked decorative (`alt=""`).
 
 ### Auth
 
@@ -74,7 +77,7 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 ### Tests
 
 - Tests sit next to the code. `*.test.ts` is a unit test: fast, isolated, no database. `*.test.tsx` is a component test: it runs in jsdom and should include an axe accessibility check for new UI. `*.integration.test.ts` talks to the real test database.
-- `e2e/*.spec.ts` are Playwright tests against a production build on port 3100. Import `test` and `expect` from `e2e/support/test`: its fixtures give every test a new user and its own client address, so tests share no state and never trip the rate limiter. Navigate with `open()` from `e2e/support/flows`, which waits for hydration; typing into a form earlier is lost. Read emails through `waitForLink` from `e2e/support/mailpit`.
+- `e2e/*.spec.ts` are Playwright tests against a production build on port 3100. Import `test` and `expect` from `e2e/support/test`: its fixtures give every test a new user and its own client address, so tests share no state and never trip the rate limiter. Navigate with `open()` from `e2e/support/flows`, which waits for hydration; typing into a form earlier is lost. Read emails through `waitForLink` from `e2e/support/mailpit`. The global setup migrates the test database and loads the sample catalog, which the catalog tests rely on.
 - Do not run integration and end-to-end tests at the same time: they share the test database, and the integration helper empties it.
 - Integration tests that write data call `resetDb()` from `@/test/reset-db` in `beforeEach`.
 

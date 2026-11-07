@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { ThemeProvider } from "next-themes"
 import { Poppins } from "next/font/google"
+import { NuqsAdapter } from "nuqs/adapters/next/app"
 
 import "./globals.css"
 
@@ -38,9 +39,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <NuqsAdapter>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </NuqsAdapter>
         </ThemeProvider>
       </body>
     </html>
