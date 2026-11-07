@@ -201,3 +201,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Guests can shop before they have an account, and no schema or migration is needed. Storing only ids means a stored price can never be stale or edited, and the total always comes from the data the store actually charges. A cart that is wiped when a guest signs in would lose the work of exactly the people about to buy.
 
 **Cost.** The cart does not follow the shopper to another device, and showing it needs one request to the server. Moving to a database cart later is an addition: the same store can sync to it on sign-in without changing the screens. Checkout must read prices and stock again, because the browser's cart is only a wish.
+
+## 26. The email address is the account's identity, and security changes notify the owner
+
+**Decision.** A user can change their name and password and delete their account, but not their email address. Changing the password needs the current one, can end the user's other sessions, and sends the owner a notice with a reset link. Deleting needs the password again, or a recently created session for people who only use Google. Both password-checking endpoints have a limit of 5 attempts a minute.
+
+**Why.** The address is what proves who someone is: sign-in, verification and password reset all depend on it. A change-of-email flow is a way to take over an account, so it needs its own careful design and nothing in the shop needs it. A notice by email means a password changed by someone else is noticed. Re-asking for the password before deleting means a left-open browser cannot destroy an account.
+
+**Cost.** Someone who loses access to their address cannot move the account to a new one; they create a new account instead.

@@ -1,11 +1,13 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
+import { createAuthMiddleware } from "better-auth/api"
 
 import { env } from "@/env"
 import { PASSWORD_MIN_LENGTH } from "@/lib/auth/validations"
 import { prisma } from "@/lib/db/client"
 import { sendEmail } from "@/lib/email/mailer"
 import {
+  passwordChangedEmail,
   passwordResetEmail,
   verificationEmail,
 } from "@/lib/email/templates"
@@ -53,6 +55,9 @@ export const auth = betterAuth({
     },
   },
   user: {
+    // Deleting needs the password, or a session created recently for people
+    // who sign in with Google and have no password.
+    deleteUser: { enabled: true },
     additionalFields: {
       // Exposed on the session so the UI can show role-specific links. It is
       // display only: pages and actions check the role on the server.
@@ -64,6 +69,42 @@ export const auth = betterAuth({
       },
     },
   },
+  hooks: {
+    // The owner is told whenever the password changes, so a change they did
+    // not make is noticed. Not awaited, like the other emails here.
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/change-password") return
+      // a refused change (wrong current password) comes back as an error
+      const returned = ctx.context.returned
+      if (returned instanceof Error) return
+      const user = (
+        returned as
+          | { user?: { email: string; name: string } }
+          | undefined
+      )?.user
+      if (!user) return
+      void sendEmail({
+        to: user.email,
+        ...passwordChangedEmail({
+          name: user.name,
+          resetUrl: `${env.NEXT_PUBLIC_APP_URL}/forgot-password`,
+        }),
+      }).catch((error) =>
+        console.error(
+          "password changed email failed",
+          error
+        )
+      )
+    }),
+  },
   // Stored in the database so limits hold across server instances.
-  rateLimit: { enabled: true, storage: "database" },
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+    // Both check a password, so they get a guessing limit of their own.
+    customRules: {
+      "/change-password": { window: 60, max: 5 },
+      "/delete-user": { window: 60, max: 5 },
+    },
+  },
 })

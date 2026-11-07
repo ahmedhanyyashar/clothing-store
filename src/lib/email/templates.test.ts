@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  passwordChangedEmail,
   passwordResetEmail,
   verificationEmail,
 } from "./templates"
@@ -36,5 +37,28 @@ describe("email templates", () => {
     expect(html).not.toContain("<script>")
     expect(html).toContain("&lt;script&gt;")
     expect(text).toContain(`<script>alert("x")</script>`)
+  })
+})
+
+describe("password changed email", () => {
+  const email = passwordChangedEmail({
+    name: "Ada",
+    resetUrl: "https://shop.test/forgot-password",
+  })
+
+  it("says what happened and links to a reset in case it was not the owner", () => {
+    expect(email.subject).toBe(
+      "Your Clothing Store password was changed"
+    )
+    expect(email.text).toContain(
+      "https://shop.test/forgot-password"
+    )
+    expect(email.html).toContain(
+      "https://shop.test/forgot-password"
+    )
+  })
+
+  it("does not claim that the link expires", () => {
+    expect(email.text).not.toMatch(/expires/)
   })
 })

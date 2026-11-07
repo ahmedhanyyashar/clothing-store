@@ -73,6 +73,8 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - The role on the client session is for display. Never authorize from it in the browser.
 - Responses must not reveal whether an email address has an account.
 - Do not await `sendEmail` inside an auth callback: a slow mail server would make the response time reveal whether an address is registered.
+- A page under `/account` calls `requireUser` itself; the account layout does not, because a layout is not re-rendered when moving between its pages. Password screens render only when `hasPassword(user.id)` is true: Google-only users have none.
+- Password changes and account deletion go through Better Auth (`changePassword`, `deleteUser`), never directly through Prisma. The email address cannot be changed.
 - Forms use react-hook-form with a zod schema from `@/lib/auth/validations`, set `noValidate`, and show server errors in a `role="alert"` element.
 
 ### UI
