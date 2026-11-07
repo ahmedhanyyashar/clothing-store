@@ -153,3 +153,27 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Only a browser test exercises the whole path: form, HTTP API, email, link, cookie and guard. The production build is what ships. A user per test removes the need for cleanup, and a client address per test keeps the auth rate limiter, which is on, from coupling tests together.
 
 **Cost.** Slower than the other suites, and the browser must wait for hydration before typing, which the `open()` helper does.
+
+## 20. Prices are stored as whole cents
+
+**Decision.** `Product.priceCents` is an integer. `formatPrice` turns it into text and is the only place that does.
+
+**Why.** Integer arithmetic is exact, so sums, totals and refunds never pick up rounding errors. A decimal column would come back from the database as an object that cannot be passed from server to client components without a conversion at every use.
+
+**Cost.** One formatting helper, and every price shown or entered passes through it. A currency other than USD would need a currency column.
+
+## 21. Category and type are enums, sizes are labels, and stock belongs to the size
+
+**Decision.** `Category` and `ProductType` are database enums, each with a slug and label in one typed table that the compiler checks for completeness. A product's sizes are rows with a text label and their own stock count, and colors are display options with no stock.
+
+**Why.** Nothing edits categories at runtime, so enums give a typed, validated list for the filters and the URL. Sizes are text because shoes use numbers where clothes use letters. A customer buys a size, so stock has to be counted per size for the oversell guard at checkout to be correct.
+
+**Cost.** Adding a category or type is a migration and a deploy. Per-size stock means one more table to read for availability.
+
+## 22. The sample catalog ships as small committed fixtures
+
+**Decision.** The seed script and 14 optimized product photos (about 0.8 MB) live in the repository, with a credits file. The database stores only an image URL, so uploaded images can sit beside these later without a schema change.
+
+**Why.** A fresh clone gets a working, good-looking shop offline, and tests and CI never depend on an outside image host.
+
+**Cost.** The photos are permanent in git history, and running the seed replaces every product in the development database.

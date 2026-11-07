@@ -4,7 +4,7 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, and authentication. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, and the product catalog data. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
@@ -31,6 +31,7 @@ pnpm install
 cp .env.example .env
 pnpm compose        # starts the databases and the local mail catcher
 pnpm db:deploy      # applies the migrations to the development database
+pnpm db:seed        # fills it with sample products
 pnpm dev
 ```
 
@@ -43,20 +44,21 @@ The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRE
 
 ## Scripts
 
-| Script                               | Purpose                                     |
-| ------------------------------------ | ------------------------------------------- |
-| `pnpm dev`                           | Start the development server                |
-| `pnpm build` / `pnpm start`          | Production build, and serve it              |
-| `pnpm lint` / `pnpm lint:fix`        | Check, or fix, lint errors                  |
-| `pnpm format` / `pnpm format:check`  | Write, or check, formatting                 |
-| `pnpm typecheck`                     | Generate route types and run `tsc`          |
-| `pnpm test` / `pnpm test:watch`      | Unit and component tests, once or watching  |
-| `pnpm test:integration`              | Integration tests (needs `pnpm compose`)    |
-| `pnpm test:e2e`                      | End-to-end tests in a browser (see Testing) |
-| `pnpm compose` / `pnpm compose:down` | Start or stop the local databases           |
-| `pnpm db:generate`                   | Generate the Prisma client                  |
-| `pnpm db:migrate` / `pnpm db:deploy` | Create and apply, or only apply, migrations |
-| `pnpm db:studio`                     | Browse the database                         |
+| Script                               | Purpose                                      |
+| ------------------------------------ | -------------------------------------------- |
+| `pnpm dev`                           | Start the development server                 |
+| `pnpm build` / `pnpm start`          | Production build, and serve it               |
+| `pnpm lint` / `pnpm lint:fix`        | Check, or fix, lint errors                   |
+| `pnpm format` / `pnpm format:check`  | Write, or check, formatting                  |
+| `pnpm typecheck`                     | Generate route types and run `tsc`           |
+| `pnpm test` / `pnpm test:watch`      | Unit and component tests, once or watching   |
+| `pnpm test:integration`              | Integration tests (needs `pnpm compose`)     |
+| `pnpm test:e2e`                      | End-to-end tests in a browser (see Testing)  |
+| `pnpm compose` / `pnpm compose:down` | Start or stop the local databases            |
+| `pnpm db:generate`                   | Generate the Prisma client                   |
+| `pnpm db:migrate` / `pnpm db:deploy` | Create and apply, or only apply, migrations  |
+| `pnpm db:seed`                       | Replace the dev catalog with sample products |
+| `pnpm db:studio`                     | Browse the database                          |
 
 ## Project structure
 
@@ -65,6 +67,7 @@ src/app/          routes, layouts, error and not-found pages, route handlers
 src/components/   ui/ holds shadcn primitives, layout/ the page shell
 src/env.ts        the validated environment, the only place variables are read
 src/lib/db/       the Prisma client
+src/lib/catalog/  product queries, shop URL parsing, price formatting
 src/lib/auth/     Better Auth setup, server-side guards and form schemas
 src/lib/email/    SMTP mailer and email templates
 src/proxy.ts      redirects for signed-out and signed-in visitors
@@ -73,6 +76,7 @@ prisma/           schema and migrations
 docker/           local PostgreSQL (development and test databases) and the mail catcher
 e2e/              end-to-end tests (Playwright)
 docs/             design decisions
+public/products/  sample product photos, with their credits
 .github/          CI workflow, shared setup action, Dependabot, PR template
 .husky/           Git hooks: lint-staged on commit, commitlint on message
 ```

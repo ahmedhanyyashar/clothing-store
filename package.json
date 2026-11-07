@@ -23,6 +23,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "compose": "docker compose -f docker/compose.yaml up -d --wait",
     "compose:down": "docker compose -f docker/compose.yaml down",
@@ -44,6 +45,7 @@
     "next": "^16.4.5",
     "next-themes": "^0.4.6",
     "nodemailer": "^10.3.1",
+    "nuqs": "^2.10.2",
     "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
@@ -78,6 +80,7 @@
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "prisma": "^7.10.1",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0"
   }

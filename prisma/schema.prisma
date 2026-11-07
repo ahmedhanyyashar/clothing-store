@@ -86,3 +86,75 @@ model RateLimit {
   @@unique([key])
   @@map("rate_limit")
 }
+
+enum Category {
+  MEN
+  WOMEN
+  CHILDREN
+}
+
+enum ProductType {
+  T_SHIRTS
+  SHIRTS
+  HOODIES
+  JACKETS
+  JEANS
+  SHOES
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  // whole cents, so money is never a floating-point or decimal value in code
+  priceCents  Int
+  category    Category
+  type        ProductType
+  bestSeller  Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  images ProductImage[]
+  sizes  ProductSize[]
+  colors ProductColor[]
+
+  @@index([category, type])
+  @@index([createdAt])
+  @@map("product")
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  position  Int     @default(0)
+
+  @@index([productId])
+  @@map("product_image")
+}
+
+// One row per size a product is sold in. Stock lives here, because a customer
+// buys a size, not "a shirt". Labels are text because shoes use numbers.
+model ProductSize {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String
+  stock     Int     @default(0)
+  position  Int     @default(0)
+
+  @@unique([productId, label])
+  @@map("product_size")
+}
+
+model ProductColor {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  hex       String
+
+  @@index([productId])
+  @@map("product_color")
+}
