@@ -1,5 +1,5 @@
 import { env } from "@/env"
-import { prisma } from "@/lib/db"
+import { prisma } from "@/lib/db/client"
 
 /** Throws unless the URL points at a database whose name ends in `_test`. */
 export function assertTestDatabase(url: string) {

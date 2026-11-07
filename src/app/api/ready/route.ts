@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db"
+import { prisma } from "@/lib/db/client"
 
 // Readiness: can this instance serve requests that need the database? Kept
 // apart from /api/health so a database outage takes an instance out of

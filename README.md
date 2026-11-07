@@ -4,7 +4,7 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, and the authentication backend. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
@@ -12,6 +12,7 @@ Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in 
 | --------------- | ---------------------------------------------- |
 | Framework       | Next.js (App Router), React, TypeScript strict |
 | Styling         | Tailwind CSS 4, shadcn/ui (Radix), Lucide      |
+| Authentication  | Better Auth: email and password, Google        |
 | Email           | Nodemailer over SMTP, Mailpit locally          |
 | Database        | PostgreSQL 16, Prisma 7                        |
 | Configuration   | Environment validated at startup (zod)         |
@@ -29,10 +30,11 @@ Requires [Node.js](https://nodejs.org) 24, [pnpm](https://pnpm.io) 12 (`corepack
 pnpm install
 cp .env.example .env
 pnpm compose        # starts the databases and the local mail catcher
+pnpm db:deploy      # applies the migrations to the development database
 pnpm dev
 ```
 
-The app runs on http://localhost:3000. Every email the app sends lands in Mailpit at http://localhost:8025.
+The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) and the Google credentials (see the comments in `.env.example`). Every email the app sends, such as the verification link, lands in Mailpit at http://localhost:8025.
 
 | Endpoint          | Meaning                                                        |
 | ----------------- | -------------------------------------------------------------- |
@@ -61,7 +63,8 @@ The app runs on http://localhost:3000. Every email the app sends lands in Mailpi
 src/app/          routes, layouts, error and not-found pages, route handlers
 src/components/   ui/ holds shadcn primitives, layout/ the page shell
 src/env.ts        the validated environment, the only place variables are read
-src/lib/db.ts     the Prisma client
+src/lib/db/       the Prisma client
+src/lib/auth/     Better Auth configuration
 src/lib/email/    SMTP mailer and email templates
 src/test/         test helpers and global setup
 prisma/           schema and migrations
@@ -70,6 +73,13 @@ docs/             design decisions
 .github/          CI workflow, shared setup action, Dependabot, PR template
 .husky/           Git hooks: lint-staged on commit, commitlint on message
 ```
+
+## Authentication
+
+- **Sign-up** needs a verified email address: the account cannot sign in until the emailed link is used. Google sign-in is also available.
+- **Passwords** must be at least 12 characters.
+- **Responses never reveal** whether an email address has an account.
+- **Roles** are `USER` and `ADMIN`. A role cannot be set from a request.
 
 ## Testing
 

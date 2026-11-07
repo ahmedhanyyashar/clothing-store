@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { GET } from "./route"
 
-vi.mock("@/lib/db", () => ({
+vi.mock("@/lib/db/client", () => ({
   prisma: {
     $queryRaw: vi.fn().mockRejectedValue(new Error("down")),
   },

@@ -105,3 +105,19 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** SMTP is the one protocol every provider accepts, so changing provider is a configuration change and not a code change. Plain functions need no templating dependency, and escaping user-supplied text is done in one place.
 
 **Cost.** SMTP does not report bounces or complaints. If the product needs them, that is added for the chosen provider.
+
+## 14. A verified email address is required before sign-in
+
+**Decision.** Email and password accounts cannot sign in until the emailed verification link has been used. Sign-up and the password-reset request answer the same way whether or not the address is already registered, and auth callbacks start the email send without waiting for it.
+
+**Why.** An unverified address may belong to someone else, and an unauthenticated endpoint that confirms which addresses have accounts helps attackers target them. Waiting for the mail server would make the response time give the same information away.
+
+**Cost.** Sign-up needs working email, a user who mistyped their address has to sign up again, and a failed delivery is only logged.
+
+## 15. Passwords are checked by length, and auth rate limits live in the database
+
+**Decision.** The minimum is 12 characters with no composition rules. Rate limits for the auth endpoints are stored in the database.
+
+**Why.** Length is what makes passwords hard to guess, and composition rules push people to predictable patterns. Database-backed limits hold across server instances, where in-memory ones would reset per instance.
+
+**Cost.** A longer minimum than many sites ask for, and an extra table written on auth requests.
