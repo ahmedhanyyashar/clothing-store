@@ -2,6 +2,8 @@
 
 import { requireUser } from "@/lib/auth/session"
 
+import { cancelOrder, type CancelResult } from "./cancel"
+import { sendOrderConfirmation } from "./email"
 import { placeOrder, type LineProblem } from "./place"
 import { placeOrderSchema } from "./validations"
 
@@ -42,5 +44,24 @@ export async function placeOrderAction(
       ? { ok: false, message: "Choose a delivery address." }
       : { ok: false, problems: result.problems }
   }
+
+  // A repeated attempt returns the same order: it was already confirmed.
+  // Not awaited: a slow mail server must not hold up the customer.
+  if (!result.reused) {
+    void sendOrderConfirmation(result.orderId).catch(
+      (error) =>
+        console.error(
+          "order confirmation email failed",
+          error
+        )
+    )
+  }
   return { ok: true, number: result.number }
+}
+
+export async function cancelOrderAction(
+  number: string
+): Promise<CancelResult> {
+  const user = await requireUser("/account/orders")
+  return cancelOrder(user.id, number)
 }

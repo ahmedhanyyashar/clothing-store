@@ -4,7 +4,7 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, the product catalog with its shop pages, the shopping cart, an account area, and checkout. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, the product catalog with its shop pages, the shopping cart, an account area, and checkout with orders. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
@@ -123,6 +123,8 @@ public/products/  sample product photos, with their credits
 - **An order is a copy.** It keeps the name, size, image and price of each item and the delivery address as they were, so editing a product or an address later never changes it. Order numbers are random and readable (for example `CS-7K2M9QXD`).
 - **Double clicks and retries** are harmless: each checkout screen has one key, and the same key returns the same order.
 - After placing an order the shopper lands on its page, `/account/orders/<number>`, which only its owner can open.
+- `/account/orders` lists the user's orders. A pending order can be cancelled, which puts its stock back. Moving an order to confirmed, shipped or delivered takes a person with admin rights, which is also why cancelling is limited to pending orders. A confirmation email is sent when the order is placed.
+- An account with an order that is still pending, confirmed or shipped cannot be deleted. Otherwise the orders stay, with the customer's name, phone and address replaced (see decision 31).
 
 ## Testing
 
