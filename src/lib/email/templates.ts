@@ -164,3 +164,54 @@ export function orderConfirmationEmail({
       "You can cancel the order from your account until it is confirmed.",
   })
 }
+
+const STATUS_COPY = {
+  SHIPPED: {
+    subject: (number: string) =>
+      `Your ${BRAND} order ${number} has shipped`,
+    intro: (number: string) =>
+      `Good news: your order ${number} is on its way.`,
+  },
+  DELIVERED: {
+    subject: (number: string) =>
+      `Your ${BRAND} order ${number} was delivered`,
+    intro: (number: string) =>
+      `Your order ${number} was delivered. We hope you enjoy it.`,
+  },
+  CANCELLED: {
+    subject: (number: string) =>
+      `Your ${BRAND} order ${number} was cancelled`,
+    intro: (number: string) =>
+      `Your order ${number} was cancelled.`,
+  },
+} as const
+
+/**
+ * Tells a customer that their order moved on. `refund` is the amount being
+ * given back to their card, or null when no money had been taken.
+ */
+export function orderStatusEmail({
+  name,
+  number,
+  status,
+  url,
+  refund,
+}: {
+  name: string
+  number: string
+  status: keyof typeof STATUS_COPY
+  url: string
+  refund: string | null
+}) {
+  const copy = STATUS_COPY[status]
+  return render({
+    subject: copy.subject(number),
+    name,
+    intro:
+      status === "CANCELLED" && refund
+        ? `${copy.intro(number)} ${refund} is being refunded to your card; it can take a few days to appear.`
+        : copy.intro(number),
+    action: { label: "View your order", url },
+    outro: "If something looks wrong, reply to this email.",
+  })
+}

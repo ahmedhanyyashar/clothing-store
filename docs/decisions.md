@@ -289,3 +289,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Admins can refund money and change prices, and "who changed this?" must always have an answer. Writing the entry in the same transaction means a change cannot happen without its record, and a record cannot describe a change that failed.
 
 **Cost.** One more write per admin change, and a table that only grows. Old entries can be archived when the volume calls for it.
+
+## 37. Admins move orders along fixed steps, and a refund that fails stays owed
+
+**Decision.** An admin can confirm, ship, deliver or cancel an order, and the allowed steps come from one function that both the screen and the server use, so a button never appears for something the server would refuse. A card order is confirmed only by its payment. Delivering a cash order is when its money is collected, so that is when it becomes paid. Cancelling puts the stock back, closes an unpaid card order's payment page, and refunds a paid card order. The refund is a call to Stripe, so the cancel is saved first; if the refund fails, the order stays cancelled with its payment still marked paid, which the page shows as a refund owed, with a button to retry it. The same idempotency key is used every time, so a refund is made once however often it is tried. Each change locks the order, writes its audit entry in the same transaction, and emails the customer afterwards.
+
+**Why.** Setting any status from any status, as a plain dropdown does, lets a delivered order go back to pending and a cancel skip the stock and the refund. Locking the order means two admins pressing a button together, or a cancel racing a shipment, end in one consistent state. Keeping the refund outside the transaction means a Stripe outage never rolls back a cancel that should have happened, and "cancelled but paid" is a state a person can see and fix instead of money lost in between.
+
+**Cost.** A cancelled paid order can briefly show as unrefunded. Emails are sent without waiting, so a mail failure is logged and not retried.
