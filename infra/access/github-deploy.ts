@@ -28,6 +28,9 @@ const deployPolicy = pulumi.jsonStringify({
     {
       Effect: "Allow",
       Action: [
+        // reading is needed too: a push first asks whether the image exists
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer",
         "ecr:BatchCheckLayerAvailability",
         "ecr:InitiateLayerUpload",
         "ecr:UploadLayerPart",
