@@ -120,3 +120,94 @@ describe("getAdminProduct", () => {
     expect(await prisma.product.count()).toBe(0)
   })
 })
+
+describe("listAdminProducts sorting", () => {
+  async function three() {
+    await makeProduct({
+      name: "Banana Tee",
+      priceCents: 3000,
+    })
+    await makeProduct({
+      name: "Apple Jeans",
+      priceCents: 9000,
+      category: "WOMEN",
+      type: "JEANS",
+    })
+    await makeProduct({
+      name: "Cherry Hoodie",
+      priceCents: 6000,
+      category: "CHILDREN",
+      type: "HOODIES",
+    })
+  }
+  const names = async (
+    sort: Parameters<typeof listAdminProducts>[0]["sort"]
+  ) =>
+    (
+      await listAdminProducts({ page: 1, sort })
+    ).products.map((p) => p.name)
+
+  it("sorts by name", async () => {
+    await three()
+
+    expect(
+      await names({ key: "name", dir: "asc" })
+    ).toEqual([
+      "Apple Jeans",
+      "Banana Tee",
+      "Cherry Hoodie",
+    ])
+    expect(
+      await names({ key: "name", dir: "desc" })
+    ).toEqual([
+      "Cherry Hoodie",
+      "Banana Tee",
+      "Apple Jeans",
+    ])
+  })
+
+  it("sorts by price", async () => {
+    await three()
+
+    expect(
+      await names({ key: "price", dir: "asc" })
+    ).toEqual([
+      "Banana Tee",
+      "Cherry Hoodie",
+      "Apple Jeans",
+    ])
+  })
+
+  it("sorts by category, then type", async () => {
+    await three()
+
+    // the order the categories are declared in: men, women, children
+    expect(
+      await names({ key: "category", dir: "asc" })
+    ).toEqual([
+      "Banana Tee",
+      "Apple Jeans",
+      "Cherry Hoodie",
+    ])
+  })
+
+  it("keeps pages whole when many products tie on the sorted value", async () => {
+    for (let i = 0; i < ADMIN_PRODUCTS_PAGE_SIZE + 5; i++)
+      await makeProduct({ priceCents: 1000 })
+
+    const first = await listAdminProducts({
+      page: 1,
+      sort: { key: "price", dir: "asc" },
+    })
+    const second = await listAdminProducts({
+      page: 2,
+      sort: { key: "price", dir: "asc" },
+    })
+
+    const ids = [...first.products, ...second.products].map(
+      (p) => p.id
+    )
+    expect(ids).toHaveLength(ADMIN_PRODUCTS_PAGE_SIZE + 5)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+})

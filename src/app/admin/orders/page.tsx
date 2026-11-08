@@ -2,22 +2,19 @@ import type { Metadata, Route } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { DataTable } from "@/components/admin/DataTable"
+import { Pagination } from "@/components/admin/Pagination"
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge"
 import { PaymentStatusBadge } from "@/components/orders/PaymentStatusBadge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import type { OrderStatus } from "@/generated/prisma/enums"
-import { listAdminOrders } from "@/lib/admin/orders"
+import {
+  DEFAULT_ORDER_SORT,
+  listAdminOrders,
+  ORDER_SORTS,
+} from "@/lib/admin/orders"
+import { parseSort } from "@/lib/admin/sorting"
 import { requireRole } from "@/lib/auth/session"
 import { formatPrice } from "@/lib/catalog/format"
 import { ORDER_STATUS_INFO } from "@/lib/orders/status"
@@ -40,6 +37,8 @@ export default async function AdminOrdersPage({
     status?: string
     q?: string
     page?: string
+    sort?: string
+    dir?: string
   }>
 }) {
   await requireRole("ADMIN", "/admin/orders")
@@ -50,17 +49,32 @@ export default async function AdminOrdersPage({
     1,
     Number.parseInt(params.page ?? "1", 10) || 1
   )
+  const sort = parseSort(
+    params,
+    ORDER_SORTS,
+    DEFAULT_ORDER_SORT
+  )
 
   const { orders, total, pageCount } =
-    await listAdminOrders({ status, q, page })
+    await listAdminOrders({ status, q, page, sort })
   // a page past the end is as missing as any other address
   if (page > pageCount) notFound()
 
-  // links to other pages keep the filters
-  const href = (n: number) => {
+  // links keep the filters and the sort; a new sort starts again at page 1
+  const href = (
+    n: number,
+    order: { key: string; dir: string } = sort
+  ) => {
     const next = new URLSearchParams()
     if (status) next.set("status", status)
     if (q) next.set("q", q)
+    if (
+      order.key !== DEFAULT_ORDER_SORT.key ||
+      order.dir !== DEFAULT_ORDER_SORT.dir
+    ) {
+      next.set("sort", order.key)
+      next.set("dir", order.dir)
+    }
     if (n > 1) next.set("page", String(n))
     const query = next.toString()
     return `/admin/orders${query ? `?${query}` : ""}` as Route
@@ -73,7 +87,8 @@ export default async function AdminOrdersPage({
         <h2 className="text-xl font-semibold">Orders</h2>
         <p className="text-sm text-muted-foreground">
           {total} {total === 1 ? "order" : "orders"}
-          {filtered ? " match" : ""}, newest first.
+          {filtered ? " match" : ""}. Choose a heading to
+          sort.
         </p>
       </div>
 
@@ -108,6 +123,9 @@ export default async function AdminOrdersPage({
             defaultValue={q ?? ""}
           />
         </label>
+        {/* filtering keeps the sort */}
+        <input type="hidden" name="sort" value={sort.key} />
+        <input type="hidden" name="dir" value={sort.dir} />
         <Button type="submit">Filter</Button>
         {filtered && (
           <Button asChild variant="ghost">
@@ -123,97 +141,97 @@ export default async function AdminOrdersPage({
             : "There are no orders yet."}
         </p>
       ) : (
-        <Card className="overflow-hidden py-0">
-          <Table>
-            <TableCaption className="sr-only">
-              Orders
-            </TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead className="text-right">
-                  Items
-                </TableHead>
-                <TableHead className="text-right">
-                  Total
-                </TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Placed</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">
-                    <Link
-                      href={
-                        `/admin/orders/${order.number}` as Route
-                      }
-                      className="underline-offset-4 hover:underline"
-                    >
-                      {order.number}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    {order.shipName}
-                    {order.user && (
-                      <span className="block text-xs text-muted-foreground">
-                        {order.user.email}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {order.items.reduce(
-                      (sum, i) => sum + i.quantity,
-                      0
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatPrice(order.totalCents)}
-                  </TableCell>
-                  <TableCell>
-                    <PaymentStatusBadge
-                      method={order.paymentMethod}
-                      status={order.paymentStatus}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <OrderStatusBadge
-                      status={order.status}
-                    />
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {date.format(order.placedAt)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
+        <DataTable
+          caption="Orders"
+          rows={orders}
+          rowKey={(order) => order.id}
+          sort={sort}
+          sortHref={(key, dir) => href(1, { key, dir })}
+          columns={[
+            {
+              id: "number",
+              header: "Order",
+              sortKey: "number",
+              className: "font-medium",
+              cell: (order) => (
+                <Link
+                  href={
+                    `/admin/orders/${order.number}` as Route
+                  }
+                  className="underline-offset-4 hover:underline"
+                >
+                  {order.number}
+                </Link>
+              ),
+            },
+            {
+              id: "customer",
+              header: "Customer",
+              sortKey: "customer",
+              cell: (order) => (
+                <>
+                  {order.shipName}
+                  {order.user && (
+                    <span className="block text-xs text-muted-foreground">
+                      {order.user.email}
+                    </span>
+                  )}
+                </>
+              ),
+            },
+            {
+              id: "items",
+              header: "Items",
+              align: "right",
+              cell: (order) =>
+                order.items.reduce(
+                  (sum, i) => sum + i.quantity,
+                  0
+                ),
+            },
+            {
+              id: "total",
+              header: "Total",
+              sortKey: "total",
+              align: "right",
+              cell: (order) =>
+                formatPrice(order.totalCents),
+            },
+            {
+              id: "payment",
+              header: "Payment",
+              cell: (order) => (
+                <PaymentStatusBadge
+                  method={order.paymentMethod}
+                  status={order.paymentStatus}
+                />
+              ),
+            },
+            {
+              id: "status",
+              header: "Status",
+              sortKey: "status",
+              cell: (order) => (
+                <OrderStatusBadge status={order.status} />
+              ),
+            },
+            {
+              id: "placed",
+              header: "Placed",
+              sortKey: "placed",
+              className: "whitespace-nowrap",
+              cell: (order) => date.format(order.placedAt),
+            },
+          ]}
+        />
       )}
 
-      {pageCount > 1 && (
-        <nav
-          aria-label="Order pages"
-          className="flex items-center gap-3 text-sm"
-        >
-          {page > 1 && (
-            <Button asChild variant="outline" size="sm">
-              <Link href={href(page - 1)}>Previous</Link>
-            </Button>
-          )}
-          <span>
-            Page {page} of {pageCount}
-          </span>
-          {page < pageCount && (
-            <Button asChild variant="outline" size="sm">
-              <Link href={href(page + 1)}>Next</Link>
-            </Button>
-          )}
-        </nav>
-      )}
+      <Pagination
+        label="Order pages"
+        page={page}
+        pageCount={pageCount}
+        href={(n) => href(n)}
+      />
     </>
   )
 }

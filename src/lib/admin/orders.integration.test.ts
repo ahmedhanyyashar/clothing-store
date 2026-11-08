@@ -213,3 +213,97 @@ describe("getAdminOrder", () => {
     ).toBeNull()
   })
 })
+
+describe("listAdminOrders sorting", () => {
+  async function ordersWithTotals() {
+    await bulkOrders(5)
+    const rows = await prisma.order.findMany({
+      orderBy: { number: "asc" },
+    })
+    const totals = [3000, 1000, 5000, 2000, 4000]
+    for (const [i, row] of rows.entries())
+      await prisma.order.update({
+        where: { id: row.id },
+        data: {
+          // the database insists that total = subtotal + shipping
+          subtotalCents: totals[i] - 500,
+          totalCents: totals[i],
+          status: i % 2 ? "SHIPPED" : "PENDING",
+        },
+      })
+  }
+
+  it("sorts by total in either direction", async () => {
+    await ordersWithTotals()
+
+    const asc = await listAdminOrders({
+      page: 1,
+      sort: { key: "total", dir: "asc" },
+    })
+    const desc = await listAdminOrders({
+      page: 1,
+      sort: { key: "total", dir: "desc" },
+    })
+
+    expect(asc.orders.map((o) => o.totalCents)).toEqual([
+      1000, 2000, 3000, 4000, 5000,
+    ])
+    expect(desc.orders.map((o) => o.totalCents)).toEqual([
+      5000, 4000, 3000, 2000, 1000,
+    ])
+  })
+
+  it("sorts by order number, customer name and status", async () => {
+    await ordersWithTotals()
+
+    const byNumber = await listAdminOrders({
+      page: 1,
+      sort: { key: "number", dir: "desc" },
+    })
+    const byCustomer = await listAdminOrders({
+      page: 1,
+      sort: { key: "customer", dir: "asc" },
+    })
+    const byStatus = await listAdminOrders({
+      page: 1,
+      sort: { key: "status", dir: "asc" },
+    })
+
+    expect(byNumber.orders[0].number).toBe("CS-BULK0004")
+    expect(byCustomer.orders[0].shipName).toBe("Customer 0")
+    expect(byStatus.orders.map((o) => o.status)).toEqual([
+      "PENDING",
+      "PENDING",
+      "PENDING",
+      "SHIPPED",
+      "SHIPPED",
+    ])
+  })
+
+  it("keeps pages whole when many orders tie on the sorted value", async () => {
+    await bulkOrders(ADMIN_ORDERS_PAGE_SIZE + 5)
+
+    const first = await listAdminOrders({
+      page: 1,
+      sort: { key: "total", dir: "asc" },
+    })
+    const second = await listAdminOrders({
+      page: 2,
+      sort: { key: "total", dir: "asc" },
+    })
+
+    const ids = [...first.orders, ...second.orders].map(
+      (o) => o.id
+    )
+    expect(ids).toHaveLength(ADMIN_ORDERS_PAGE_SIZE + 5)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it("starts with the newest, as before, when no sort is given", async () => {
+    await bulkOrders(3)
+
+    const { orders } = await listAdminOrders({ page: 1 })
+
+    expect(orders[0].number).toBe("CS-BULK0002")
+  })
+})
