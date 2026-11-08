@@ -22,6 +22,7 @@ A clothing store built with Next.js (App Router), React and TypeScript, backed b
 | `pnpm db:migrate`       | Create and apply a migration after a schema change |
 | `pnpm db:deploy`        | Apply existing migrations                          |
 | `pnpm db:seed`          | Replace the dev catalog with sample products       |
+| `pnpm db:seed:demo`     | The catalog plus demo accounts, orders and log     |
 | `pnpm build`            | Production build                                   |
 
 Run lint, format check, typecheck and tests before declaring a change done. Run the integration tests whenever the change touches the database.
@@ -140,6 +141,7 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - Tests sit next to the code. `*.test.ts` is a unit test: fast, isolated, no database. `*.test.tsx` is a component test: it runs in jsdom and should include an axe accessibility check for new UI. `*.integration.test.ts` talks to the real test database.
 - `e2e/*.spec.ts` are Playwright tests against a production build on port 3100. Import `test` and `expect` from `e2e/support/test`: its fixtures give every test a new user and its own client address, so tests share no state and never trip the rate limiter. Navigate with `open()` from `e2e/support/flows`, which waits for hydration; typing into a form earlier is lost. Read emails through `waitForLink` from `e2e/support/mailpit`. The global setup migrates the test database and loads the sample catalog, which the catalog tests rely on.
 - Do not run integration and end-to-end tests at the same time: they share the test database, and the integration helper empties it.
+- The tests rely on `pnpm db:seed` loading only the catalog. Put anything else in the demo seed (`prisma/demo.ts`), which has its own test. Orders it makes follow the same rules as real ones (totals from `computeTotals`, cash paid only on delivery, a paid card order confirmed); change both together.
 - Integration tests that write data call `resetDb()` from `@/test/reset-db` in `beforeEach`.
 
 ## Git

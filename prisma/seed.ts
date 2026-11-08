@@ -217,6 +217,16 @@ const products: Seed[] = [
 ]
 
 async function main() {
+  await seedCatalog()
+
+  // `pnpm db:seed:demo` adds customers, orders and an admin log on top
+  if (process.argv.includes("--demo")) {
+    const { seedDemo } = await import("./demo")
+    await seedDemo()
+  }
+}
+
+async function seedCatalog() {
   await prisma.product.deleteMany()
 
   for (const [index, product] of products.entries()) {

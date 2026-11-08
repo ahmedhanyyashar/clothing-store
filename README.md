@@ -47,23 +47,24 @@ The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRE
 
 ## Scripts
 
-| Script                                      | Purpose                                      |
-| ------------------------------------------- | -------------------------------------------- |
-| `pnpm dev`                                  | Start the development server                 |
-| `pnpm build` / `pnpm start`                 | Production build, and serve it               |
-| `pnpm lint` / `pnpm lint:fix`               | Check, or fix, lint errors                   |
-| `pnpm format` / `pnpm format:check`         | Write, or check, formatting                  |
-| `pnpm typecheck`                            | Generate route types and run `tsc`           |
-| `pnpm test` / `pnpm test:watch`             | Unit and component tests, once or watching   |
-| `pnpm test:integration`                     | Integration tests (needs `pnpm compose`)     |
-| `pnpm test:e2e`                             | End-to-end tests in a browser (see Testing)  |
-| `pnpm compose` / `pnpm compose:down`        | Start or stop the local databases            |
-| `pnpm db:generate`                          | Generate the Prisma client                   |
-| `pnpm db:migrate` / `pnpm db:deploy`        | Create and apply, or only apply, migrations  |
-| `pnpm admin:grant <email>` / `admin:revoke` | Make an account an admin, or take it away    |
-| `pnpm storage:sweep [--dry-run]`            | Delete photo files nothing uses              |
-| `pnpm db:seed`                              | Replace the dev catalog with sample products |
-| `pnpm db:studio`                            | Browse the database                          |
+| Script                                      | Purpose                                          |
+| ------------------------------------------- | ------------------------------------------------ |
+| `pnpm dev`                                  | Start the development server                     |
+| `pnpm build` / `pnpm start`                 | Production build, and serve it                   |
+| `pnpm lint` / `pnpm lint:fix`               | Check, or fix, lint errors                       |
+| `pnpm format` / `pnpm format:check`         | Write, or check, formatting                      |
+| `pnpm typecheck`                            | Generate route types and run `tsc`               |
+| `pnpm test` / `pnpm test:watch`             | Unit and component tests, once or watching       |
+| `pnpm test:integration`                     | Integration tests (needs `pnpm compose`)         |
+| `pnpm test:e2e`                             | End-to-end tests in a browser (see Testing)      |
+| `pnpm compose` / `pnpm compose:down`        | Start or stop the local databases                |
+| `pnpm db:generate`                          | Generate the Prisma client                       |
+| `pnpm db:migrate` / `pnpm db:deploy`        | Create and apply, or only apply, migrations      |
+| `pnpm admin:grant <email>` / `admin:revoke` | Make an account an admin, or take it away        |
+| `pnpm storage:sweep [--dry-run]`            | Delete photo files nothing uses                  |
+| `pnpm db:seed`                              | Replace the dev catalog with sample products     |
+| `pnpm db:seed:demo`                         | The sample catalog plus demo accounts and orders |
+| `pnpm db:studio`                            | Browse the database                              |
 
 ## Project structure
 
@@ -98,6 +99,10 @@ public/products/  sample product photos, with their credits
 - **Shop** (`/shop`) filters by category and type (several of each at once), searches by name, sorts by newest or price, and shows 12 products a page. Everything is in the URL, for example `/shop?category=men,women&type=jeans&page=2`, so any view can be shared.
 - **Product pages** (`/products/<id>`) show the photos, price, sizes with their availability, and colors.
 - These pages render per request, so stock is always current and the build needs no database.
+
+## Demo data
+
+`pnpm db:seed:demo` loads the sample catalog and then a demo shop on top of it: twelve customers, a demo admin, and 72 orders over the last 60 days in every state (delivered, shipped, confirmed, pending, cancelled, refunded), with the admin log that goes with them and a few sizes running low or sold out. It uses fixed numbers, so it looks the same every time, and running it again replaces the previous demo data without touching other accounts. The demo accounts are `demo@clothing-store.example` and `demo-admin@clothing-store.example`, with the password in `DEMO_PASSWORD` (`demo-password` if it is not set). `pnpm db:seed` loads only the catalog, which is what the tests use.
 
 ## Feedback
 
