@@ -27,6 +27,7 @@
     "admin:grant": "tsx --env-file-if-exists=.env scripts/admin.ts grant",
     "admin:revoke": "tsx --env-file-if-exists=.env scripts/admin.ts revoke",
     "storage:setup": "tsx --env-file-if-exists=.env scripts/storage-setup.ts",
+    "storage:sweep": "tsx --env-file-if-exists=.env scripts/storage-sweep.ts",
     "db:studio": "prisma studio",
     "compose": "docker compose -f docker/compose.yaml up -d --wait",
     "compose:down": "docker compose -f docker/compose.yaml down",

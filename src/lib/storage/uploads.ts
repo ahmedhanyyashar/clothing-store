@@ -10,6 +10,7 @@ import { newPhotoKey } from "./keys"
 import {
   isPhotoKey,
   MAX_PHOTO_BYTES,
+  UPLOAD_LIFETIME_MS,
   type PhotoType,
 } from "./rules"
 import { SNIFF_BYTES, sniffPhotoType } from "./sniff"
@@ -40,12 +41,14 @@ export type Inspection =
   | { ok: true; type: PhotoType; size: number }
   | {
       ok: false
-      reason: "missing" | "too-large" | "not-a-photo"
+      reason:
+        "missing" | "too-large" | "not-a-photo" | "expired"
     }
 
 /**
  * Whether `key` holds a real photo: it exists, is within the size limit, and
- * its first bytes are those of a JPEG, PNG or WebP. The upload form already
+ * its first bytes are those of a JPEG, PNG or WebP, and it was uploaded recently
+ * enough to still be attached. The upload form already
  * limits what S3 accepts; this does not trust it, because the key comes back
  * from the browser when the product is saved.
  */
@@ -56,11 +59,13 @@ export async function inspectUpload(
     return { ok: false, reason: "missing" }
 
   let size: number
+  let uploadedAt: Date | undefined
   try {
     const head = await s3.send(
       new HeadObjectCommand({ Bucket: BUCKET, Key: key })
     )
     size = head.ContentLength ?? 0
+    uploadedAt = head.LastModified
   } catch (error) {
     if (isNotFound(error))
       return { ok: false, reason: "missing" }
@@ -68,6 +73,12 @@ export async function inspectUpload(
   }
   if (size > MAX_PHOTO_BYTES)
     return { ok: false, reason: "too-large" }
+  // too old to attach: the sweep may be about to delete it
+  if (
+    uploadedAt &&
+    Date.now() - uploadedAt.getTime() > UPLOAD_LIFETIME_MS
+  )
+    return { ok: false, reason: "expired" }
 
   const object = await s3.send(
     new GetObjectCommand({
