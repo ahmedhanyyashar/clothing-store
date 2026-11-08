@@ -11,11 +11,11 @@ vi.mock("next/navigation", () => ({
 
 describe("AccountNav", () => {
   it("marks the section being viewed", () => {
-    pathname.current = "/account/security"
+    pathname.current = "/account/settings"
     render(<AccountNav />)
 
     expect(
-      screen.getByRole("link", { name: "Security" })
+      screen.getByRole("link", { name: "Settings" })
     ).toHaveAttribute("aria-current", "page")
     expect(
       screen.getByRole("link", { name: "Profile" })

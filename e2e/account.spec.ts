@@ -12,10 +12,10 @@ const NEW_PASSWORD = "a-brand-new-password-1"
 test("the account pages are for signed-in visitors only", async ({
   page,
 }) => {
-  await open(page, "/account/security")
+  await open(page, "/account/settings")
 
   await expect(page).toHaveURL(
-    "/sign-in?redirect=%2Faccount%2Fsecurity"
+    "/sign-in?redirect=%2Faccount%2Fsettings"
   )
 })
 
@@ -42,7 +42,7 @@ test("a user changes their password, is told by email, and signs in with the new
   account,
 }) => {
   await createSignedInUser(page, account)
-  await open(page, "/account/security")
+  await open(page, "/account/settings")
 
   await page
     .getByLabel("Current password")
@@ -78,7 +78,7 @@ test("a wrong current password changes nothing", async ({
   account,
 }) => {
   await createSignedInUser(page, account)
-  await open(page, "/account/security")
+  await open(page, "/account/settings")
 
   await page
     .getByLabel("Current password")
@@ -106,7 +106,7 @@ test("a user deletes their account and can no longer sign in", async ({
   account,
 }) => {
   await createSignedInUser(page, account)
-  await open(page, "/account/security")
+  await open(page, "/account/settings")
 
   await page
     .getByRole("button", { name: "Delete account" })
