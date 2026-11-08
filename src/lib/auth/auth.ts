@@ -3,11 +3,14 @@ import { prismaAdapter } from "better-auth/adapters/prisma"
 import {
   APIError,
   createAuthMiddleware,
+  getSessionFromCtx,
 } from "better-auth/api"
+import { nextCookies } from "better-auth/next-js"
 
 import { env } from "@/env"
 import { PASSWORD_MIN_LENGTH } from "@/lib/auth/validations"
 import { prisma } from "@/lib/db/client"
+import { DEMO_READ_ONLY } from "@/lib/demo/accounts"
 import { sendEmail } from "@/lib/email/mailer"
 import {
   passwordChangedEmail,
@@ -18,6 +21,21 @@ import {
   anonymiseOrders,
   hasActiveOrders,
 } from "@/lib/orders/account"
+
+/**
+ * What a demo account must not do, because the account is shared by everyone
+ * who tries the shop: change who it is, or sign every other visitor out.
+ */
+const DEMO_BLOCKED = new Set([
+  "/change-password",
+  "/set-password",
+  "/change-email",
+  "/update-user",
+  "/delete-user",
+  "/revoke-session",
+  "/revoke-sessions",
+  "/revoke-other-sessions",
+])
 
 export const auth = betterAuth({
   baseURL: env.NEXT_PUBLIC_APP_URL,
@@ -89,9 +107,27 @@ export const auth = betterAuth({
         required: false,
         input: false,
       },
+      isDemo: {
+        type: "boolean",
+        required: false,
+        input: false,
+      },
     },
   },
+  // lets a server action sign someone in and set the session cookie
+  plugins: [nextCookies()],
   hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (!DEMO_BLOCKED.has(ctx.path)) return
+      const session = await getSessionFromCtx(ctx)
+      if (
+        (session?.user as { isDemo?: boolean } | undefined)
+          ?.isDemo
+      )
+        throw new APIError("FORBIDDEN", {
+          message: DEMO_READ_ONLY,
+        })
+    }),
     // The owner is told whenever the password changes, so a change they did
     // not make is noticed. Not awaited, like the other emails here.
     after: createAuthMiddleware(async (ctx) => {

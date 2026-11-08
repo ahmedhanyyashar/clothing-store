@@ -118,6 +118,7 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - Confirm what just happened with a toast (`toast.success` from `sonner`; the one `<Toaster />` is in the root layout), and keep anything the user must read or fix inline: field errors, refusals and failures are `role="alert"` text next to the thing that failed, because a toast disappears. Toasts need no markup in a component, only the call.
 - Use the UI primitives (`Card`, `Table`, `Badge`, `Button`) in admin screens; show order and payment status with `OrderStatusBadge` and `PaymentStatusBadge`. Escape user search text with `escapeLike` from `@/lib/db/like`.
 - Admin lists are a `DataTable` with a `Pagination`. Sort through the address only: read `?sort=&dir=` with `parseSort` and a fixed list of columns, map each column to a database field in the query (never pass the visitor's text to `orderBy`), and always add the id as the last tie-breaker so pages never repeat or lose a row. A heading's link goes through `sortHref` and resets to page 1.
+- A demo account (`user.isDemo`) is shared by every visitor and must stay harmless. Every admin action or route that changes something checks `admin.isDemo` right after `requireRole` and returns `DEMO_READ_ONLY`; a new one needs the same check and a case in `demo-admin.integration.test.ts`. Better Auth endpoints that change an account are listed in `DEMO_BLOCKED` in `@/lib/auth/auth`; add any new one there.
 - Admin menus use `SectionNav` and keep a section highlighted on its sub-pages.
 
 ### Auth

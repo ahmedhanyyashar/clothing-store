@@ -1,6 +1,7 @@
 "use server"
 
 import { requireRole } from "@/lib/auth/session"
+import { DEMO_READ_ONLY } from "@/lib/demo/accounts"
 import { ORDER_NUMBER_PATTERN } from "@/lib/orders/number"
 
 import {
@@ -69,6 +70,9 @@ export async function orderAction(
     "ADMIN",
     `/admin/orders/${number}`
   )
+  // the demo admin looks but does not touch
+  if (admin.isDemo)
+    return { ok: false, message: DEMO_READ_ONLY }
 
   if (
     !ORDER_NUMBER_PATTERN.test(number) ||

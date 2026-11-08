@@ -21,6 +21,22 @@ export default async function SettingsPage() {
   const user = await requireUser("/account/settings")
   const withPassword = await hasPassword(user.id)
 
+  // a demo account is shared by every visitor, so none of this is theirs to change
+  if (user.isDemo)
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Demo account</CardTitle>
+          <CardDescription>
+            This account is shared by everyone who tries the
+            shop, so its password cannot be changed and it
+            cannot be deleted. Create your own account to
+            see these settings.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    )
+
   return (
     <>
       <Card>

@@ -104,6 +104,8 @@ public/products/  sample product photos, with their credits
 
 `pnpm db:seed:demo` loads the sample catalog and then a demo shop on top of it: twelve customers, a demo admin, and 72 orders over the last 60 days in every state (delivered, shipped, confirmed, pending, cancelled, refunded), with the admin log that goes with them and a few sizes running low or sold out. It uses fixed numbers, so it looks the same every time, and running it again replaces the previous demo data without touching other accounts. The demo accounts are `demo@clothing-store.example` and `demo-admin@clothing-store.example`, with the password in `DEMO_PASSWORD` (`demo-password` if it is not set). `pnpm db:seed` loads only the catalog, which is what the tests use.
 
+With `DEMO_MODE="true"` (and `DEMO_PASSWORD` set), the sign-in page offers **Use the demo shopper** and **Use the demo admin**, so a visitor can look around without an account. The password stays on the server. Demo accounts are marked in the database (`isDemo`) and are limited on the server, not just hidden: they cannot change their password, name or email, delete themselves, or sign other visitors out, and the demo admin sees every admin screen but every change it tries (an order step, a product, a photo upload) is refused. No email is sent to demo addresses.
+
 ## Feedback
 
 - **Toasts** confirm an action that succeeded (added to the cart, saved, cancelled, signed out). They are announced to screen readers and have a close button. Errors stay next to the field or button they belong to, so they can be read and fixed.
