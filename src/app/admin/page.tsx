@@ -1,4 +1,5 @@
-import type { Metadata } from "next"
+import type { Metadata, Route } from "next"
+import Link from "next/link"
 
 import { RevenueChart } from "@/components/admin/RevenueChart"
 import {
@@ -129,8 +130,15 @@ export default async function DashboardPage() {
                     className="flex justify-between py-2"
                   >
                     <span>
-                      {size.product.name} · size{" "}
-                      {size.label}
+                      <Link
+                        href={
+                          `/admin/products/${size.product.id}` as Route
+                        }
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {size.product.name}
+                      </Link>{" "}
+                      · size {size.label}
                     </span>
                     <span
                       className={
