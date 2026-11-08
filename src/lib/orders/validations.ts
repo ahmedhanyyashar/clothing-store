@@ -11,6 +11,7 @@ export const placeOrderSchema = z.object({
   addressId: z.string().min(1).max(64),
   // one value per checkout attempt, made by the browser
   idempotencyKey: z.uuid(),
+  paymentMethod: z.enum(["CARD", "CASH_ON_DELIVERY"]),
   items: z
     .array(cartLineSchema)
     .min(1, "Your cart is empty.")

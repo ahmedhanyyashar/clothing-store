@@ -93,6 +93,8 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - A payment for an order that is cancelled is refunded, never ignored. An amount or currency that does not match the order is an error, not a payment.
 - Tests never reach Stripe. `STRIPE_API_URL` points the client at the `stripe-mock` service (compose and CI), and webhooks are tested by calling `handleStripeEvent` or by posting events signed with the test secret. Build orders in tests with `createCardOrder` from `@/test/factories`.
 - Amounts, names and images sent to Stripe come from the order's own copies (`OrderItem`), never from the product.
+- A card order is made first and holds its stock; `paymentUrlFor` then makes or finds its Stripe session (one idempotency key per order). If no payment page can be opened, release the order with `abandonCardOrder`. Whatever cancels a card order also closes its session with `expireSession`.
+- The order page shows what the database says. After Stripe it waits for the webhook (`ConfirmingPayment`); it must never read `?paid=1` as "paid".
 
 ### Auth
 

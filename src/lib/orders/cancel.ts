@@ -21,6 +21,7 @@ export function cancelOrder(
       where: { userId, number },
       select: {
         id: true,
+        paymentMethod: true,
         items: {
           select: {
             productId: true,
@@ -40,6 +41,10 @@ export function cancelOrder(
       data: {
         status: "CANCELLED",
         cancelledAt: new Date(),
+        // a card order that was never paid did not get paid
+        ...(order.paymentMethod === "CARD"
+          ? { paymentStatus: "FAILED" as const }
+          : {}),
       },
     })
     if (count === 0) return "not-cancellable"

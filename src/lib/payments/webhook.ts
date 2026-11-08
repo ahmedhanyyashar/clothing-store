@@ -2,9 +2,9 @@ import type Stripe from "stripe"
 
 import type { Prisma } from "@/generated/prisma/client"
 import { prisma } from "@/lib/db/client"
-import { restoreStock } from "@/lib/orders/stock"
 
 import { CURRENCY, stripe } from "./stripe"
+import { cancelUnpaidOrder } from "./unpaid"
 
 type Tx = Prisma.TransactionClient
 
@@ -220,21 +220,6 @@ async function applyExpiry(
   if (!order || order.paymentMethod !== "CARD") return {}
 
   // only an order still waiting for its payment is given up on
-  if (
-    order.status !== "PENDING" ||
-    order.paymentStatus !== "PENDING"
-  ) {
-    return {}
-  }
-
-  await tx.order.update({
-    where: { id: order.id },
-    data: {
-      status: "CANCELLED",
-      cancelledAt: new Date(),
-      paymentStatus: "FAILED",
-    },
-  })
-  await restoreStock(tx, order.items)
+  await cancelUnpaidOrder(tx, order)
   return {}
 }

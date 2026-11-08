@@ -4,7 +4,9 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { CancelOrder } from "@/components/orders/CancelOrder"
+import { ConfirmingPayment } from "@/components/orders/ConfirmingPayment"
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge"
+import { PayNow } from "@/components/orders/PayNow"
 import { addressLines } from "@/lib/address/validations"
 import { requireUser } from "@/lib/auth/session"
 import { formatPrice } from "@/lib/catalog/format"
@@ -14,6 +16,11 @@ import {
   canCustomerCancel,
   ORDER_STATUS_INFO,
 } from "@/lib/orders/status"
+import {
+  isAwaitingCardPayment,
+  PAYMENT_METHOD_LABEL,
+  paymentStatusLabel,
+} from "@/lib/payments/status"
 
 export const metadata: Metadata = { title: "Order" }
 
@@ -27,7 +34,7 @@ export default async function OrderPage({
   searchParams,
 }: {
   params: Promise<{ number: string }>
-  searchParams: Promise<{ placed?: string }>
+  searchParams: Promise<{ placed?: string; paid?: string }>
 }) {
   const { number } = await params
   const user = await requireUser(
@@ -39,24 +46,59 @@ export default async function OrderPage({
   // someone else's order is indistinguishable from one that does not exist
   const order = await getOrder(user.id, number)
   if (!order) notFound()
-  const { placed } = await searchParams
+  const { placed, paid } = await searchParams
+  const awaitingPayment = isAwaitingCardPayment(order)
 
   return (
     <>
-      {placed === "1" && (
+      {paid === "1" && order.paymentStatus === "PAID" && (
         <div
           role="status"
           className="rounded-lg border border-border bg-accent p-4"
         >
           <p className="font-semibold">
-            Thank you, your order is placed.
+            Payment received. Thank you!
           </p>
           <p className="text-sm">
-            We sent a confirmation to your email. You pay in
-            cash when it arrives.
+            We sent a confirmation to your email.
           </p>
         </div>
       )}
+      {paid === "1" && awaitingPayment && (
+        <ConfirmingPayment />
+      )}
+
+      {awaitingPayment && paid !== "1" && (
+        <div className="space-y-3 rounded-lg border border-border bg-accent p-4">
+          <div>
+            <p className="font-semibold">
+              This order is waiting for its payment.
+            </p>
+            <p className="text-sm">
+              Your items are held for a short while. If the
+              payment is not made, the order is cancelled
+              and they go back on sale.
+            </p>
+          </div>
+          <PayNow number={order.number} />
+        </div>
+      )}
+
+      {placed === "1" &&
+        order.paymentMethod === "CASH_ON_DELIVERY" && (
+          <div
+            role="status"
+            className="rounded-lg border border-border bg-accent p-4"
+          >
+            <p className="font-semibold">
+              Thank you, your order is placed.
+            </p>
+            <p className="text-sm">
+              We sent a confirmation to your email. You pay
+              in cash when it arrives.
+            </p>
+          </div>
+        )}
 
       <div className="space-y-2">
         <p className="text-sm">
@@ -181,7 +223,14 @@ export default async function OrderPage({
         </div>
         <div>
           <h3 className="font-semibold">Payment</h3>
-          <p className="mt-2 text-sm">Cash on delivery</p>
+          <p className="mt-2 text-sm">
+            {PAYMENT_METHOD_LABEL[order.paymentMethod]}
+            {" · "}
+            {paymentStatusLabel(
+              order.paymentMethod,
+              order.paymentStatus
+            )}
+          </p>
         </div>
       </section>
 

@@ -265,3 +265,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Stripe sends each event at least once and again after any error, and a payment and an expiry for the same order can arrive together. Without the locks they could leave an order both cancelled with its stock returned and paid. Marking a refund event handled early would leave a customer charged for an order they do not have if the refund failed. Tests run many copies and a payment racing an expiry, and check the same end state every time.
 
 **Cost.** Two locks per event and one more table. The refund is a call to Stripe, so it cannot be part of the database transaction.
+
+## 34. Card payments use Stripe's hosted page, and the order page believes only the database
+
+**Decision.** The shopper pays on a Stripe-hosted page, so card details never reach this app. The session is built from the order's own copies of names and prices, with the order number as the reference. Asking for the payment page again returns the same session, and "Pay now" on the order page does that. After paying, the shopper returns to the order page, which says "Confirming your payment" and asks again for a few seconds until the webhook has marked it paid; a `?paid=1` in the address never makes an order look paid. Cancelling an unpaid card order also closes its session. The confirmation email for a card order is sent when it is paid.
+
+**Why.** A hosted page keeps the app out of card data rules. Building the session from the order means what is charged is what was shown and stored. Trusting the address for payment would let anyone type their way to a paid order.
+
+**Cost.** A card order's confirmation can lag the redirect by a few seconds, and the page polls to cover it. Product images are sent to Stripe only when the site is on https, because Stripe fetches them itself.
