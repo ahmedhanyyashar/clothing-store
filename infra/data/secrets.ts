@@ -45,7 +45,7 @@ export const stripeWebhookSecret = appSecret(
   "stripe-webhook-secret",
   config.requireSecret("stripeWebhookSecret")
 )
-// an SMTP URL such as smtps://user:password@email-smtp.us-east-1.amazonaws.com
+// an SMTP URL such as smtps://user:password@email-smtp.eu-north-1.amazonaws.com
 export const smtpUrlSecret = appSecret(
   "smtp-url",
   config.requireSecret("smtpUrl")

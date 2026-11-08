@@ -21,7 +21,7 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write # short-lived AWS credentials; no stored keys
+  id-token: write # lets the workflow use a short-lived token, when the account allows it
 
 jobs:
   deploy:
@@ -56,7 +56,11 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
+          # either a role GitHub is trusted to assume (AWS_ROLE_ARN), or the
+          # deploy user's key (githubAuth: key in infra/); see infra/README.md
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - uses: aws-actions/amazon-ecr-login@v2

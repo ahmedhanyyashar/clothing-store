@@ -26,6 +26,14 @@ export const googleClientId = config.require(
   "googleClientId"
 )
 
+/**
+ * How GitHub Actions signs in to AWS to deploy: "oidc" (a short-lived token, no
+ * stored secret) or "key" (an access key kept in GitHub's secrets). See
+ * access/github-deploy.ts for when each applies.
+ */
+export const githubAuth: "oidc" | "key" =
+  config.get("githubAuth") === "key" ? "key" : "oidc"
+
 /** Where budget alerts are sent, and the monthly limit in dollars. */
 export const alertEmail = config.require("alertEmail")
 export const budgetUsd = config.getNumber("budgetUsd") ?? 20

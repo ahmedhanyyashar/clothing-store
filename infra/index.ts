@@ -1,6 +1,6 @@
 import * as pulumi from "@pulumi/pulumi"
 
-import { deployRole } from "./access/github-deploy"
+import { deploy } from "./access/github-deploy"
 
 import "./budget"
 
@@ -15,7 +15,15 @@ import { vpc } from "./network/vpc"
 
 // What the deploy workflow needs, as GitHub environment variables (README.md
 // shows how to copy them over).
-export const AWS_ROLE_ARN = deployRole.arn
+// how GitHub signs in: AWS_ROLE_ARN is a variable, the key is two secrets
+export const AWS_ROLE_ARN =
+  "roleArn" in deploy ? deploy.roleArn : ""
+export const AWS_ACCESS_KEY_ID =
+  "accessKeyId" in deploy ? deploy.accessKeyId : undefined
+export const AWS_SECRET_ACCESS_KEY =
+  "secretAccessKey" in deploy
+    ? deploy.secretAccessKey
+    : undefined
 export const ECR_REPOSITORY_URL = ecrRepo.url
 export const ECS_CLUSTER = cluster.name
 export const ECS_SERVICE = service.service.name

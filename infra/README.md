@@ -37,9 +37,17 @@ The database has no route to the internet.
 | `edge/`     | CloudFront for the site (and a domain, if you have one) and for the photos.     |
 | `budget.ts` | A monthly spending alert by email.                                              |
 
-No keys are stored anywhere. Tasks get their S3 access from a role; GitHub gets
-its deploy access from a short-lived token (OIDC), and only for this repository
-and this environment.
+Tasks get their S3 access from a role, so no AWS key is stored in the app. GitHub
+signs in to deploy in one of two ways (the `githubAuth` setting): a short-lived
+token that AWS trusts for this repository and environment only (`oidc`, no
+secret anywhere), or a dedicated user that can only push images and update this
+one service, whose access key is a GitHub secret (`key`). This account's
+organisation forbids the first, so it uses the second; its trade-off is in
+`access/github-deploy.ts`.
+
+**Region.** The organisation that owns this account allows only `eu-north-1`
+(Stockholm), so that is where everything is built. It also means no domain of
+your own: a CloudFront certificate for one must be in `us-east-1`.
 
 ## What it costs
 
@@ -48,7 +56,7 @@ $18, a small database $13, a small Fargate task $9, plus a few dollars for the
 rest, so about $70 to $80 a month at the default (small) size. The `highAvailability`
 setting (a NAT gateway per zone, a database in two zones, two tasks) roughly
 doubles it.
-These are estimates for us-east-1; check the AWS pricing calculator. The budget
+These are estimates (prices differ a little by region); check the AWS pricing calculator. The budget
 alert emails you at 80% of `budgetUsd` (20 by default).
 
 It is meant to be applied for a demonstration and then removed with
@@ -65,7 +73,7 @@ stack, which would make the stack depend on itself):
 ```bash
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 BUCKET=clothing-store-pulumi-state-$ACCOUNT
-aws s3api create-bucket --bucket $BUCKET --region us-east-1
+aws s3api create-bucket --bucket $BUCKET --region eu-north-1 \n  --create-bucket-configuration LocationConstraint=eu-north-1
 aws s3api put-bucket-versioning --bucket $BUCKET --versioning-configuration Status=Enabled
 aws s3api put-public-access-block --bucket $BUCKET --public-access-block-configuration   BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
 pulumi login s3://$BUCKET
@@ -98,7 +106,7 @@ pulumi config set --secret betterAuthSecret "$(openssl rand -base64 32)"
 pulumi config set --secret googleClientSecret <from the Google console>
 pulumi config set --secret stripeSecretKey <sk_test_... from Stripe>
 pulumi config set --secret stripeWebhookSecret <whsec_... see below>
-pulumi config set --secret smtpUrl "smtps://USER:PASSWORD@email-smtp.us-east-1.amazonaws.com"
+pulumi config set --secret smtpUrl "smtps://USER:PASSWORD@email-smtp.eu-north-1.amazonaws.com"
 # optional, for a public demo (shows the "use a demo account" buttons):
 pulumi config set --secret demoPassword <at least 8 characters>
 ```
@@ -119,9 +127,13 @@ The first apply takes about 15 minutes, mostly the database and CloudFront.
 1. **Copy the outputs into a GitHub environment.** In the repository settings,
    create an environment named `production` and add these as
    _variables_ (none is secret). `pulumi stack output NAME` prints each:
-   `AWS_ROLE_ARN`, `ECR_REPOSITORY_URL`, `ECS_CLUSTER`, `ECS_SERVICE`,
+   `ECR_REPOSITORY_URL`, `ECS_CLUSTER`, `ECS_SERVICE`,
    `MIGRATION_TASK_DEFINITION`, `SUBNET_IDS`, `SECURITY_GROUP_ID`, `APP_URL`,
-   `S3_BUCKET`, `S3_PUBLIC_URL`, and also `AWS_REGION` (`us-east-1`). Add
+   `S3_BUCKET`, `S3_PUBLIC_URL`, and also `AWS_REGION` (`eu-north-1`). With
+   `githubAuth: key`, add the deploy user's key as two _secrets_ of the same
+   environment (`pulumi stack output AWS_ACCESS_KEY_ID --show-secrets`, and the
+   same for `AWS_SECRET_ACCESS_KEY`); with `oidc`, add `AWS_ROLE_ARN` as a
+   variable instead. Add
    `NEXT_PUBLIC_GA_ID` too if you use analytics.
 2. **Tell Google and Stripe the address.** `APP_URL` is where the site lives
    (a `dxxxx.cloudfront.net` address unless you set `domainName`). Add
@@ -157,7 +169,7 @@ will accept every setting.
 docker run -d --rm --name floci -p 4566:4566 floci/floci:2.0.1
 export PULUMI_CONFIG_PASSPHRASE=local AWS_ENDPOINT_URL=http://localhost:4566   AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_REGION=us-east-1
 pulumi login file://.pulumi-state && pulumi stack init local
-pulumi config set aws:region us-east-1
+pulumi config set aws:region eu-north-1
 pulumi config set aws:skipCredentialsValidation true
 pulumi config set aws:skipMetadataApiCheck true
 pulumi config set aws:skipRequestingAccountId true
