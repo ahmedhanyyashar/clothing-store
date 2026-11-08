@@ -59,6 +59,19 @@ export const appSecurityGroup = new aws.ec2.SecurityGroup(
   }
 )
 
+// A security group made by Pulumi has no outgoing rule unless it is given one
+// (the console's "allow all" default is removed), so without this the load
+// balancer could not reach the app and every health check would time out.
+new aws.vpc.SecurityGroupEgressRule("alb-to-app", {
+  securityGroupId: albSecurityGroup.id,
+  referencedSecurityGroupId: appSecurityGroup.id,
+  ipProtocol: "tcp",
+  fromPort: 3000,
+  toPort: 3000,
+  description:
+    "The load balancer may reach the app, and nothing else",
+})
+
 export const dbSecurityGroup = new aws.ec2.SecurityGroup(
   "db",
   {
