@@ -217,3 +217,19 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** A parcel that cannot be delivered costs more than a form that asks for the right things, and the same rules in the browser and on the server cannot disagree. Autocomplete and maps need a paid provider, a key, and a consent and Content-Security-Policy decision, and the form works well without them. It is written so a provider can fill the same fields later. "At most one default" is enforced by the database, and a per-user lock keeps simultaneous requests from breaking it or the limit of 3.
 
 **Cost.** Adding a country is a code change. Postal code patterns check the format, not that the code exists. Typing a whole address is slower than choosing one from suggestions.
+
+## 28. Stock is taken by the database, inside one transaction
+
+**Decision.** Placing an order reads the current prices and stock inside one transaction and takes the stock with an update that only succeeds while `stock >= quantity`. If any line fails, the transaction rolls back, no stock moves, and the response names each line and how many are left. Lines are locked in a fixed order. The browser sends product ids, sizes and quantities and nothing else: never a price, a name or a total.
+
+**Why.** A check followed by a write lets two buyers pass the check together and oversell. Putting the condition in the UPDATE makes the database the judge, and the database also refuses negative stock as a second line of defence. A fixed locking order prevents deadlocks between orders over the same sizes. Integration tests run many buyers at once to prove the stock never goes below zero and a losing buyer takes nothing.
+
+**Cost.** Every order takes row locks on the sizes it buys, which serializes buyers of the same size for a few milliseconds.
+
+## 29. An order is a copy, its totals are whole cents, and a repeated request is the same order
+
+**Decision.** An order stores the name, size, image and unit price of each item and the delivery address, as they were at purchase. Prices are integer cents. Shipping is a flat $5.00, free from $75.00, in one file, and prices include tax, so there is no tax line. The total is the subtotal plus shipping, and the database checks that. Each checkout attempt has one key, and a repeated request with that key returns the existing order instead of making another. Order numbers are random, readable codes such as `CS-7K2M9QXD`.
+
+**Why.** Products and saved addresses change and disappear; an order is a record of a sale and must not change with them. Cents avoid fractions. A key stops a double click, a retry or a dropped connection from making two orders. Random numbers say nothing about how many orders exist.
+
+**Cost.** Order rows are wider, and shipping is one rule for everywhere. A different rate per country or a tax line means changing the pricing file and the order columns.

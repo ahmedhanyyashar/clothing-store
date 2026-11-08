@@ -12,6 +12,18 @@ enum Role {
   ADMIN
 }
 
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+}
+
 model User {
   id            String    @id
   name          String
@@ -24,6 +36,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   addresses     Address[]
+  orders        Order[]
 
   @@unique([email])
   @@map("user")
@@ -118,6 +131,7 @@ model Product {
   images ProductImage[]
   sizes  ProductSize[]
   colors ProductColor[]
+  orderItems OrderItem[]
 
   @@index([category, type])
   @@index([createdAt])
@@ -181,4 +195,61 @@ model Address {
 
   @@index([userId])
   @@map("address")
+}
+
+// An order is a record of what was sold, to whom, and at what price, at one
+// moment. It copies the product details and the delivery address instead of
+// pointing at them, because products and saved addresses are edited and
+// deleted while an order must stay as it was.
+model Order {
+  id             String        @id @default(cuid())
+  // what the customer sees and quotes, for example CS-7K2M9QXD
+  number         String        @unique
+  // null once the account is deleted; the order itself is kept
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  status         OrderStatus   @default(PENDING)
+  paymentMethod  PaymentMethod
+  subtotalCents  Int
+  shippingCents  Int
+  totalCents     Int
+  // one value per checkout attempt, so a repeated request returns the same order
+  idempotencyKey String        @unique
+
+  // the delivery address as it was at purchase
+  shipName       String
+  shipPhone      String
+  shipLine1      String
+  shipLine2      String?
+  shipCity       String
+  shipRegion     String?
+  shipPostalCode String?
+  shipCountry    String
+  shipNotes      String?
+
+  placedAt       DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  cancelledAt    DateTime?
+
+  items          OrderItem[]
+
+  @@index([userId, placedAt])
+  @@map("order")
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // null if the product is deleted later; the copied fields below remain
+  productId      String?
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name           String
+  size           String
+  imageUrl       String?
+  unitPriceCents Int
+  quantity       Int
+
+  @@index([orderId])
+  @@map("order_item")
 }
