@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/client"
+import { logger } from "@/lib/logger"
 
 // Readiness: can this instance serve requests that need the database? Kept
 // apart from /api/health so a database outage takes an instance out of
@@ -8,7 +9,7 @@ export async function GET() {
     await prisma.$queryRaw`SELECT 1`
     return Response.json({ status: "ok" })
   } catch (error) {
-    console.error("readiness check failed", error)
+    logger.error("readiness check failed", error)
     return Response.json(
       { status: "unavailable" },
       { status: 503 }

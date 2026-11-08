@@ -4,6 +4,7 @@ import { formatPrice } from "@/lib/catalog/format"
 import { prisma } from "@/lib/db/client"
 import { sendEmail } from "@/lib/email/mailer"
 import { orderStatusEmail } from "@/lib/email/templates"
+import { logger } from "@/lib/logger"
 import { restoreStock } from "@/lib/orders/stock"
 import { expireSession } from "@/lib/payments/checkout"
 import { refundPayment } from "@/lib/payments/refund"
@@ -238,7 +239,7 @@ async function completeRefund(
     },
   })
   if (!order.stripePaymentIntentId) {
-    console.error(
+    logger.error(
       `order ${order.number}: no payment to refund`
     )
     return "owed"
@@ -250,7 +251,7 @@ async function completeRefund(
       order.stripePaymentIntentId
     )
   } catch (error) {
-    console.error(
+    logger.error(
       `order ${order.number}: refund failed`,
       error
     )
@@ -306,7 +307,7 @@ function notify(
       }),
     })
   })().catch((error) =>
-    console.error("order status email failed", error)
+    logger.error("order status email failed", error)
   )
 }
 

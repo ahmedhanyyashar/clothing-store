@@ -7,6 +7,7 @@ import {
 } from "vitest"
 
 import { env } from "@/env"
+import { logger } from "@/lib/logger"
 import { stripe } from "@/lib/payments/stripe"
 import {
   handleStripeEvent,
@@ -54,7 +55,7 @@ function request(
 
 beforeEach(() => {
   vi.resetAllMocks()
-  vi.spyOn(console, "error").mockImplementation(() => {})
+  vi.spyOn(logger, "error").mockImplementation(() => {})
 })
 
 describe("POST /api/webhooks/stripe", () => {

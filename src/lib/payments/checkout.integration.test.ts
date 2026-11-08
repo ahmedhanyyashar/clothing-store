@@ -9,6 +9,7 @@ import {
 } from "vitest"
 
 import { prisma } from "@/lib/db/client"
+import { logger } from "@/lib/logger"
 import { cancelOrder } from "@/lib/orders/cancel"
 import { placeOrder } from "@/lib/orders/place"
 import {
@@ -197,7 +198,7 @@ describe("the payment page of a card order", () => {
   })
 
   it("reports that Stripe is unavailable instead of throwing", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.spyOn(logger, "error").mockImplementation(() => {})
     const { order } = await createCardOrder()
     vi.spyOn(
       stripe.checkout.sessions,
@@ -310,7 +311,7 @@ describe("closing a payment page", () => {
   })
 
   it("does not fail when Stripe refuses, because a late payment is refunded anyway", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.spyOn(logger, "error").mockImplementation(() => {})
     vi.spyOn(
       stripe.checkout.sessions,
       "expire"

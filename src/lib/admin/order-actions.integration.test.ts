@@ -9,6 +9,7 @@ import {
 
 import { prisma } from "@/lib/db/client"
 import { sendEmail } from "@/lib/email/mailer"
+import { logger } from "@/lib/logger"
 import { stripe } from "@/lib/payments/stripe"
 import {
   createCardOrder,
@@ -336,7 +337,7 @@ describe("cancelling", () => {
   })
 
   it("leaves a refund that failed as owed, and a retry settles it once", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.spyOn(logger, "error").mockImplementation(() => {})
     const create = vi.spyOn(stripe.refunds, "create")
     create.mockRejectedValueOnce(
       new Error("Stripe is down")
@@ -378,7 +379,7 @@ describe("cancelling", () => {
   })
 
   it("reports a refund as owed, instead of failing, when there is no payment to refund", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.spyOn(logger, "error").mockImplementation(() => {})
     const { order } = await paidCard({ intent: null })
 
     expect(

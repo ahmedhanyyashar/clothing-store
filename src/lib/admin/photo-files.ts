@@ -1,4 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client"
+import { logger } from "@/lib/logger"
 import {
   deleteObjects,
   inspectUpload,
@@ -44,6 +45,6 @@ export async function deleteFiles(keys: string[]) {
   try {
     await deleteObjects(keys)
   } catch (error) {
-    console.error("photo files could not be deleted", error)
+    logger.error("photo files could not be deleted", error)
   }
 }
