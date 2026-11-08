@@ -119,6 +119,7 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - Use the UI primitives (`Card`, `Table`, `Badge`, `Button`) in admin screens; show order and payment status with `OrderStatusBadge` and `PaymentStatusBadge`. Escape user search text with `escapeLike` from `@/lib/db/like`.
 - Admin lists are a `DataTable` with a `Pagination`. Sort through the address only: read `?sort=&dir=` with `parseSort` and a fixed list of columns, map each column to a database field in the query (never pass the visitor's text to `orderBy`), and always add the id as the last tie-breaker so pages never repeat or lose a row. A heading's link goes through `sortHref` and resets to page 1.
 - A demo account (`user.isDemo`) is shared by every visitor and must stay harmless. Every admin action or route that changes something checks `admin.isDemo` right after `requireRole` and returns `DEMO_READ_ONLY`; a new one needs the same check and a case in `demo-admin.integration.test.ts`. Better Auth endpoints that change an account are listed in `DEMO_BLOCKED` in `@/lib/auth/auth`; add any new one there.
+- Every response carries a nonce-based Content-Security-Policy from `src/proxy.ts`. A new script needs the nonce (`headers().get("x-nonce")`, as the layout does); do not add `'unsafe-inline'` for scripts. A new origin the browser must reach (an API, an image host) is added in `buildCsp`. Load any third-party script only after consent (`useConsent`).
 - Admin menus use `SectionNav` and keep a section highlighted on its sub-pages.
 
 ### Auth

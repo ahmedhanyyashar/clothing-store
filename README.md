@@ -106,6 +106,12 @@ public/products/  sample product photos, with their credits
 
 With `DEMO_MODE="true"` (and `DEMO_PASSWORD` set), the sign-in page offers **Use the demo shopper** and **Use the demo admin**, so a visitor can look around without an account. The password stays on the server. Demo accounts are marked in the database (`isDemo`) and are limited on the server, not just hidden: they cannot change their password, name or email, delete themselves, or sign other visitors out, and the demo admin sees every admin screen but every change it tries (an order step, a product, a photo upload) is refused. No email is sent to demo addresses.
 
+## Privacy and security headers
+
+- **Legal pages:** the privacy policy, terms of sale and cookie policy (`/privacy`, `/terms`, `/cookies`) are linked from the footer, and the terms and privacy policy from checkout. They describe what the shop actually stores, who receives it and how long it is kept.
+- **Consent:** a first visit shows a banner with two equal choices. Nothing is loaded from Google, and no analytics cookie is set, until "Allow analytics". The choice is kept in a cookie of our own for a year and can be changed from "Cookie settings" in the footer. Set `NEXT_PUBLIC_GA_ID` to turn analytics on at all.
+- **Content Security Policy:** every page gets its own policy with a fresh nonce (`src/proxy.ts`, `src/lib/csp.ts`): scripts run only with that nonce, nothing can frame the site, and connections go only to the site, the photo bucket and (when configured) Google Analytics. Because the nonce is per response, pages render per request.
+
 ## Feedback
 
 - **Toasts** confirm an action that succeeded (added to the cart, saved, cancelled, signed out). They are announced to screen readers and have a close button. Errors stay next to the field or button they belong to, so they can be read and fixed.

@@ -15,6 +15,15 @@ function randomIp() {
 }
 
 export const test = base.extend<{ account: Account }>({
+  // The cookie banner is covered by its own spec; elsewhere it would sit over
+  // the page, so every test starts having chosen "essential only".
+  context: async ({ context, baseURL }, provide) => {
+    await context.addCookies([
+      { name: "consent", value: "denied", url: baseURL! },
+    ])
+    await provide(context)
+  },
+
   // Each test acts as its own client. The auth rate limiter counts requests
   // per address, so without this the tests would throttle one another.
   extraHTTPHeaders: async ({}, provide) => {
