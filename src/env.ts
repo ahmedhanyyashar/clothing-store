@@ -44,6 +44,11 @@ export const env = createEnv({
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
+    // Google Analytics measurement ID. Without it, no analytics code exists.
+    NEXT_PUBLIC_GA_ID: z
+      .string()
+      .regex(/^G-[A-Z0-9]+$/)
+      .optional(),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
@@ -65,6 +70,7 @@ export const env = createEnv({
     DEMO_PASSWORD: process.env.DEMO_PASSWORD,
     DEMO_MODE: process.env.DEMO_MODE,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
   },
   emptyStringAsUndefined: true,
 })

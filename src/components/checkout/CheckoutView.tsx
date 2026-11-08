@@ -432,6 +432,17 @@ export function CheckoutView({
               ? "Pay by card"
               : "Place order"}
         </Button>
+        <p className="mt-2 text-xs text-muted-foreground">
+          By placing your order you accept the{" "}
+          <Link href="/terms" className="underline">
+            terms of sale
+          </Link>{" "}
+          and the{" "}
+          <Link href="/privacy" className="underline">
+            privacy policy
+          </Link>
+          .
+        </p>
         {addresses.length > 0 || (
           <p className="mt-2 text-xs text-muted-foreground">
             Add a delivery address to place your order.
