@@ -1,15 +1,53 @@
+import type { Prisma } from "@/generated/prisma/client"
 import { prisma } from "@/lib/db/client"
 import { escapeLike } from "@/lib/db/like"
 
+import type { Sort } from "./sorting"
+
 export const ADMIN_PRODUCTS_PAGE_SIZE = 20
+
+/** The columns the product list can be sorted by, and the order it starts in. */
+export const PRODUCT_SORTS = [
+  "name",
+  "category",
+  "price",
+  "created",
+] as const
+export type ProductSort = Sort<
+  (typeof PRODUCT_SORTS)[number]
+>
+export const DEFAULT_PRODUCT_SORT: ProductSort = {
+  key: "created",
+  dir: "desc",
+}
+
+function productOrder({
+  key,
+  dir,
+}: ProductSort): Prisma.ProductOrderByWithRelationInput[] {
+  // the id breaks ties, so a product never appears on two pages or on none
+  const tie = { id: "asc" } as const
+  switch (key) {
+    case "name":
+      return [{ name: dir }, tie]
+    case "category":
+      return [{ category: dir }, { type: dir }, tie]
+    case "price":
+      return [{ priceCents: dir }, tie]
+    case "created":
+      return [{ createdAt: dir }, tie]
+  }
+}
 
 /** The shop's products for the admin list: newest first, 20 to a page, searchable by name. */
 export async function listAdminProducts({
   q,
   page,
+  sort = DEFAULT_PRODUCT_SORT,
 }: {
   q?: string
   page: number
+  sort?: ProductSort
 }) {
   const text = q?.trim()
   const where = text
@@ -24,8 +62,7 @@ export async function listAdminProducts({
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
-      // the id breaks ties, so a product never appears on two pages or on none
-      orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+      orderBy: productOrder(sort),
       skip: (page - 1) * ADMIN_PRODUCTS_PAGE_SIZE,
       take: ADMIN_PRODUCTS_PAGE_SIZE,
       select: {

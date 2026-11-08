@@ -3,20 +3,17 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { DataTable } from "@/components/admin/DataTable"
+import { Pagination } from "@/components/admin/Pagination"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { listAdminProducts } from "@/lib/admin/product-queries"
+  DEFAULT_PRODUCT_SORT,
+  listAdminProducts,
+  PRODUCT_SORTS,
+} from "@/lib/admin/product-queries"
+import { parseSort } from "@/lib/admin/sorting"
 import { requireRole } from "@/lib/auth/session"
 import { formatPrice } from "@/lib/catalog/format"
 import {
@@ -29,7 +26,12 @@ export const metadata: Metadata = { title: "Products" }
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>
+  searchParams: Promise<{
+    q?: string
+    page?: string
+    sort?: string
+    dir?: string
+  }>
 }) {
   await requireRole("ADMIN", "/admin/products")
   const params = await searchParams
@@ -38,15 +40,31 @@ export default async function AdminProductsPage({
     1,
     Number.parseInt(params.page ?? "1", 10) || 1
   )
+  const sort = parseSort(
+    params,
+    PRODUCT_SORTS,
+    DEFAULT_PRODUCT_SORT
+  )
 
   const { products, total, pageCount } =
-    await listAdminProducts({ q, page })
+    await listAdminProducts({ q, page, sort })
   // a page past the end is as missing as any other address
   if (page > pageCount) notFound()
 
-  const href = (n: number) => {
+  // links keep the search and the sort; a new sort starts again at page 1
+  const href = (
+    n: number,
+    order: { key: string; dir: string } = sort
+  ) => {
     const next = new URLSearchParams()
     if (q) next.set("q", q)
+    if (
+      order.key !== DEFAULT_PRODUCT_SORT.key ||
+      order.dir !== DEFAULT_PRODUCT_SORT.dir
+    ) {
+      next.set("sort", order.key)
+      next.set("dir", order.dir)
+    }
     if (n > 1) next.set("page", String(n))
     const query = next.toString()
     return `/admin/products${query ? `?${query}` : ""}` as Route
@@ -61,7 +79,7 @@ export default async function AdminProductsPage({
           </h2>
           <p className="text-sm text-muted-foreground">
             {total} {total === 1 ? "product" : "products"}
-            {q ? " match" : ""}, newest first.
+            {q ? " match" : ""}. Choose a heading to sort.
           </p>
         </div>
         <Button asChild>
@@ -82,6 +100,9 @@ export default async function AdminProductsPage({
             defaultValue={q ?? ""}
           />
         </label>
+        {/* searching keeps the sort */}
+        <input type="hidden" name="sort" value={sort.key} />
+        <input type="hidden" name="dir" value={sort.dir} />
         <Button type="submit">Search</Button>
         {q && (
           <Button asChild variant="ghost">
@@ -99,114 +120,109 @@ export default async function AdminProductsPage({
             : "There are no products yet."}
         </p>
       ) : (
-        <Card className="overflow-hidden py-0">
-          <Table>
-            <TableCaption className="sr-only">
-              Products
-            </TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <span className="sr-only">Photo</span>
-                </TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">
-                  Price
-                </TableHead>
-                <TableHead className="text-right">
-                  In stock
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => {
+        <DataTable
+          caption="Products"
+          rows={products}
+          rowKey={(product) => product.id}
+          sort={sort}
+          sortHref={(key, dir) => href(1, { key, dir })}
+          columns={[
+            {
+              id: "photo",
+              header: (
+                <span className="sr-only">Photo</span>
+              ),
+              cell: (product) => {
+                const image = product.images[0]?.url
+                return (
+                  <div className="relative h-12 w-10 overflow-hidden rounded bg-muted">
+                    {image && (
+                      // decorative: the name beside it says what it is
+                      <Image
+                        src={image}
+                        alt=""
+                        fill
+                        sizes="40px"
+                        className="object-cover"
+                      />
+                    )}
+                  </div>
+                )
+              },
+            },
+            {
+              id: "name",
+              header: "Name",
+              sortKey: "name",
+              className: "font-medium",
+              cell: (product) => (
+                <>
+                  <Link
+                    href={
+                      `/admin/products/${product.id}` as Route
+                    }
+                    className="underline-offset-4 hover:underline"
+                  >
+                    {product.name}
+                  </Link>
+                  {product.bestSeller && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-2"
+                    >
+                      Best seller
+                    </Badge>
+                  )}
+                </>
+              ),
+            },
+            {
+              id: "category",
+              header: "Category",
+              sortKey: "category",
+              cell: (product) => (
+                <>
+                  {CATEGORY_INFO[product.category].label} ·{" "}
+                  {TYPE_INFO[product.type].label}
+                </>
+              ),
+            },
+            {
+              id: "price",
+              header: "Price",
+              sortKey: "price",
+              align: "right",
+              cell: (product) =>
+                formatPrice(product.priceCents),
+            },
+            {
+              id: "stock",
+              header: "In stock",
+              align: "right",
+              cell: (product) => {
                 const stock = product.sizes.reduce(
                   (sum, s) => sum + s.stock,
                   0
                 )
-                const image = product.images[0]?.url
-                return (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <div className="relative h-12 w-10 overflow-hidden rounded bg-muted">
-                        {image && (
-                          // decorative: the name beside it says what it is
-                          <Image
-                            src={image}
-                            alt=""
-                            fill
-                            sizes="40px"
-                            className="object-cover"
-                          />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={
-                          `/admin/products/${product.id}` as Route
-                        }
-                        className="underline-offset-4 hover:underline"
-                      >
-                        {product.name}
-                      </Link>
-                      {product.bestSeller && (
-                        <Badge
-                          variant="secondary"
-                          className="ml-2"
-                        >
-                          Best seller
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {
-                        CATEGORY_INFO[product.category]
-                          .label
-                      }{" "}
-                      · {TYPE_INFO[product.type].label}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatPrice(product.priceCents)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {stock === 0 ? (
-                        <Badge variant="destructive">
-                          Sold out
-                        </Badge>
-                      ) : (
-                        stock
-                      )}
-                    </TableCell>
-                  </TableRow>
+                return stock === 0 ? (
+                  <Badge variant="destructive">
+                    Sold out
+                  </Badge>
+                ) : (
+                  stock
                 )
-              })}
-            </TableBody>
-          </Table>
-        </Card>
+              },
+            },
+          ]}
+        />
       )}
 
-      {pageCount > 1 && (
-        <nav
-          aria-label="Product pages"
-          className="flex items-center gap-3 text-sm"
-        >
-          {page > 1 && (
-            <Button asChild variant="outline" size="sm">
-              <Link href={href(page - 1)}>Previous</Link>
-            </Button>
-          )}
-          <span>
-            Page {page} of {pageCount}
-          </span>
-          {page < pageCount && (
-            <Button asChild variant="outline" size="sm">
-              <Link href={href(page + 1)}>Next</Link>
-            </Button>
-          )}
-        </nav>
-      )}
+      <Pagination
+        label="Product pages"
+        page={page}
+        pageCount={pageCount}
+        href={(n) => href(n)}
+      />
     </>
   )
 }

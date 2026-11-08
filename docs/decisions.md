@@ -329,3 +329,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Uploads that are never saved, and deletions that failed after a product was saved, leave files nothing refers to, and the bucket cannot know which are safe to remove. Doing it in the app on a timer would need a scheduler the app does not have. Checking for references and deleting are two steps, so a file attached between them could be deleted; making the attach window shorter than the sweep's wait means any file the sweep can take is already too old to attach, and no lock is needed.
 
 **Cost.** An admin who leaves a product form open for more than half a day has to add the photos again. Until the sweep is scheduled, unused files stay.
+
+## 42. Lists sort through the address, on a fixed list of columns
+
+**Decision.** The admin order and product lists sort when a heading is chosen. The sort is two address parameters (`sort`, `dir`) read on the server against a fixed list of columns for each table; anything else falls back to the default order. The query maps each column to a database field and adds the row id as a last tie-breaker. The table is a server component with plain links in its headings; there is no client-side table state.
+
+**Why.** Both lists already filter and page on the server through the address, so keeping the sort in the same place means one source of truth: a sorted view survives a reload, can be shared, works without scripts, and is kept by the search and the paging. A client-side table library would hold the same state a second time and could only sort the rows of one page, which is a wrong answer for a list of many pages. Accepting only named columns keeps the visitor's text out of the query, and the id tie-breaker stops a page repeating or dropping a row when many rows share the sorted value.
+
+**Cost.** A sort is a page load, not an instant reorder. A column that is not stored in the database (for example the total stock of a product, which is a sum over sizes) cannot be sorted without extra work, so it is not offered.
