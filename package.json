@@ -24,6 +24,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
+    "admin:grant": "tsx --env-file-if-exists=.env scripts/admin.ts grant",
+    "admin:revoke": "tsx --env-file-if-exists=.env scripts/admin.ts revoke",
     "db:studio": "prisma studio",
     "compose": "docker compose -f docker/compose.yaml up -d --wait",
     "compose:down": "docker compose -f docker/compose.yaml down",

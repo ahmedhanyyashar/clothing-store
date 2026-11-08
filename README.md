@@ -45,21 +45,22 @@ The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRE
 
 ## Scripts
 
-| Script                               | Purpose                                      |
-| ------------------------------------ | -------------------------------------------- |
-| `pnpm dev`                           | Start the development server                 |
-| `pnpm build` / `pnpm start`          | Production build, and serve it               |
-| `pnpm lint` / `pnpm lint:fix`        | Check, or fix, lint errors                   |
-| `pnpm format` / `pnpm format:check`  | Write, or check, formatting                  |
-| `pnpm typecheck`                     | Generate route types and run `tsc`           |
-| `pnpm test` / `pnpm test:watch`      | Unit and component tests, once or watching   |
-| `pnpm test:integration`              | Integration tests (needs `pnpm compose`)     |
-| `pnpm test:e2e`                      | End-to-end tests in a browser (see Testing)  |
-| `pnpm compose` / `pnpm compose:down` | Start or stop the local databases            |
-| `pnpm db:generate`                   | Generate the Prisma client                   |
-| `pnpm db:migrate` / `pnpm db:deploy` | Create and apply, or only apply, migrations  |
-| `pnpm db:seed`                       | Replace the dev catalog with sample products |
-| `pnpm db:studio`                     | Browse the database                          |
+| Script                                      | Purpose                                      |
+| ------------------------------------------- | -------------------------------------------- |
+| `pnpm dev`                                  | Start the development server                 |
+| `pnpm build` / `pnpm start`                 | Production build, and serve it               |
+| `pnpm lint` / `pnpm lint:fix`               | Check, or fix, lint errors                   |
+| `pnpm format` / `pnpm format:check`         | Write, or check, formatting                  |
+| `pnpm typecheck`                            | Generate route types and run `tsc`           |
+| `pnpm test` / `pnpm test:watch`             | Unit and component tests, once or watching   |
+| `pnpm test:integration`                     | Integration tests (needs `pnpm compose`)     |
+| `pnpm test:e2e`                             | End-to-end tests in a browser (see Testing)  |
+| `pnpm compose` / `pnpm compose:down`        | Start or stop the local databases            |
+| `pnpm db:generate`                          | Generate the Prisma client                   |
+| `pnpm db:migrate` / `pnpm db:deploy`        | Create and apply, or only apply, migrations  |
+| `pnpm admin:grant <email>` / `admin:revoke` | Make an account an admin, or take it away    |
+| `pnpm db:seed`                              | Replace the dev catalog with sample products |
+| `pnpm db:studio`                            | Browse the database                          |
 
 ## Project structure
 
@@ -73,6 +74,8 @@ src/lib/cart/     the cart store, its server lookup and the pure totals
 src/lib/address/  saved addresses: the country rules, validation and the queries
 src/lib/orders/   placing and reading orders, shipping and statuses
 src/lib/payments/ the Stripe client, the webhook and the card payment page
+src/lib/admin/    admin roles, the audit log and the dashboard queries
+scripts/          commands an operator runs (admin:grant, admin:revoke)
 src/lib/auth/     Better Auth setup, server-side guards and form schemas
 src/lib/email/    SMTP mailer and email templates
 src/proxy.ts      redirects for signed-out and signed-in visitors
@@ -135,6 +138,13 @@ public/products/  sample product photos, with their credits
 - **The webhook** (`POST /api/webhooks/stripe`) is the only thing that marks an order paid. It checks Stripe's signature first, applies each event once however often Stripe sends it, and refuses a payment whose amount does not match the order. A payment that arrives after the order was cancelled is refunded automatically.
 - **Trying it by hand:** put a Stripe test secret key in `.env`, run `stripe listen --forward-to localhost:3000/api/webhooks/stripe` (the Stripe CLI) and copy the `whsec_` secret it prints into `STRIPE_WEBHOOK_SECRET`. Pay with the test card 4242 4242 4242 4242, any future date and any CVC.
 - **Tests** never reach Stripe: `pnpm compose` starts `stripe-mock`, a server generated from Stripe's own API description, and the webhook is tested with events signed by the test secret.
+
+## Admin
+
+- **Becoming an admin** is the operator's job, not the app's: `pnpm admin:grant <email>` promotes an existing account whose address is verified, and `pnpm admin:revoke <email>` takes the role away (it refuses to remove the last admin unless given `--force`). Nothing in the web app can create an admin, and a role cannot be set from a request. In production, run it with `DATABASE_URL` pointing at the production database.
+- **`/admin`** is for admins only. Every admin page checks the role on the server; anyone else, signed in or not, gets the same "page not found", so the area's existence is not revealed. The "Admin" link in the header is shown to admins only and is display, not protection.
+- **The dashboard** shows revenue for the last 30 days and all time, orders waiting, customers, products, best sellers and sizes running low. Revenue counts a payment on the day it was paid (UTC), and orders that were refunded do not count. The chart is plain markup with a table of the same numbers for screen readers.
+- **The audit log** (`/admin/audit`) lists every change made by an admin or an operator, newest first. An entry is written in the same transaction as the change it describes, and it keeps the name of whoever did it even if their account is later deleted (see decisions 35 and 36).
 
 ## Testing
 

@@ -39,6 +39,12 @@ export function UserMenu() {
 
   return (
     <div className="flex items-center gap-2">
+      {/* display only: every admin page checks the role on the server */}
+      {session.user.role === "ADMIN" && (
+        <Button asChild variant="ghost">
+          <Link href="/admin">Admin</Link>
+        </Button>
+      )}
       <Button asChild variant="ghost" className="max-w-40">
         <Link href="/account" className="truncate">
           {session.user.name}

@@ -64,7 +64,7 @@ const eslintConfig = [
 
   {
     // a command-line script reports its result on the console
-    files: ["prisma/seed.ts"],
+    files: ["prisma/seed.ts", "scripts/**/*.ts"],
     rules: { "no-console": "off" },
   },
 

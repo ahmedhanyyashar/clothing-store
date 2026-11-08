@@ -47,6 +47,7 @@ model User {
   accounts      Account[]
   addresses     Address[]
   orders        Order[]
+  auditEntries  AuditLog[]
 
   @@unique([email])
   @@map("user")
@@ -278,4 +279,25 @@ model StripeEvent {
   receivedAt DateTime @default(now())
 
   @@map("stripe_event")
+}
+
+// What admins (and operators) changed, and when. An entry is written in the
+// same transaction as the change it describes, so neither exists without the
+// other. The actor is copied as text, because the account can be deleted.
+model AuditLog {
+  id         String   @id @default(cuid())
+  // null for an operator's command, which has no account
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorLabel String
+  // a dotted name such as order.ship or admin.grant
+  action     String
+  targetType String
+  targetId   String
+  summary    String
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_log")
 }
