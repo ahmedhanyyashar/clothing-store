@@ -1,0 +1,17 @@
+# keep the build context small and free of secrets
+.git
+.github
+.husky
+.vscode
+.claude
+.next
+.reports
+node_modules
+infra/node_modules
+infra/.pulumi
+e2e
+docker
+*.md
+.env
+.env.*
+!.env.example

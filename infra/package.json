@@ -1,0 +1,19 @@
+{
+  "name": "clothing-store-infra",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^7.44.0",
+    "@pulumi/awsx": "^3.9.0",
+    "@pulumi/pulumi": "^3.261.0",
+    "@pulumi/random": "^4.21.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "^5"
+  }
+}

@@ -21,6 +21,8 @@ describe("buildCsp", () => {
     const on = buildCsp({
       nonce: "n",
       photoOrigin: "https://photos.example.com",
+      uploadOrigin:
+        "https://bucket.s3.us-east-1.amazonaws.com",
       analytics: true,
     })
 
@@ -29,8 +31,9 @@ describe("buildCsp", () => {
     expect(on).toContain(
       "img-src 'self' data: blob: https://photos.example.com"
     )
+    // photos are shown from one place and uploaded to another
     expect(on).toContain(
-      "connect-src 'self' https://photos.example.com"
+      "connect-src 'self' https://bucket.s3.us-east-1.amazonaws.com"
     )
     expect(on).toContain("https://*.google-analytics.com")
   })

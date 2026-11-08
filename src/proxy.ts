@@ -18,6 +18,13 @@ const photoOrigin = new URL(
   })
 ).origin
 
+// The bucket the browser posts photos to: the stand-in server locally, otherwise
+// the bucket's own address. Photos are shown from somewhere else (a CDN, when
+// S3_PUBLIC_URL is set), so the two origins are not always the same.
+const uploadOrigin = env.S3_ENDPOINT_URL
+  ? new URL(env.S3_ENDPOINT_URL).origin
+  : `https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com`
+
 // Gives every page its own Content-Security-Policy, and sends signed-out
 // visitors away from the private areas. The redirect only checks that a session
 // cookie exists, to save a round trip; it does not prove the session is valid,
@@ -42,6 +49,7 @@ export function proxy(request: NextRequest) {
     nonce,
     dev: process.env.NODE_ENV === "development",
     photoOrigin,
+    uploadOrigin,
     analytics: Boolean(env.NEXT_PUBLIC_GA_ID),
   })
   const headers = new Headers(request.headers)

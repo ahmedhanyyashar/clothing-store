@@ -112,6 +112,12 @@ With `DEMO_MODE="true"` (and `DEMO_PASSWORD` set), the sign-in page offers **Use
 - **Consent:** a first visit shows a banner with two equal choices. Nothing is loaded from Google, and no analytics cookie is set, until "Allow analytics". The choice is kept in a cookie of our own for a year and can be changed from "Cookie settings" in the footer. Set `NEXT_PUBLIC_GA_ID` to turn analytics on at all.
 - **Content Security Policy:** every page gets its own policy with a fresh nonce (`src/proxy.ts`, `src/lib/csp.ts`): scripts run only with that nonce, nothing can frame the site, and connections go only to the site, the photo bucket and (when configured) Google Analytics. Because the nonce is per response, pages render per request.
 
+## Infrastructure and deployment
+
+- **`Dockerfile`** builds two images from one commit: the app (a Next.js standalone server) and a one-off migration job (`--target migrate`).
+- **`infra/`** is the AWS setup as a Pulumi program: a VPC with public, app and data tiers over two zones, ECS Fargate behind a load balancer and CloudFront, RDS Postgres in the data tier, a private S3 bucket for photos served through its own CloudFront address, Secrets Manager, and a monthly budget alert. [infra/README.md](infra/README.md) shows the topology, the cost, and how to apply and remove it.
+- **Deploy** is continuous delivery to production (`.github/workflows/deploy.yml`): when CI passes on `main`, the commit that passed is built, its migration runs first (and stops everything if it fails), the service rolls onto the new image, and the workflow checks the rollout really completed and the site answers. There are two environments, local and production. A repository variable, `DEPLOY_ENABLED`, switches it on and off so merges do not deploy to a stack that is not running. GitHub signs in to AWS with a short-lived token for this repository and environment; no AWS keys are stored.
+
 ## Logs, errors and quality checks
 
 - **Logs** are one JSON object per line (`logger` in `src/lib/logger.ts`), errors on stderr, so a log service reads them without parsing rules. Every error that escapes a page, a route handler or a server action is logged with its route and request by `onRequestError` (`src/instrumentation.ts`); alert on `"level":"error"`.

@@ -1,0 +1,6 @@
+name: clothing-store-infra
+description: AWS infrastructure for the clothing store
+runtime:
+  name: nodejs
+  options:
+    typescript: true

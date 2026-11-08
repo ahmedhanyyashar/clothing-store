@@ -9,7 +9,7 @@ export function publicBase(config: {
   publicUrl?: string
 }) {
   const base =
-    config.publicUrl ??
+    config.publicUrl ||
     (config.endpoint
       ? `${config.endpoint}/${config.bucket}`
       : `https://${config.bucket}.s3.${config.region}.amazonaws.com`)

@@ -1,0 +1,124 @@
+name: Deploy
+
+# Continuous delivery to production: when CI passes on main, the exact commit
+# that passed is deployed. It can also be started by hand.
+#
+# It does nothing unless the repository variable DEPLOY_ENABLED is "true". Set
+# it once the infrastructure exists (infra/README.md) and unset it before the
+# stack is destroyed, so merges do not try to deploy to something that is gone.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# one deploy at a time: a second waits instead of racing the first through the
+# same migration and the same service
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # short-lived AWS credentials; no stored keys
+
+jobs:
+  deploy:
+    # Only main is ever deployed, and only after its checks passed. A manual
+    # run is allowed from main only.
+    if: >-
+      vars.DEPLOY_ENABLED == 'true' &&
+      ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Settings are variables of the GitHub environment (none is secret). They
+    # are the outputs of the infrastructure stack: see infra/README.md.
+    environment: production
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      ECR_REPOSITORY_URL: ${{ vars.ECR_REPOSITORY_URL }}
+      ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+      ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+      MIGRATION_TASK_DEFINITION: ${{ vars.MIGRATION_TASK_DEFINITION }}
+      SUBNET_IDS: ${{ vars.SUBNET_IDS }}
+      SECURITY_GROUP_ID: ${{ vars.SECURITY_GROUP_ID }}
+      APP_URL: ${{ vars.APP_URL }}
+      S3_BUCKET: ${{ vars.S3_BUCKET }}
+      S3_PUBLIC_URL: ${{ vars.S3_PUBLIC_URL }}
+      NEXT_PUBLIC_GA_ID: ${{ vars.NEXT_PUBLIC_GA_ID }}
+    steps:
+      # the commit that CI tested, not whatever main has become since
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      # Both images are built from this commit, so a migration and the code
+      # that needs it ship together. The public settings are baked into the app
+      # image; the secrets arrive when the container starts.
+      - name: Build and push the app image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_APP_URL="$APP_URL" \
+            --build-arg NEXT_PUBLIC_GA_ID="$NEXT_PUBLIC_GA_ID" \
+            --build-arg S3_BUCKET="$S3_BUCKET" \
+            --build-arg S3_REGION="$AWS_REGION" \
+            --build-arg S3_PUBLIC_URL="$S3_PUBLIC_URL" \
+            -t "$ECR_REPOSITORY_URL:$(git rev-parse HEAD)" -t "$ECR_REPOSITORY_URL:latest" .
+          docker push "$ECR_REPOSITORY_URL" --all-tags
+
+      - name: Build and push the migration image
+        run: |
+          docker build --target migrate \
+            -t "$ECR_REPOSITORY_URL:migrate-$(git rev-parse HEAD)" \
+            -t "$ECR_REPOSITORY_URL:migrate-latest" .
+          docker push "$ECR_REPOSITORY_URL" --all-tags
+
+      # Before the new code starts. If the migration fails, nothing is rolled
+      # out and the running version carries on with the old schema. This means
+      # a migration must work with the version that is still running: add a
+      # column first, use it in the next release, drop the old one after that.
+      - name: Migrate the database
+        run: |
+          task=$(aws ecs run-task \
+            --cluster "$ECS_CLUSTER" \
+            --launch-type FARGATE \
+            --task-definition "$MIGRATION_TASK_DEFINITION" \
+            --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],securityGroups=[$SECURITY_GROUP_ID],assignPublicIp=DISABLED}" \
+            --query 'tasks[0].taskArn' --output text)
+          aws ecs wait tasks-stopped --cluster "$ECS_CLUSTER" --tasks "$task"
+          code=$(aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$task" \
+            --query 'tasks[0].containers[0].exitCode' --output text)
+          if [ "$code" != "0" ]; then
+            echo "Migration failed with exit code $code" >&2
+            exit 1
+          fi
+
+      - name: Roll the service onto the new image
+        run: |
+          aws ecs update-service --cluster "$ECS_CLUSTER" --service "$ECS_SERVICE" \
+            --force-new-deployment > /dev/null
+          aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE"
+
+      # ECS rolls a deployment that never became healthy back by itself, and
+      # then the service is "stable" again on the old version. That must not
+      # look like a successful deploy.
+      - name: Check the new version is the one running
+        run: |
+          state=$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
+            --query "services[0].deployments[?status=='PRIMARY'].rolloutState | [0]" --output text)
+          if [ "$state" != "COMPLETED" ]; then
+            echo "The new version did not roll out (state: $state); ECS kept the old one." >&2
+            exit 1
+          fi
+
+      - name: Check the live site
+        run: curl --fail --silent --show-error --retry 5 --retry-delay 10 "$APP_URL/api/ready"
