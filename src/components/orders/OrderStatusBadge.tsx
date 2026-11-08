@@ -1,6 +1,15 @@
+import { Badge } from "@/components/ui/badge"
 import type { OrderStatus } from "@/generated/prisma/enums"
 import { ORDER_STATUS_INFO } from "@/lib/orders/status"
-import { cn } from "@/lib/utils"
+
+// The compiler rejects a status without a look.
+const VARIANT = {
+  PENDING: "outline",
+  CONFIRMED: "secondary",
+  SHIPPED: "secondary",
+  DELIVERED: "default",
+  CANCELLED: "destructive",
+} as const satisfies Record<OrderStatus, string>
 
 export function OrderStatusBadge({
   status,
@@ -8,15 +17,8 @@ export function OrderStatusBadge({
   status: OrderStatus
 }) {
   return (
-    <span
-      className={cn(
-        "rounded-md px-2 py-0.5 text-xs font-medium",
-        status === "CANCELLED"
-          ? "border border-destructive text-destructive"
-          : "bg-accent"
-      )}
-    >
+    <Badge variant={VARIANT[status]}>
       {ORDER_STATUS_INFO[status].label}
-    </span>
+    </Badge>
   )
 }

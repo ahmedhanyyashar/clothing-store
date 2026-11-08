@@ -4,6 +4,7 @@ import type {
   ProductType,
 } from "@/generated/prisma/enums"
 import { prisma } from "@/lib/db/client"
+import { escapeLike } from "@/lib/db/like"
 
 import type { ShopQuery, Sort } from "./search-params"
 
@@ -70,12 +71,6 @@ const ORDER_BY = {
   Sort,
   Prisma.ProductOrderByWithRelationInput[]
 >
-
-// `contains` becomes a LIKE pattern, where % and _ are wildcards. Escaping them
-// makes a search for "100%" look for those characters, not match everything.
-function escapeLike(text: string) {
-  return text.replace(/[\\%_]/g, "\\$&")
-}
 
 /** One page of the shop, with the filters, search and sort already applied. */
 export async function listProducts(query: ShopQuery) {

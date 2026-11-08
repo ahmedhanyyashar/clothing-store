@@ -102,6 +102,9 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - An admin is made only by the operator commands in `scripts/admin.ts` (`@/lib/admin/roles`). Never add a route, action or screen that sets a role.
 - Every change an admin makes calls `recordAudit(tx, ...)` with the same transaction as the change, naming the admin with `actorOf(user)`. A change without its audit entry is a bug. Write the summary as a sentence a person can read without looking anything up.
 - Dashboard numbers come from `getDashboard`: whole cents, paid orders by `paidAt` in UTC, refunded orders excluded. A failed query must raise an error, not show zero.
+- Change an order's status only through `advanceOrder`, `cancelAsAdmin` and `retryRefund` in `@/lib/admin/order-actions`. They lock the order row, check `availableActions` (the single source for both the buttons and the server), write the audit entry in the same transaction, and email the customer after the commit. Never update `Order.status` directly from an admin screen.
+- A refund is a call to Stripe and cannot sit inside the transaction: save the cancel first, then refund with `refundPayment` (one idempotency key per order). A cancelled order whose `paymentStatus` is still `PAID` is a refund owed, never a finished order.
+- Use the UI primitives (`Card`, `Table`, `Badge`, `Button`) in admin screens; show order and payment status with `OrderStatusBadge` and `PaymentStatusBadge`. Escape user search text with `escapeLike` from `@/lib/db/like`.
 - Admin menus use `SectionNav` and keep a section highlighted on its sub-pages.
 
 ### Auth

@@ -3,7 +3,8 @@ import type Stripe from "stripe"
 import type { Prisma } from "@/generated/prisma/client"
 import { prisma } from "@/lib/db/client"
 
-import { CURRENCY, stripe } from "./stripe"
+import { refundPayment } from "./refund"
+import { CURRENCY } from "./stripe"
 import { cancelUnpaidOrder } from "./unpaid"
 
 type Tx = Prisma.TransactionClient
@@ -87,10 +88,7 @@ export async function handleStripeEvent(
   if (effect.refund) {
     const { orderId, paymentIntentId } = effect.refund
     // the same key every time, so a retry cannot refund twice
-    await stripe.refunds.create(
-      { payment_intent: paymentIntentId },
-      { idempotencyKey: `refund-${orderId}` }
-    )
+    await refundPayment(orderId, paymentIntentId)
     await prisma.$transaction(async (tx) => {
       await lock(tx, event.id)
       await tx.order.update({

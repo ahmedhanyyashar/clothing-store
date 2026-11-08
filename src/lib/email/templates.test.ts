@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   orderConfirmationEmail,
+  orderStatusEmail,
   passwordChangedEmail,
   passwordResetEmail,
   verificationEmail,
@@ -105,5 +106,53 @@ describe("order confirmation email", () => {
 
     expect(html).not.toContain("<img")
     expect(html).toContain("&lt;img")
+  })
+})
+
+describe("order status email", () => {
+  const send = (
+    status: "SHIPPED" | "DELIVERED" | "CANCELLED",
+    refund: string | null = null
+  ) =>
+    orderStatusEmail({
+      name: "Ada",
+      number: "CS-7K2M9QXD",
+      status,
+      url: "https://shop.test/account/orders/CS-7K2M9QXD",
+      refund,
+    })
+
+  it.each([
+    ["SHIPPED", "has shipped"],
+    ["DELIVERED", "was delivered"],
+    ["CANCELLED", "was cancelled"],
+  ] as const)(
+    "says in the subject that the order %s",
+    (status, words) => {
+      expect(send(status).subject).toBe(
+        `Your Clothing Store order CS-7K2M9QXD ${words}`
+      )
+    }
+  )
+
+  it("links to the order in both formats", () => {
+    const { text, html } = send("SHIPPED")
+
+    expect(text).toContain(
+      "https://shop.test/account/orders/CS-7K2M9QXD"
+    )
+    expect(html).toContain(
+      "https://shop.test/account/orders/CS-7K2M9QXD"
+    )
+  })
+
+  it("mentions the refund only for a cancelled order that had been paid", () => {
+    expect(send("CANCELLED", "$54.98").text).toContain(
+      "$54.98 is being refunded to your card"
+    )
+    expect(send("CANCELLED").text).not.toMatch(/refund/)
+    expect(send("SHIPPED", "$54.98").text).not.toMatch(
+      /refund/
+    )
   })
 })
