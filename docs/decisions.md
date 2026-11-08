@@ -233,3 +233,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Products and saved addresses change and disappear; an order is a record of a sale and must not change with them. Cents avoid fractions. A key stops a double click, a retry or a dropped connection from making two orders. Random numbers say nothing about how many orders exist.
 
 **Cost.** Order rows are wider, and shipping is one rule for everywhere. A different rate per country or a tax line means changing the pricing file and the order columns.
+
+## 30. Only signed-in users check out, and the only payment is cash on delivery
+
+**Decision.** Checkout needs an account. A visitor who reaches it is sent to sign in and the cart waits, because the cart is kept through sign-in. The payment method is stored on the order, and cash on delivery is the only value.
+
+**Why.** An account gives saved addresses, order history and cancelling without extra machinery, and avoids tokens for looking up guest orders. Storing the method on the order means another way of paying is a new value and a new branch in checkout, not a change to the order tables.
+
+**Cost.** First-time buyers must register before they can order.

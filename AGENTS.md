@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. Human contributors sho
 
 ## Project
 
-A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, with Better Auth for authentication and SMTP for email. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db/client.ts`, and the Prisma schema holds the authentication and catalog models, the product queries are in `src/lib/catalog/`, the cart is in `src/lib/cart/` and `src/components/cart/`, saved addresses are in `src/lib/address/` and `src/components/address/`, and orders are in `src/lib/orders/`. Security headers are set in `next.config.ts`.
+A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, with Better Auth for authentication and SMTP for email. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db/client.ts`, and the Prisma schema holds the authentication and catalog models, the product queries are in `src/lib/catalog/`, the cart is in `src/lib/cart/` and `src/components/cart/`, saved addresses are in `src/lib/address/` and `src/components/address/`, and orders are in `src/lib/orders/`, `src/components/checkout/` and `src/components/orders/`. Security headers are set in `next.config.ts`.
 
 ## Commands
 
@@ -77,7 +77,7 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 
 ### Orders
 
-- Place orders only through `placeOrder` in `@/lib/orders/place`. It takes ids, sizes and quantities from the browser and nothing else: names, prices and stock are read inside its transaction. Never accept a price from a client.
+- Place orders only through `placeOrder` in `@/lib/orders/place`, called from the `placeOrderAction` server action. It takes ids, sizes and quantities from the browser and nothing else: names, prices and stock are read inside its transaction. Never accept a price from a client.
 - Stock leaves a size only through the guarded update (`stock >= quantity` in the UPDATE itself) inside that transaction. A check followed by a write is not safe: two buyers pass the check together.
 - Lock lines in a fixed order (the lines are sorted) so two orders over the same sizes cannot deadlock.
 - An order copies the product name, size, image and unit price, and the address, at purchase. Do not point an order at a saved address or read a price from the product afterwards.

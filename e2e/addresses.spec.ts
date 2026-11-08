@@ -7,44 +7,8 @@ import {
   open,
   signOut,
 } from "./support/flows"
+import { fillAddress } from "./support/shop"
 import { expect, test } from "./support/test"
-
-async function fillAddress(
-  page: Page,
-  details: {
-    label: string
-    street: string
-    city: string
-    region: string
-    postalCode: string
-    phone: string
-    country?: string
-  }
-) {
-  if (details.country) {
-    await page
-      .getByLabel("Country")
-      .selectOption(details.country)
-  }
-  await page
-    .getByLabel("Label (optional)")
-    .fill(details.label)
-  await page.getByLabel("Full name").fill("Ada Lovelace")
-  await page.getByLabel("Phone").fill(details.phone)
-  await page
-    .getByLabel("Street address")
-    .fill(details.street)
-  await page.getByLabel("City").fill(details.city)
-  const region = page.getByLabel(/^(State|County)/)
-  if (
-    (await region.evaluate((el) => el.tagName)) === "SELECT"
-  )
-    await region.selectOption(details.region)
-  else await region.fill(details.region)
-  await page
-    .getByLabel("Postal code")
-    .fill(details.postalCode)
-}
 
 const home = {
   label: "Home",
