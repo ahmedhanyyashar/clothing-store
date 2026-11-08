@@ -78,7 +78,7 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 ### Orders
 
 - Place orders only through `placeOrder` in `@/lib/orders/place`, called from the `placeOrderAction` server action. It takes ids, sizes and quantities from the browser and nothing else: names, prices and stock are read inside its transaction. Never accept a price from a client.
-- Stock leaves a size only through the guarded update (`stock >= quantity` in the UPDATE itself) inside that transaction. A check followed by a write is not safe: two buyers pass the check together.
+- Stock leaves a size only through the guarded update (`stock >= quantity` in the UPDATE itself) inside that transaction, and goes back only in `cancelOrder`, guarded by the status change. A check followed by a write is not safe: two buyers pass the check together.
 - Lock lines in a fixed order (the lines are sorted) so two orders over the same sizes cannot deadlock.
 - An order copies the product name, size, image and unit price, and the address, at purchase. Do not point an order at a saved address or read a price from the product afterwards.
 - Totals come from `computeTotals` in `@/lib/orders/pricing`; the cart, the checkout and the order all use it. Status rules are `ORDER_TRANSITIONS` in `@/lib/orders/status`: add a transition there, never an ad-hoc status update.

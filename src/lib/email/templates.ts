@@ -20,17 +20,28 @@ function render({
   subject,
   name,
   intro,
+  sections = [],
   action,
   outro,
 }: {
   subject: string
   name: string
   intro: string
+  /** Titled lists of plain lines, shown between the intro and the button. */
+  sections?: { title: string; lines: string[] }[]
   /** The button. A notice that needs no response has none. */
   action?: { label: string; url: string }
   outro: string
 }): EmailContent {
   const greeting = `Hi ${name},`
+
+  const sectionsHtml = sections
+    .map(
+      ({ title, lines }) => `
+      <p style="margin:24px 0 4px;font-weight:600;">${escapeHtml(title)}</p>
+      <p style="margin:0;color:#333;">${lines.map(escapeHtml).join("<br>")}</p>`
+    )
+    .join("")
 
   const button = action
     ? `
@@ -49,7 +60,7 @@ function render({
     <div style="max-width:480px;margin:0 auto;padding:32px;background:#fff;border-radius:8px;">
       <p style="margin:0 0 24px;font-size:18px;font-weight:600;">${BRAND}</p>
       <p>${escapeHtml(greeting)}</p>
-      <p>${escapeHtml(intro)}</p>${button}
+      <p>${escapeHtml(intro)}</p>${sectionsHtml}${button}
       <p style="color:#555;font-size:14px;">${escapeHtml(outro)}</p>${fallback}
     </div>
   </body>
@@ -59,6 +70,11 @@ function render({
     greeting,
     "",
     intro,
+    ...sections.flatMap(({ title, lines }) => [
+      "",
+      `${title}:`,
+      ...lines,
+    ]),
     ...(action
       ? ["", `${action.label}: ${action.url}`]
       : []),
@@ -115,5 +131,36 @@ export function passwordChangedEmail({
     intro: `The password for your account was just changed.`,
     action: { label: "Reset password", url: resetUrl },
     outro: `If this was you, no action is needed. If it was not, reset your password now.`,
+  })
+}
+
+/** What the customer ordered, where it goes, what it costs, and a link to the order. */
+export function orderConfirmationEmail({
+  name,
+  number,
+  url,
+  items,
+  totals,
+  address,
+}: {
+  name: string
+  number: string
+  url: string
+  items: string[]
+  totals: string[]
+  address: string[]
+}) {
+  return render({
+    subject: `Your ${BRAND} order ${number}`,
+    name,
+    intro: `Thank you for your order. Your order number is ${number}.`,
+    sections: [
+      { title: "Items", lines: items },
+      { title: "Totals", lines: totals },
+      { title: "Delivery address", lines: address },
+    ],
+    action: { label: "View your order", url },
+    outro:
+      "You can cancel the order from your account until it is confirmed.",
   })
 }

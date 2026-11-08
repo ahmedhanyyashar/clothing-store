@@ -3,13 +3,17 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { CancelOrder } from "@/components/orders/CancelOrder"
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge"
 import { addressLines } from "@/lib/address/validations"
 import { requireUser } from "@/lib/auth/session"
 import { formatPrice } from "@/lib/catalog/format"
 import { ORDER_NUMBER_PATTERN } from "@/lib/orders/number"
 import { getOrder } from "@/lib/orders/queries"
-import { ORDER_STATUS_INFO } from "@/lib/orders/status"
+import {
+  canCustomerCancel,
+  ORDER_STATUS_INFO,
+} from "@/lib/orders/status"
 
 export const metadata: Metadata = { title: "Order" }
 
@@ -48,12 +52,21 @@ export default async function OrderPage({
             Thank you, your order is placed.
           </p>
           <p className="text-sm">
-            You pay in cash when it arrives.
+            We sent a confirmation to your email. You pay in
+            cash when it arrives.
           </p>
         </div>
       )}
 
       <div className="space-y-2">
+        <p className="text-sm">
+          <Link
+            href="/account/orders"
+            className="underline"
+          >
+            All orders
+          </Link>
+        </p>
         <h2 className="flex flex-wrap items-center gap-3 text-xl font-semibold">
           Order {order.number}
           <OrderStatusBadge status={order.status} />
@@ -171,6 +184,10 @@ export default async function OrderPage({
           <p className="mt-2 text-sm">Cash on delivery</p>
         </div>
       </section>
+
+      {canCustomerCancel(order.status) && (
+        <CancelOrder number={order.number} />
+      )}
     </>
   )
 }

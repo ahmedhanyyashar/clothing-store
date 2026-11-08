@@ -10,6 +10,11 @@ import { auth } from "@/lib/auth/auth"
 import { hasPassword } from "@/lib/auth/session"
 import { prisma } from "@/lib/db/client"
 import { sendEmail } from "@/lib/email/mailer"
+import { placeOrder } from "@/lib/orders/place"
+import {
+  createProduct,
+  createSavedAddress,
+} from "@/test/factories"
 import { resetDb } from "@/test/reset-db"
 
 vi.mock("@/lib/email/mailer", () => ({
@@ -204,5 +209,88 @@ describe("hasPassword", () => {
     })
 
     expect(await hasPassword(user.id)).toBe(false)
+  })
+})
+
+describe("deleting an account that has orders", () => {
+  /** Places one order for the signed-in user and returns its id. */
+  async function orderPlaced() {
+    const user = await prisma.user.findFirstOrThrow()
+    const address = await createSavedAddress(user.id)
+    const product = await createProduct()
+    const result = await placeOrder({
+      userId: user.id,
+      addressId: address.id,
+      idempotencyKey: crypto.randomUUID(),
+      items: [
+        { productId: product.id, size: "M", quantity: 1 },
+      ],
+    })
+    if (!result.ok) throw new Error("not placed")
+    return result.orderId
+  }
+
+  it("refuses while an order is still on its way, and changes nothing", async () => {
+    const headers = await signedIn()
+    const orderId = await orderPlaced()
+
+    await expect(
+      auth.api.deleteUser({
+        headers,
+        body: { password: account.password },
+      })
+    ).rejects.toMatchObject({ status: "BAD_REQUEST" })
+
+    expect(await userCount()).toBe(1)
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: orderId },
+    })
+    expect(order.shipName).toBe("Ada Lovelace")
+    expect(order.userId).not.toBeNull()
+  })
+
+  it("keeps a finished order but removes the person from it", async () => {
+    const headers = await signedIn()
+    const orderId = await orderPlaced()
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: "DELIVERED" },
+    })
+
+    await auth.api.deleteUser({
+      headers,
+      body: { password: account.password },
+    })
+
+    expect(await userCount()).toBe(0)
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: orderId },
+      include: { items: true },
+    })
+    expect(order).toMatchObject({
+      userId: null,
+      shipName: "Deleted customer",
+      shipPhone: "",
+      shipLine1: "Deleted",
+      shipCity: "Deleted",
+      status: "DELIVERED",
+    })
+    expect(order.items).toHaveLength(1)
+  })
+
+  it("allows deleting once the order is cancelled", async () => {
+    const headers = await signedIn()
+    const orderId = await orderPlaced()
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: "CANCELLED" },
+    })
+
+    await auth.api.deleteUser({
+      headers,
+      body: { password: account.password },
+    })
+
+    expect(await userCount()).toBe(0)
   })
 })

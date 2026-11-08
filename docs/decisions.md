@@ -241,3 +241,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** An account gives saved addresses, order history and cancelling without extra machinery, and avoids tokens for looking up guest orders. Storing the method on the order means another way of paying is a new value and a new branch in checkout, not a change to the order tables.
 
 **Cost.** First-time buyers must register before they can order.
+
+## 31. Orders follow fixed statuses, and deleting an account keeps orders without personal details
+
+**Decision.** An order moves pending, confirmed, shipped, delivered, and can be cancelled before it ships; the allowed moves are one table. A customer can cancel only while it is pending, which restores the stock once, however many times it is asked. An account with an order that is pending, confirmed or shipped cannot be deleted. Otherwise the orders are kept: the customer's name, phone and address are replaced and the link to the user is cleared, while the items, prices and country stay.
+
+**Why.** An order on its way needs its address and someone to receive it. Tax and accounting rules require keeping sales records, while privacy law lets a person ask to be forgotten; anonymising does both. Guarding the cancel with the status change means a double click, or a race with confirmation, cannot put stock back twice.
+
+**Cost.** Someone with a pending order must cancel it or wait before deleting their account. Only a person with admin access can move an order along, so a customer's order stays pending until then.

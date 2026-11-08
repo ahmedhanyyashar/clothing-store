@@ -1,6 +1,9 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
-import { createAuthMiddleware } from "better-auth/api"
+import {
+  APIError,
+  createAuthMiddleware,
+} from "better-auth/api"
 
 import { env } from "@/env"
 import { PASSWORD_MIN_LENGTH } from "@/lib/auth/validations"
@@ -11,6 +14,10 @@ import {
   passwordResetEmail,
   verificationEmail,
 } from "@/lib/email/templates"
+import {
+  anonymiseOrders,
+  hasActiveOrders,
+} from "@/lib/orders/account"
 
 export const auth = betterAuth({
   baseURL: env.NEXT_PUBLIC_APP_URL,
@@ -57,7 +64,22 @@ export const auth = betterAuth({
   user: {
     // Deleting needs the password, or a session created recently for people
     // who sign in with Google and have no password.
-    deleteUser: { enabled: true },
+    deleteUser: {
+      enabled: true,
+      beforeDelete: async (user) => {
+        // An order that is still on its way needs its address and a person
+        // to receive it, so the account stays until the order is done.
+        if (await hasActiveOrders(user.id)) {
+          throw new APIError("BAD_REQUEST", {
+            message:
+              "You have an order that is not delivered or cancelled yet. Cancel it or wait for it to arrive, then delete your account.",
+          })
+        }
+        // Finished orders are kept for the shop's records, without the
+        // customer's personal details.
+        await anonymiseOrders(user.id)
+      },
+    },
     additionalFields: {
       // Exposed on the session so the UI can show role-specific links. It is
       // display only: pages and actions check the role on the server.
