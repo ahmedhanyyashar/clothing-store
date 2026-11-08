@@ -4,7 +4,7 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, the product catalog with its shop pages, the shopping cart, and an account area. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, the product catalog with its shop pages, the shopping cart, an account area, and checkout. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
@@ -114,6 +114,15 @@ public/products/  sample product photos, with their credits
 - Deleting the account needs the password again (or a recently created session for Google-only users) and removes the user, their sessions and linked accounts.
 - The email address is the account's identity and cannot be changed (see decision 26).
 - Both the password change and the deletion are rate limited to 5 attempts a minute.
+
+## Checkout and orders
+
+- **Checkout** (`/checkout`) is for signed-in users: a visitor is sent to sign in and the cart waits for them. They review the items, choose a saved address (or add one and come straight back), and place the order. Payment is cash on delivery.
+- **Totals:** shipping is a flat $5.00, free from $75.00, and prices include tax, so there is no tax line. Both numbers live in `src/lib/orders/pricing.ts`.
+- **Placing an order** reads prices and stock from the database again; the cart in the browser is only a request. Stock is taken with a guarded update inside one transaction, so two buyers can never both get the last item, and an order that cannot be filled changes nothing. A line that cannot be bought is reported by name, with how many are left.
+- **An order is a copy.** It keeps the name, size, image and price of each item and the delivery address as they were, so editing a product or an address later never changes it. Order numbers are random and readable (for example `CS-7K2M9QXD`).
+- **Double clicks and retries** are harmless: each checkout screen has one key, and the same key returns the same order.
+- After placing an order the shopper lands on its page, `/account/orders/<number>`, which only its owner can open.
 
 ## Testing
 

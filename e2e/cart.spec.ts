@@ -1,5 +1,3 @@
-import type { Page } from "@playwright/test"
-
 import {
   createSignedInUser,
   open,
@@ -7,42 +5,8 @@ import {
   signUp,
   verifyEmail,
 } from "./support/flows"
+import { addToCart, openTee } from "./support/shop"
 import { expect, test } from "./support/test"
-
-// Classic White Tee costs $24.99 and has 6 in size XL.
-
-async function openTee(page: Page) {
-  await open(page, "/shop?q=classic+white")
-  await page
-    .getByRole("link", { name: "Classic White Tee" })
-    .click()
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Classic White Tee",
-    })
-  ).toBeVisible()
-  // the product page is server-rendered; wait for its scripts before using the form
-  await page.waitForLoadState("networkidle")
-}
-
-async function addToCart(
-  page: Page,
-  size: string,
-  quantity = "1"
-) {
-  // the radio itself is visually hidden; its label is what a shopper clicks
-  await page.getByText(size, { exact: true }).click()
-  await page
-    .getByRole("combobox", { name: "Quantity" })
-    .selectOption(quantity)
-  await page
-    .getByRole("button", { name: "Add to cart" })
-    .click()
-  await expect(
-    page.getByText("Added to your cart.")
-  ).toBeVisible()
-}
 
 test("a visitor fills a cart, changes it, and it survives a reload", async ({
   page,

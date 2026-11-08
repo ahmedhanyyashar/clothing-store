@@ -6,6 +6,10 @@ import { EmptyState } from "@/components/catalog/EmptyState"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart/use-cart"
 import { formatPrice } from "@/lib/catalog/format"
+import {
+  computeTotals,
+  FREE_SHIPPING_FROM_CENTS,
+} from "@/lib/orders/pricing"
 
 import { CartLines } from "./CartLines"
 
@@ -36,6 +40,8 @@ export function CartView() {
     )
   }
 
+  const totals = computeTotals(cart.subtotalCents)
+
   return (
     <div className="mt-8 grid gap-8 lg:grid-cols-3">
       <div className="lg:col-span-2">
@@ -57,15 +63,40 @@ export function CartView() {
             <dt className="text-muted-foreground">Items</dt>
             <dd>{cart.itemCount}</dd>
           </div>
-          <div className="flex justify-between text-base font-semibold">
-            <dt>Subtotal</dt>
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">
+              Subtotal
+            </dt>
             <dd>{formatPrice(cart.subtotalCents)}</dd>
           </div>
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">
+              Shipping
+            </dt>
+            <dd>
+              {totals.shippingCents === 0
+                ? "Free"
+                : formatPrice(totals.shippingCents)}
+            </dd>
+          </div>
+          <div className="flex justify-between border-t border-border pt-2 text-base font-semibold">
+            <dt>Total</dt>
+            <dd>{formatPrice(totals.totalCents)}</dd>
+          </div>
         </dl>
+        {totals.shippingCents > 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Free shipping from{" "}
+            {formatPrice(FREE_SHIPPING_FROM_CENTS)}.
+          </p>
+        )}
+        <Button asChild size="lg" className="mt-6 w-full">
+          <Link href="/checkout">Checkout</Link>
+        </Button>
         <Button
           asChild
-          variant="outline"
-          className="mt-6 w-full"
+          variant="ghost"
+          className="mt-2 w-full"
         >
           <Link href="/shop">Continue shopping</Link>
         </Button>

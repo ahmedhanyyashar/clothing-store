@@ -1,6 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { Route } from "next"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
@@ -59,9 +60,12 @@ function initialValues(
 export function AddressForm({
   address,
   isFirst = false,
+  next = "/account/addresses",
 }: {
   address?: SavedAddress
   isFirst?: boolean
+  /** Where to go after saving or cancelling: the page the shopper came from. */
+  next?: string
 }) {
   const router = useRouter()
   const form = useForm<AddressInput>({
@@ -98,7 +102,7 @@ export function AddressForm({
       }
       return
     }
-    router.push("/account/addresses")
+    router.push(next as Route)
     router.refresh()
   }
 
@@ -362,7 +366,7 @@ export function AddressForm({
               : "Save address"}
           </Button>
           <Button asChild variant="ghost">
-            <Link href="/account/addresses">Cancel</Link>
+            <Link href={next as Route}>Cancel</Link>
           </Button>
         </div>
       </form>
