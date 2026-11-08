@@ -3,6 +3,7 @@ import type {
   ProductType,
 } from "@/generated/prisma/enums"
 import { prisma } from "@/lib/db/client"
+import { placeOrder } from "@/lib/orders/place"
 
 let counter = 0
 
@@ -97,4 +98,29 @@ export async function createSavedAddress(
       ...overrides,
     },
   })
+}
+
+/**
+ * A card order waiting for its payment, as checkout leaves it, with the
+ * product whose stock it holds. Ten in stock before the order.
+ */
+export async function createCardOrder(quantity = 2) {
+  const user = await createUser()
+  const address = await createSavedAddress(user.id)
+  const product = await createProduct({
+    priceCents: 2000,
+    sizes: [{ label: "M", stock: 10 }],
+  })
+  const placed = await placeOrder({
+    userId: user.id,
+    addressId: address.id,
+    idempotencyKey: crypto.randomUUID(),
+    items: [{ productId: product.id, size: "M", quantity }],
+    paymentMethod: "CARD",
+  })
+  if (!placed.ok) throw new Error("not placed")
+  const order = await prisma.order.findUniqueOrThrow({
+    where: { id: placed.orderId },
+  })
+  return { order, product, user }
 }

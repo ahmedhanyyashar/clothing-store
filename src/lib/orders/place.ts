@@ -1,4 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client"
+import type { PaymentMethod } from "@/generated/prisma/enums"
 import { lineKey, type CartItem } from "@/lib/cart/model"
 import { prisma } from "@/lib/db/client"
 
@@ -136,8 +137,12 @@ export async function placeOrder(input: {
   addressId: string
   idempotencyKey: string
   items: OrderLine[]
+  /** Cash on delivery unless said otherwise. */
+  paymentMethod?: PaymentMethod
 }): Promise<PlaceOrderResult> {
   const { userId, addressId, idempotencyKey } = input
+  const paymentMethod =
+    input.paymentMethod ?? "CASH_ON_DELIVERY"
   // a fixed order of locking, so two orders over the same sizes cannot deadlock
   const items = [...input.items].sort((a, b) =>
     lineKey(a).localeCompare(lineKey(b))
@@ -164,6 +169,7 @@ export async function placeOrder(input: {
           addressId,
           idempotencyKey,
           items,
+          paymentMethod,
         })
       )
     } catch (error) {
@@ -212,9 +218,16 @@ async function create(
     addressId: string
     idempotencyKey: string
     items: OrderLine[]
+    paymentMethod: PaymentMethod
   }
 ): Promise<PlaceOrderResult> {
-  const { userId, addressId, idempotencyKey, items } = input
+  const {
+    userId,
+    addressId,
+    idempotencyKey,
+    items,
+    paymentMethod,
+  } = input
 
   const address = await tx.address.findFirst({
     where: { id: addressId, userId },
@@ -251,7 +264,7 @@ async function create(
     data: {
       number: generateOrderNumber(),
       userId,
-      paymentMethod: "CASH_ON_DELIVERY",
+      paymentMethod,
       ...computeTotals(subtotalCents),
       idempotencyKey,
       shipName: address.fullName,

@@ -14,6 +14,7 @@ Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in 
 | Styling         | Tailwind CSS 4, shadcn/ui (Radix), Lucide      |
 | Authentication  | Better Auth: email and password, Google        |
 | Email           | Nodemailer over SMTP, Mailpit locally          |
+| Payments        | Stripe Checkout and signed webhooks            |
 | Database        | PostgreSQL 16, Prisma 7                        |
 | Configuration   | Environment validated at startup (zod)         |
 | Package manager | pnpm                                           |
@@ -35,7 +36,7 @@ pnpm db:seed        # fills it with sample products
 pnpm dev
 ```
 
-The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) and the Google credentials (see the comments in `.env.example`). Every email the app sends, such as verification and password-reset links, lands in Mailpit at http://localhost:8025.
+The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) the Google credentials and, for card payments, the Stripe test keys (see the comments in `.env.example` and Payments below). Every email the app sends, such as verification and password-reset links, lands in Mailpit at http://localhost:8025.
 
 | Endpoint          | Meaning                                                        |
 | ----------------- | -------------------------------------------------------------- |
@@ -71,12 +72,13 @@ src/lib/catalog/  product queries, shop URL parsing, price formatting
 src/lib/cart/     the cart store, its server lookup and the pure totals
 src/lib/address/  saved addresses: the country rules, validation and the queries
 src/lib/orders/   placing and reading orders, shipping and statuses
+src/lib/payments/ the Stripe client, the webhook and the card payment page
 src/lib/auth/     Better Auth setup, server-side guards and form schemas
 src/lib/email/    SMTP mailer and email templates
 src/proxy.ts      redirects for signed-out and signed-in visitors
 src/test/         test helpers and global setup
 prisma/           schema and migrations
-docker/           local PostgreSQL (development and test databases) and the mail catcher
+docker/           local PostgreSQL (development and test databases) the mail catcher and a stand-in for the Stripe API
 e2e/              end-to-end tests (Playwright)
 docs/             design decisions
 public/products/  sample product photos, with their credits
@@ -125,6 +127,12 @@ public/products/  sample product photos, with their credits
 - After placing an order the shopper lands on its page, `/account/orders/<number>`, which only its owner can open.
 - `/account/orders` lists the user's orders. A pending order can be cancelled, which puts its stock back. Moving an order to confirmed, shipped or delivered takes a person with admin rights, which is also why cancelling is limited to pending orders. A confirmation email is sent when the order is placed.
 - An account with an order that is still pending, confirmed or shipped cannot be deleted. Otherwise the orders stay, with the customer's name, phone and address replaced (see decision 31).
+
+## Payments
+
+- **The webhook** (`POST /api/webhooks/stripe`) is the only thing that marks an order paid. It checks Stripe's signature first, applies each event once however often Stripe sends it, and refuses a payment whose amount does not match the order. A payment that arrives after the order was cancelled is refunded automatically.
+- **Trying it by hand:** put a Stripe test secret key in `.env`, run `stripe listen --forward-to localhost:3000/api/webhooks/stripe` (the Stripe CLI) and copy the `whsec_` secret it prints into `STRIPE_WEBHOOK_SECRET`. Pay with the test card 4242 4242 4242 4242, any future date and any CVC.
+- **Tests** never reach Stripe: `pnpm compose` starts `stripe-mock`, a server generated from Stripe's own API description, and the webhook is tested with events signed by the test secret.
 
 ## Testing
 

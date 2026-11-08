@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/client"
 
 import { CUSTOMER_CANCELLABLE } from "./status"
+import { restoreStock } from "./stock"
 
 export type CancelResult =
   "cancelled" | "not-cancellable" | "not-found"
@@ -43,17 +44,7 @@ export function cancelOrder(
     })
     if (count === 0) return "not-cancellable"
 
-    for (const item of order.items) {
-      // a product deleted since the order has no stock to give back
-      if (!item.productId) continue
-      await tx.productSize.updateMany({
-        where: {
-          productId: item.productId,
-          label: item.size,
-        },
-        data: { stock: { increment: item.quantity } },
-      })
-    }
+    await restoreStock(tx, order.items)
     return "cancelled"
   })
 }

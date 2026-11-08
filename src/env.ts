@@ -18,6 +18,12 @@ export const env = createEnv({
       .string()
       .endsWith(".apps.googleusercontent.com"),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
+    // Stripe: a secret API key, and the signing secret of the webhook endpoint
+    STRIPE_SECRET_KEY: z.string().startsWith("sk_"),
+    STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_"),
+    // Leave unset to use Stripe. Set it to talk to a stand-in server instead
+    // (the `stripe-mock` service in docker/compose.yaml, used by the tests).
+    STRIPE_API_URL: z.url().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
@@ -29,6 +35,10 @@ export const env = createEnv({
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET:
+      process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_API_URL: process.env.STRIPE_API_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
   emptyStringAsUndefined: true,

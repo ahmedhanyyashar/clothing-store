@@ -24,6 +24,9 @@ env:
   BETTER_AUTH_SECRET: ci-only-secret-at-least-32-characters-long
   GOOGLE_CLIENT_ID: ci-client.apps.googleusercontent.com
   GOOGLE_CLIENT_SECRET: ci-client-secret
+  STRIPE_SECRET_KEY: sk_test_mock
+  STRIPE_WEBHOOK_SECRET: whsec_test_secret
+  STRIPE_API_URL: http://localhost:12111
 
 jobs:
   verify:
@@ -53,6 +56,10 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      stripe-mock:
+        image: stripe/stripe-mock:v0.206.0
+        ports:
+          - 12111:12111
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -84,6 +91,10 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      stripe-mock:
+        image: stripe/stripe-mock:v0.206.0
+        ports:
+          - 12111:12111
       mail:
         image: axllent/mailpit:v1.33.0
         ports:

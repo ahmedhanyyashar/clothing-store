@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. Human contributors sho
 
 ## Project
 
-A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, with Better Auth for authentication and SMTP for email. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db/client.ts`, and the Prisma schema holds the authentication and catalog models, the product queries are in `src/lib/catalog/`, the cart is in `src/lib/cart/` and `src/components/cart/`, saved addresses are in `src/lib/address/` and `src/components/address/`, and orders are in `src/lib/orders/`, `src/components/checkout/` and `src/components/orders/`. Security headers are set in `next.config.ts`.
+A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, with Better Auth for authentication and SMTP for email. Only the foundation exists so far: routes live in `src/app/` (health and readiness handlers, error and not-found pages), the page shell is in `src/components/layout/`, the shadcn primitives are in `src/components/ui/`, the validated environment is in `src/env.ts`, the database client is in `src/lib/db/client.ts`, and the Prisma schema holds the authentication and catalog models, the product queries are in `src/lib/catalog/`, the cart is in `src/lib/cart/` and `src/components/cart/`, saved addresses are in `src/lib/address/` and `src/components/address/`, orders are in `src/lib/orders/`, `src/components/checkout/` and `src/components/orders/`, and payments are in `src/lib/payments/` and `src/app/api/webhooks/stripe/`. Security headers are set in `next.config.ts`.
 
 ## Commands
 
@@ -85,6 +85,14 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - Every order query takes the user's id and filters by it; someone else's order is "not found". A checkout attempt has one idempotency key (a uuid made in the browser); the same key returns the same order.
 - A new payment method is a new `PaymentMethod` value and a new branch in checkout; the order tables do not change.
 - Create users and saved addresses in tests with `createUser` and `createSavedAddress` from `@/test/factories`. Test anything that touches stock with concurrent requests, not only sequential ones.
+
+### Payments
+
+- Money moves only on a signed Stripe event. `POST /api/webhooks/stripe` verifies the signature over the raw body and passes the event to `handleStripeEvent`. Never treat a redirect, a query string or anything from the browser as proof of payment.
+- `handleStripeEvent` must stay idempotent: the event id is stored with its effects in one transaction, and the order row is locked (`FOR UPDATE`) while it is read and changed. A new event type is a new case there, with tests for a duplicate and for copies arriving together. Nothing that calls Stripe goes inside the transaction; the refund is the one exception and marks the event handled only after it succeeded.
+- A payment for an order that is cancelled is refunded, never ignored. An amount or currency that does not match the order is an error, not a payment.
+- Tests never reach Stripe. `STRIPE_API_URL` points the client at the `stripe-mock` service (compose and CI), and webhooks are tested by calling `handleStripeEvent` or by posting events signed with the test secret. Build orders in tests with `createCardOrder` from `@/test/factories`.
+- Amounts, names and images sent to Stripe come from the order's own copies (`OrderItem`), never from the product.
 
 ### Auth
 
