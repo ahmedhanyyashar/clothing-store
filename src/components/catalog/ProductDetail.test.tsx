@@ -1,12 +1,16 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { axe } from "jest-axe"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import type { ProductDetails } from "@/lib/catalog/queries"
 
 import { ProductGallery } from "./ProductGallery"
 import { ProductInfo } from "./ProductInfo"
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}))
 
 const product: ProductDetails = {
   id: "abc123",

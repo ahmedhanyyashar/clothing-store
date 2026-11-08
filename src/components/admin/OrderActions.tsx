@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
 
 import {
   AlertDialog,
@@ -37,16 +38,12 @@ export function OrderActions({
 }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
-  const [outcome, setOutcome] = useState<{
-    ok: boolean
-    message: string
-  }>()
 
   async function run(action: AdminAction) {
     setBusy(true)
-    setOutcome(undefined)
     const result = await orderAction(number, action)
-    setOutcome(result)
+    if (result.ok) toast.success(result.message)
+    else toast.error(result.message, { duration: 10_000 })
     setBusy(false)
     // either way the page should show the order as it is now
     router.refresh()
@@ -107,16 +104,6 @@ export function OrderActions({
           )
         )}
       </div>
-      <p
-        role={outcome && !outcome.ok ? "alert" : "status"}
-        className={
-          outcome && !outcome.ok
-            ? "text-sm text-destructive"
-            : "text-sm text-muted-foreground"
-        }
-      >
-        {outcome?.message}
-      </p>
     </div>
   )
 }

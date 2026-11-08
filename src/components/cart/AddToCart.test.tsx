@@ -1,7 +1,14 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { axe } from "jest-axe"
-import { beforeEach, describe, expect, it } from "vitest"
+import { toast } from "sonner"
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest"
 
 import { useCartStore } from "@/lib/cart/store"
 
@@ -13,7 +20,20 @@ const sizes = [
   { label: "L", stock: 0 },
 ]
 
+const push = vi.fn()
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+}))
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    warning: vi.fn(),
+    error: vi.fn(),
+  },
+}))
+
 beforeEach(() => {
+  vi.clearAllMocks()
   localStorage.clear()
   useCartStore.setState({ userId: null, lines: [] })
 })
@@ -49,12 +69,21 @@ describe("AddToCart", () => {
     expect(useCartStore.getState().lines).toEqual([
       { productId: "tee", size: "M", quantity: 3 },
     ])
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Added to your cart."
+    expect(toast.success).toHaveBeenCalledWith(
+      "Added to your cart.",
+      {
+        action: expect.objectContaining({
+          label: "View cart",
+        }),
+      }
     )
-    expect(
-      screen.getByRole("link", { name: "View cart" })
-    ).toHaveAttribute("href", "/cart")
+    // the toast's button takes the shopper to the cart
+    const options = vi.mocked(toast.success).mock
+      .calls[0][1] as unknown as {
+      action: { onClick: () => void }
+    }
+    options.action.onClick()
+    expect(push).toHaveBeenCalledWith("/cart")
   })
 
   it("offers no more than the stock of the chosen size", async () => {
@@ -87,8 +116,9 @@ describe("AddToCart", () => {
     await userEvent.click(add)
     await userEvent.click(add)
 
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Your cart has the most we can offer."
+    expect(toast.warning).toHaveBeenCalledWith(
+      "Your cart has the most we can offer.",
+      expect.anything()
     )
     expect(useCartStore.getState().lines[0].quantity).toBe(
       2

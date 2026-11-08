@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
 
 import {
   AlertDialog,
@@ -28,11 +29,12 @@ export function CancelOrder({
 
   async function cancel() {
     const result = await cancelOrderAction(number)
-    setMessage(
-      result === "cancelled"
-        ? undefined
-        : "This order can no longer be cancelled."
-    )
+    if (result === "cancelled") {
+      setMessage(undefined)
+      toast.success("Order cancelled.")
+    } else {
+      setMessage("This order can no longer be cancelled.")
+    }
     // either way the page should show the order as it is now
     router.refresh()
   }

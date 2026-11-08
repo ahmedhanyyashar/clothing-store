@@ -1,7 +1,8 @@
 "use client"
 
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState, type SubmitEvent } from "react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { MAX_QUANTITY } from "@/lib/cart/model"
@@ -17,13 +18,11 @@ export function AddToCart({
   productId: string
   sizes: Size[]
 }) {
+  const router = useRouter()
   const add = useCartStore((state) => state.add)
   const [size, setSize] = useState<string>()
   const [wanted, setWanted] = useState(1)
-  const [message, setMessage] = useState<{
-    kind: "error" | "added"
-    text: string
-  }>()
+  const [problem, setProblem] = useState<string>()
 
   const soldOut = sizes.every((s) => s.stock === 0)
   const stock = sizes.find((s) => s.label === size)?.stock
@@ -37,17 +36,26 @@ export function AddToCart({
   function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     if (size === undefined) {
-      setMessage({ kind: "error", text: "Choose a size." })
+      setProblem("Choose a size.")
       return
     }
     const added = add({ productId, size }, quantity, limit)
-    setMessage({
-      kind: "added",
-      text:
-        added < quantity
-          ? "Your cart has the most we can offer."
-          : "Added to your cart.",
-    })
+    setProblem(undefined)
+    const viewCart = {
+      label: "View cart",
+      onClick: () => router.push("/cart"),
+    }
+    if (added < quantity)
+      toast.warning(
+        "Your cart has the most we can offer.",
+        {
+          action: viewCart,
+        }
+      )
+    else
+      toast.success("Added to your cart.", {
+        action: viewCart,
+      })
   }
 
   return (
@@ -67,7 +75,7 @@ export function AddToCart({
                 disabled={s.stock === 0}
                 onChange={() => {
                   setSize(s.label)
-                  setMessage(undefined)
+                  setProblem(undefined)
                 }}
                 className="peer sr-only"
               />
@@ -114,24 +122,10 @@ export function AddToCart({
       </div>
 
       <p
-        role={
-          message?.kind === "error" ? "alert" : "status"
-        }
-        className={
-          message?.kind === "error"
-            ? "mt-3 text-sm text-destructive"
-            : "mt-3 text-sm text-muted-foreground"
-        }
+        role="alert"
+        className="mt-3 text-sm text-destructive"
       >
-        {message?.text}
-        {message?.kind === "added" && (
-          <>
-            {" "}
-            <Link href="/cart" className="underline">
-              View cart
-            </Link>
-          </>
-        )}
+        {problem}
       </p>
     </form>
   )

@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
 import {
   AlertDialog,
@@ -63,6 +64,7 @@ export function DeleteAccount({
       })
       return
     }
+    toast.success("Your account was deleted.")
     router.push("/")
     // drop cached pages that were rendered for this user
     router.refresh()
