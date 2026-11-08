@@ -33,6 +33,8 @@ const photoHost = process.env.S3_BUCKET
   : null
 
 const nextConfig: NextConfig = {
+  // a self-contained server for the container image
+  output: "standalone",
   images: {
     remotePatterns: photoHost
       ? [

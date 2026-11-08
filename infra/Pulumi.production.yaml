@@ -1,0 +1,13 @@
+# Settings that are not secret. The secrets are set with
+# `pulumi config set --secret` (see README.md); an encrypted copy is kept here.
+config:
+  aws:region: us-east-1
+  clothing-store-infra:environment: production
+  clothing-store-infra:githubRepo: ahmedhanyyashar/clothing-store
+  clothing-store-infra:emailFrom: no-reply@CHANGE-ME.example
+  clothing-store-infra:googleClientId: CHANGE-ME.apps.googleusercontent.com
+  clothing-store-infra:alertEmail: CHANGE-ME@example.com
+  # clothing-store-infra:domainName: shop.example.com   (optional)
+  # clothing-store-infra:budgetUsd: "20"                (optional)
+  # clothing-store-infra:highAvailability: "true"       (see config.ts)
+  # clothing-store-infra:protectData: "true"            (see config.ts)

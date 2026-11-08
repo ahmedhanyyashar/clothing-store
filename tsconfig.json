@@ -32,5 +32,5 @@
     ".reports/next/types/**/*.ts",
     ".reports/next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".reports"]
+  "exclude": ["node_modules", ".reports", "infra"]
 }

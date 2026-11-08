@@ -45,6 +45,10 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
+      - run: npm ci
+        working-directory: infra
+      - run: npm run typecheck
+        working-directory: infra
 
   test:
     runs-on: ubuntu-latest

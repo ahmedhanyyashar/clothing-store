@@ -8,12 +8,15 @@ export function buildCsp({
   nonce,
   dev = false,
   photoOrigin,
+  uploadOrigin,
   analytics = false,
 }: {
   nonce: string
   dev?: boolean
   /** Where product photos are served from, if not this site. */
   photoOrigin?: string
+  /** Where the browser posts a photo to be stored (the bucket itself). */
+  uploadOrigin?: string
   /** Whether the Google Analytics addresses are allowed. */
   analytics?: boolean
 }) {
@@ -45,7 +48,7 @@ export function buildCsp({
     // photo uploads go straight to the bucket
     "connect-src": [
       "'self'",
-      ...(photoOrigin ? [photoOrigin] : []),
+      ...(uploadOrigin ? [uploadOrigin] : []),
       ...ga,
       ...(dev ? ["ws:", "http://localhost:*"] : []),
     ],
