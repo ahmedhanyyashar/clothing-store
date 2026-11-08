@@ -69,7 +69,7 @@ services:
   # An S3-compatible stand-in for the product photo bucket. Create the bucket
   # with `pnpm storage:setup`.
   storage:
-    image: floci/floci:2.4.0
+    image: floci/floci:2.0.1
     ports:
       - "4566:4566"
     restart: unless-stopped
