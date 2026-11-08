@@ -27,6 +27,7 @@
     "admin:grant": "tsx --env-file-if-exists=.env scripts/admin.ts grant",
     "admin:revoke": "tsx --env-file-if-exists=.env scripts/admin.ts revoke",
     "storage:setup": "tsx --env-file-if-exists=.env scripts/storage-setup.ts",
+    "screenshots": "tsx scripts/screenshots.ts",
     "storage:sweep": "tsx --env-file-if-exists=.env scripts/storage-sweep.ts",
     "db:seed:demo": "tsx --env-file-if-exists=.env prisma/seed.ts --demo",
     "seed:bundle": "node scripts/bundle-seed.mjs",
