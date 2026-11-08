@@ -70,6 +70,7 @@ src/lib/db/       the Prisma client
 src/lib/catalog/  product queries, shop URL parsing, price formatting
 src/lib/cart/     the cart store, its server lookup and the pure totals
 src/lib/address/  saved addresses: the country rules, validation and the queries
+src/lib/orders/   placing and reading orders, shipping and statuses
 src/lib/auth/     Better Auth setup, server-side guards and form schemas
 src/lib/email/    SMTP mailer and email templates
 src/proxy.ts      redirects for signed-out and signed-in visitors

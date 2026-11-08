@@ -49,3 +49,52 @@ export async function createProduct(
     },
   })
 }
+
+let userCounter = 0
+
+/** Creates a verified user. */
+export async function createUser(
+  overrides: { name?: string; email?: string } = {}
+) {
+  userCounter += 1
+  return prisma.user.create({
+    data: {
+      id: `user-${userCounter}`,
+      name: overrides.name ?? `User ${userCounter}`,
+      email:
+        overrides.email ?? `user${userCounter}@example.com`,
+      emailVerified: true,
+    },
+  })
+}
+
+/** Saves an address for a user, in the form the address queries store it. */
+export async function createSavedAddress(
+  userId: string,
+  overrides: Partial<{
+    fullName: string
+    phone: string
+    line1: string
+    city: string
+    region: string | null
+    postalCode: string | null
+    country: string
+    notes: string | null
+    isDefault: boolean
+  }> = {}
+) {
+  return prisma.address.create({
+    data: {
+      userId,
+      fullName: "Ada Lovelace",
+      phone: "+12025550123",
+      line1: "1 Main St",
+      city: "Austin",
+      region: "Texas",
+      postalCode: "73301",
+      country: "US",
+      isDefault: true,
+      ...overrides,
+    },
+  })
+}
