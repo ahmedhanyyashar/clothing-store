@@ -249,3 +249,19 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** An order on its way needs its address and someone to receive it. Tax and accounting rules require keeping sales records, while privacy law lets a person ask to be forgotten; anonymising does both. Guarding the cancel with the status change means a double click, or a race with confirmation, cannot put stock back twice.
 
 **Cost.** Someone with a pending order must cancel it or wait before deleting their account. Only a person with admin access can move an order along, so a customer's order stays pending until then.
+
+## 32. A card order exists before it is paid, and holds its stock
+
+**Decision.** A card order is made the same way as a cash order: one transaction reads the prices and takes the stock, and the order starts pending and unpaid. Only then is the shopper sent to pay. The payment is a Stripe Checkout session that closes by itself after about half an hour. Whatever does not end in a payment (the session expires, the shopper cancels, Stripe cannot be reached) cancels the order and puts the stock back. Payment status is kept apart from order status.
+
+**Why.** Creating the order only after payment lets two people pay for the last item, and the loser has to be refunded; it also needs a second, separate stock check at the moment of payment. Taking the stock first means nobody pays for something that has sold out, and it reuses the transaction, the idempotency key and the cancel logic that cash orders already have.
+
+**Cost.** An abandoned payment holds its stock for up to about 31 minutes. A pending card order that never got a session, or whose expiry event was lost, stays until the shopper cancels it, so a scheduled check for old pending card orders is worth having in production.
+
+## 33. Stripe events are applied once, and a payment after cancellation is refunded
+
+**Decision.** The webhook verifies Stripe's signature over the raw body before reading anything. Each event id is stored in the same transaction as its effects, a lock on the id makes copies arriving together take turns, and the order row is locked while it is read and changed. A payment confirms the order only if the session says it is paid and the amount and currency match the order; a mismatch is logged and never accepted. A payment for an order that was already cancelled is recorded and then refunded, and that event is marked handled only after the refund succeeded. Events about anything else are ignored.
+
+**Why.** Stripe sends each event at least once and again after any error, and a payment and an expiry for the same order can arrive together. Without the locks they could leave an order both cancelled with its stock returned and paid. Marking a refund event handled early would leave a customer charged for an order they do not have if the refund failed. Tests run many copies and a payment racing an expiry, and check the same end state every time.
+
+**Cost.** Two locks per event and one more table. The refund is a call to Stripe, so it cannot be part of the database transaction.

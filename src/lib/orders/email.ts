@@ -13,6 +13,7 @@ export async function sendOrderConfirmation(
     where: { id: orderId },
     select: {
       number: true,
+      paymentMethod: true,
       subtotalCents: true,
       shippingCents: true,
       totalCents: true,
@@ -51,7 +52,7 @@ export async function sendOrderConfirmation(
       totals: [
         `Subtotal: ${formatPrice(order.subtotalCents)}`,
         `Shipping: ${order.shippingCents === 0 ? "Free" : formatPrice(order.shippingCents)}`,
-        `Total: ${formatPrice(order.totalCents)} (pay in cash on delivery)`,
+        `Total: ${formatPrice(order.totalCents)} (${order.paymentMethod === "CARD" ? "paid by card" : "pay in cash on delivery"})`,
       ],
       address: addressLines({
         fullName: order.shipName,

@@ -58,6 +58,14 @@ services:
       timeout: 5s
       retries: 5
 
+  # A stand-in for the Stripe API, generated from Stripe's own OpenAPI spec, so
+  # tests exercise the real request shapes without the network or an account.
+  stripe-mock:
+    image: stripe/stripe-mock:v0.206.0
+    ports:
+      - "12111:12111"
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   postgres_test_data:

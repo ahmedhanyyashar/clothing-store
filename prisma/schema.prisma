@@ -22,6 +22,16 @@ enum OrderStatus {
 
 enum PaymentMethod {
   CASH_ON_DELIVERY
+  CARD
+}
+
+// Where the money is. Pending means not paid yet: a card payment in progress,
+// or cash still to be collected on delivery.
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }
 
 model User {
@@ -210,6 +220,12 @@ model Order {
   user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   status         OrderStatus   @default(PENDING)
   paymentMethod  PaymentMethod
+  paymentStatus  PaymentStatus @default(PENDING)
+  // the Stripe Checkout session and payment of a card order
+  stripeSessionId        String?       @unique
+  stripePaymentIntentId  String?       @unique
+  paidAt                 DateTime?
+  refundedAt             DateTime?
   subtotalCents  Int
   shippingCents  Int
   totalCents     Int
@@ -252,4 +268,14 @@ model OrderItem {
 
   @@index([orderId])
   @@map("order_item")
+}
+
+// Stripe sends each event at least once, and sends it again if we answer with
+// an error. An event id in this table means its effects have been applied.
+model StripeEvent {
+  id         String   @id
+  type       String
+  receivedAt DateTime @default(now())
+
+  @@map("stripe_event")
 }
