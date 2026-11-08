@@ -56,6 +56,9 @@ ENV DATABASE_URL=postgresql://build:build@localhost:5432/build \
 COPY . .
 RUN pnpm db:generate && pnpm build
 
+# The demo seed as one file, so the running image can load the demo data.
+RUN node scripts/bundle-seed.mjs
+
 # Pin the migration tooling to exactly the versions the app was built with.
 RUN mkdir /migrate && node -e '\
 const v = (p) => require(`${p}/package.json`).version; \
@@ -95,6 +98,7 @@ WORKDIR /app
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
+COPY --from=build --chown=node:node /app/seed.mjs ./seed.mjs
 
 USER node
 EXPOSE 3000
