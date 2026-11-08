@@ -66,7 +66,7 @@ jobs:
         ports:
           - 12111:12111
       storage:
-        image: floci/floci:2.4.0
+        image: floci/floci:2.0.1
         ports:
           - 4566:4566
     steps:
@@ -105,7 +105,7 @@ jobs:
         ports:
           - 12111:12111
       storage:
-        image: floci/floci:2.4.0
+        image: floci/floci:2.0.1
         ports:
           - 4566:4566
       mail:
