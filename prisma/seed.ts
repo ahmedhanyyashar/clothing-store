@@ -220,6 +220,10 @@ async function main() {
   await seedCatalog()
 
   // `pnpm db:seed:demo` adds customers, orders and an admin log on top
+  if (process.argv.includes("--demo-customer")) {
+    const { seedDemoCustomer } = await import("./demo")
+    await seedDemoCustomer()
+  }
   if (process.argv.includes("--demo")) {
     const { seedDemo } = await import("./demo")
     await seedDemo()

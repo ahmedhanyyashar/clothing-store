@@ -7,6 +7,11 @@ import type {
   PaymentStatus,
 } from "@/generated/prisma/enums"
 import { prisma } from "@/lib/db/client"
+import {
+  DEMO_ADMIN_EMAIL,
+  DEMO_CUSTOMER_EMAIL,
+  DEMO_DOMAIN,
+} from "@/lib/demo/accounts"
 import { generateOrderNumber } from "@/lib/orders/number"
 import { computeTotals } from "@/lib/orders/pricing"
 
@@ -16,9 +21,11 @@ import { computeTotals } from "@/lib/orders/pricing"
 // below, so running it again first removes the previous demo data and leaves
 // anyone else's account alone.
 
-export const DEMO_DOMAIN = "@clothing-store.example"
-export const DEMO_ADMIN_EMAIL = `demo-admin${DEMO_DOMAIN}`
-export const DEMO_CUSTOMER_EMAIL = `demo${DEMO_DOMAIN}`
+export {
+  DEMO_ADMIN_EMAIL,
+  DEMO_CUSTOMER_EMAIL,
+  DEMO_DOMAIN,
+}
 
 const DAY = 24 * 60 * 60 * 1000
 const HOUR = 60 * 60 * 1000
@@ -160,6 +167,7 @@ export async function seedDemo() {
       email: DEMO_ADMIN_EMAIL,
       emailVerified: true,
       role: "ADMIN",
+      isDemo: true,
       createdAt: new Date(now - 90 * DAY),
       accounts: {
         create: {
@@ -183,6 +191,7 @@ export async function seedDemo() {
         name,
         email: `${handle}${DEMO_DOMAIN}`,
         emailVerified: true,
+        isDemo: true,
         createdAt: new Date(now - (85 - index * 6) * DAY),
         accounts: {
           create: {
@@ -443,6 +452,36 @@ export async function seedDemo() {
       `Sign in as ${DEMO_CUSTOMER_EMAIL} or ${DEMO_ADMIN_EMAIL} ` +
       `(password: DEMO_PASSWORD, "demo-password" if unset).\n`
   )
+}
+
+/**
+ * Only the demo customer, with no orders and no catalog: what the browser tests
+ * need to try the sign-in. Safe to run again.
+ */
+export async function seedDemoCustomer() {
+  const password = await hashPassword(
+    env.DEMO_PASSWORD ?? "demo-password"
+  )
+  await prisma.user.deleteMany({
+    where: { email: DEMO_CUSTOMER_EMAIL },
+  })
+  await prisma.user.create({
+    data: {
+      id: "demo-user-0",
+      name: "Demo Shopper",
+      email: DEMO_CUSTOMER_EMAIL,
+      emailVerified: true,
+      isDemo: true,
+      accounts: {
+        create: {
+          id: "demo-user-0-credential",
+          accountId: "demo-user-0",
+          providerId: "credential",
+          password,
+        },
+      },
+    },
+  })
 }
 
 async function removePreviousDemo() {

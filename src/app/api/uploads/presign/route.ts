@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { getSession } from "@/lib/auth/session"
+import { DEMO_READ_ONLY } from "@/lib/demo/accounts"
 import {
   MAX_PHOTO_BYTES,
   MAX_PHOTOS,
@@ -46,6 +47,12 @@ export async function POST(request: Request) {
   const session = await getSession()
   if (session?.user.role !== "ADMIN")
     return new NextResponse(null, { status: 404 })
+  // the demo admin looks but does not touch
+  if (session.user.isDemo)
+    return NextResponse.json(
+      { error: DEMO_READ_ONLY },
+      { status: 403 }
+    )
 
   const parsed = requestSchema.safeParse(
     await request.json().catch(() => null)

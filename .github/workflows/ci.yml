@@ -32,6 +32,8 @@ env:
   S3_ENDPOINT_URL: http://localhost:4566
   S3_ACCESS_KEY_ID: test
   S3_SECRET_ACCESS_KEY: test
+  DEMO_MODE: "true"
+  DEMO_PASSWORD: demo-test-password
 
 jobs:
   verify:

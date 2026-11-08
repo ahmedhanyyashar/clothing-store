@@ -337,3 +337,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Both lists already filter and page on the server through the address, so keeping the sort in the same place means one source of truth: a sorted view survives a reload, can be shared, works without scripts, and is kept by the search and the paging. A client-side table library would hold the same state a second time and could only sort the rows of one page, which is a wrong answer for a list of many pages. Accepting only named columns keeps the visitor's text out of the query, and the id tie-breaker stops a page repeating or dropping a row when many rows share the sorted value.
 
 **Cost.** A sort is a page load, not an instant reorder. A column that is not stored in the database (for example the total stock of a product, which is a sum over sizes) cannot be sorted without extra work, so it is not offered.
+
+## 43. A demo shopper and a read-only demo admin, limited on the server
+
+**Decision.** With demo mode on, the sign-in page offers two buttons that sign a visitor in as a demo shopper or a demo admin, using a password kept in the server's environment. The two accounts (and the other seeded customers) carry an `isDemo` flag. The server refuses, for any account with the flag: changing the password, name or email, deleting the account, ending sessions, and, for the admin, every action that changes an order, a product or a photo. The admin pages themselves open normally. No email is sent to the demo addresses.
+
+**Why.** Visitors should see the admin side, which is most of what the project does, without the risk of a public sign-in as an admin: anyone could delete the catalog, fill the bucket or read other people's data. Hiding the buttons would protect nothing, because an action is a plain request anyone can send, so each one refuses on the server. Ending sessions is blocked as well, because the account is shared and one visitor would sign the others out. The demo addresses do not exist, so mailing them would only produce bounces.
+
+**Cost.** A demo shopper can still place and cancel orders, so stock and the order list change as visitors try the shop; the demo seed restores them. The demo admin cannot show what a change looks like.
