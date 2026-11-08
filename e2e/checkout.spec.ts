@@ -4,7 +4,7 @@ import {
   fillAddress,
   homeAddress,
   openTee,
-  placeOrderFromCheckout,
+  placeCashOrder,
   saveHomeAddress,
 } from "./support/shop"
 import { expect, test } from "./support/test"
@@ -34,7 +34,7 @@ test("a shopper checks out with cash on delivery", async ({
   // $49.98 is below the free-shipping line
   await expect(page.getByText("$54.98")).toBeVisible()
 
-  const number = await placeOrderFromCheckout(page)
+  const number = await placeCashOrder(page)
 
   await expect(
     page.getByText("Thank you, your order is placed.")
@@ -85,7 +85,7 @@ test("a shopper with no address adds one and comes straight back to the checkout
     page.getByText("You have no saved address yet.")
   ).toBeVisible()
   await expect(
-    page.getByRole("button", { name: "Place order" })
+    page.getByRole("button", { name: "Pay by card" })
   ).toBeDisabled()
 
   await page
@@ -102,6 +102,6 @@ test("a shopper with no address adds one and comes straight back to the checkout
     page.getByRole("radio", { name: /Home/ })
   ).toBeChecked()
   await expect(
-    page.getByRole("button", { name: "Place order" })
+    page.getByRole("button", { name: "Pay by card" })
   ).toBeEnabled()
 })

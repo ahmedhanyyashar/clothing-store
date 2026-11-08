@@ -20,6 +20,26 @@ import {
   FREE_SHIPPING_FROM_CENTS,
 } from "@/lib/orders/pricing"
 
+type PaymentMethod = "CARD" | "CASH_ON_DELIVERY"
+
+const PAYMENT_OPTIONS: {
+  value: PaymentMethod
+  label: string
+  description: string
+}[] = [
+  {
+    value: "CARD",
+    label: "Pay by card",
+    description:
+      "You pay securely on Stripe's page. Visa, Mastercard and more.",
+  },
+  {
+    value: "CASH_ON_DELIVERY",
+    label: "Cash on delivery",
+    description: "Pay when your order arrives.",
+  },
+]
+
 const NEW_ADDRESS =
   "/account/addresses/new?next=/checkout" as Route
 
@@ -43,6 +63,8 @@ export function CheckoutView({
   )
   const [submitting, setSubmitting] = useState(false)
   const [placed, setPlaced] = useState<string>()
+  const [method, setMethod] =
+    useState<PaymentMethod>("CARD")
   const [error, setError] = useState<string>()
   const [problems, setProblems] = useState<LineProblem[]>(
     []
@@ -53,7 +75,9 @@ export function CheckoutView({
   if (placed) {
     return (
       <p role="status" className="mt-8">
-        Order {placed} placed. Taking you to it…
+        {method === "CARD"
+          ? `Order ${placed} created. Taking you to the payment page…`
+          : `Order ${placed} placed. Taking you to it…`}
       </p>
     )
   }
@@ -99,6 +123,7 @@ export function CheckoutView({
     const result = await placeOrderAction({
       addressId,
       idempotencyKey,
+      paymentMethod: method,
       // what the customer sees is what is ordered: a line cut to the stock
       // goes in at the lower quantity
       items: buying.map((row) => ({
@@ -112,9 +137,14 @@ export function CheckoutView({
       setPlaced(result.number)
       // the cart is emptied only once the order exists
       useCartStore.getState().clear()
-      router.push(
-        `/account/orders/${result.number}?placed=1` as Route
-      )
+      if (result.redirectUrl) {
+        // pay on Stripe's page; the order page is where they come back to
+        window.location.assign(result.redirectUrl)
+      } else {
+        router.push(
+          `/account/orders/${result.number}${method === "CASH_ON_DELIVERY" ? "?placed=1" : ""}` as Route
+        )
+      }
       return
     }
 
@@ -214,14 +244,34 @@ export function CheckoutView({
           >
             Payment
           </h2>
-          <p className="mt-3 rounded-lg border border-border p-4 text-sm">
-            <span className="block font-medium">
-              Cash on delivery
-            </span>
-            <span className="text-muted-foreground">
-              Pay when your order arrives.
-            </span>
-          </p>
+          <fieldset className="mt-3 space-y-3">
+            <legend className="sr-only">
+              Choose how to pay
+            </legend>
+            {PAYMENT_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                className="flex cursor-pointer gap-3 rounded-lg border border-border p-4 has-checked:border-foreground has-focus-visible:ring-2 has-focus-visible:ring-ring"
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  value={option.value}
+                  checked={method === option.value}
+                  onChange={() => setMethod(option.value)}
+                  className="mt-1"
+                />
+                <span className="text-sm">
+                  <span className="block font-medium">
+                    {option.label}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {option.description}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
         </section>
 
         <section aria-labelledby="items-heading">
@@ -376,7 +426,11 @@ export function CheckoutView({
           disabled={!canPlace}
           onClick={() => void place()}
         >
-          {submitting ? "Placing order…" : "Place order"}
+          {submitting
+            ? "Placing order…"
+            : method === "CARD"
+              ? "Pay by card"
+              : "Place order"}
         </Button>
         {addresses.length > 0 || (
           <p className="mt-2 text-xs text-muted-foreground">

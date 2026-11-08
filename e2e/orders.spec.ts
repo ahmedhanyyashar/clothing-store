@@ -7,7 +7,7 @@ import {
 } from "./support/flows"
 import { waitForLink } from "./support/mailpit"
 import {
-  placeOrderFromCheckout,
+  placeCashOrder,
   readyToCheckOut,
 } from "./support/shop"
 import { expect, test } from "./support/test"
@@ -17,7 +17,7 @@ test("a placed order is emailed and listed in the history", async ({
   account,
 }) => {
   await readyToCheckOut(page, account)
-  const number = await placeOrderFromCheckout(page)
+  const number = await placeCashOrder(page)
 
   const link = await waitForLink(
     account.email,
@@ -36,7 +36,7 @@ test("a shopper cancels a pending order", async ({
   account,
 }) => {
   await readyToCheckOut(page, account)
-  const number = await placeOrderFromCheckout(page)
+  const number = await placeCashOrder(page)
 
   await page
     .getByRole("button", { name: "Cancel order" })
@@ -64,7 +64,7 @@ test("one user cannot open another user's order", async ({
   account,
 }) => {
   await readyToCheckOut(page, account)
-  const number = await placeOrderFromCheckout(page)
+  const number = await placeCashOrder(page)
   await signOut(page)
 
   await createSignedInUser(page, {
@@ -86,7 +86,7 @@ test("an account with an order on its way cannot be deleted until the order is d
   account,
 }) => {
   await readyToCheckOut(page, account)
-  const number = await placeOrderFromCheckout(page)
+  const number = await placeCashOrder(page)
 
   await open(page, "/account/security")
   await page

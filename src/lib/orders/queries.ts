@@ -31,6 +31,7 @@ const detailSelect = {
   number: true,
   status: true,
   paymentMethod: true,
+  paymentStatus: true,
   subtotalCents: true,
   shippingCents: true,
   totalCents: true,

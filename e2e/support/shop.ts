@@ -114,8 +114,11 @@ export async function readyToCheckOut(
   ).toBeVisible()
 }
 
-/** On the checkout page: place the order and return its number. */
-export async function placeOrderFromCheckout(page: Page) {
+/** On the checkout page: pay with cash on delivery and return the order's number. */
+export async function placeCashOrder(page: Page) {
+  await page
+    .getByRole("radio", { name: /Cash on delivery/ })
+    .check()
   await page
     .getByRole("button", { name: "Place order" })
     .click()

@@ -4,7 +4,7 @@ An online clothing store, built end to end with Next.js and TypeScript. The repo
 
 ## Status
 
-Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, the product catalog with its shop pages, the shopping cart, an account area, and checkout with orders. Features are added in later pull requests, and this README grows with them.
+Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in with Prisma, the design system with the page shell, and transactional email, authentication, the product catalog with its shop pages, the shopping cart, an account area, checkout with orders, and card payments. Features are added in later pull requests, and this README grows with them.
 
 ## Stack
 
@@ -119,7 +119,7 @@ public/products/  sample product photos, with their credits
 
 ## Checkout and orders
 
-- **Checkout** (`/checkout`) is for signed-in users: a visitor is sent to sign in and the cart waits for them. They review the items, choose a saved address (or add one and come straight back), and place the order. Payment is cash on delivery.
+- **Checkout** (`/checkout`) is for signed-in users: a visitor is sent to sign in and the cart waits for them. They review the items, choose a saved address (or add one and come straight back), and place the order. They pay by card on Stripe's page, or in cash on delivery.
 - **Totals:** shipping is a flat $5.00, free from $75.00, and prices include tax, so there is no tax line. Both numbers live in `src/lib/orders/pricing.ts`.
 - **Placing an order** reads prices and stock from the database again; the cart in the browser is only a request. Stock is taken with a guarded update inside one transaction, so two buyers can never both get the last item, and an order that cannot be filled changes nothing. A line that cannot be bought is reported by name, with how many are left.
 - **An order is a copy.** It keeps the name, size, image and price of each item and the delivery address as they were, so editing a product or an address later never changes it. Order numbers are random and readable (for example `CS-7K2M9QXD`).
@@ -130,6 +130,8 @@ public/products/  sample product photos, with their credits
 
 ## Payments
 
+- **Pay by card** sends the shopper to Stripe's own page, so card details never reach this app. The order is made first and holds its stock; the payment page closes after about half an hour, and an unpaid order is then cancelled and its items go back on sale. "Pay now" on the order page reopens the same payment page while it is open.
+- Coming back from Stripe, the order page says "Confirming your payment" until Stripe's signed message arrives, then shows the order as paid and confirmed. Nothing in the address can make an order look paid.
 - **The webhook** (`POST /api/webhooks/stripe`) is the only thing that marks an order paid. It checks Stripe's signature first, applies each event once however often Stripe sends it, and refuses a payment whose amount does not match the order. A payment that arrives after the order was cancelled is refunded automatically.
 - **Trying it by hand:** put a Stripe test secret key in `.env`, run `stripe listen --forward-to localhost:3000/api/webhooks/stripe` (the Stripe CLI) and copy the `whsec_` secret it prints into `STRIPE_WEBHOOK_SECRET`. Pay with the test card 4242 4242 4242 4242, any future date and any CVC.
 - **Tests** never reach Stripe: `pnpm compose` starts `stripe-mock`, a server generated from Stripe's own API description, and the webhook is tested with events signed by the test secret.
