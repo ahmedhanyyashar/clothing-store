@@ -297,3 +297,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Setting any status from any status, as a plain dropdown does, lets a delivered order go back to pending and a cancel skip the stock and the refund. Locking the order means two admins pressing a button together, or a cancel racing a shipment, end in one consistent state. Keeping the refund outside the transaction means a Stripe outage never rolls back a cancel that should have happened, and "cancelled but paid" is a state a person can see and fix instead of money lost in between.
 
 **Cost.** A cancelled paid order can briefly show as unrefunded. Emails are sent without waiting, so a mail failure is logged and not retried.
+
+## 38. A stale form cannot overwrite a sale, and deleting a product is for good
+
+**Decision.** The product form remembers the stock each size had when the page loaded. A save writes a size's stock only if the admin changed that number, and then only if the stock is still what the admin saw (a compare-and-set in the database). If it is not, the whole save is refused, nothing is kept, and the admin is told to reload. Sizes are identified by their label, so a size is added or removed but never renamed. The audit entry for an edit lists exactly what changed ("price $24.99 → $26.99; stock of M 5 → 8"), and a save that changes nothing writes nothing. Deleting a product removes it with its sizes and colors, asks first, and is recorded with the name and price; orders keep their own copy of what was bought, and carts already show a missing product as unavailable.
+
+**Why.** Stock is also changed by every sale, so an admin form that writes the number it loaded would silently undo purchases made while the page was open, and the shop could then sell what it no longer has. Writing only what was edited, and only against the value that was seen, removes that. A plain delete keeps every catalog, cart and checkout query as it is; an "archived" flag would need a filter in each of them, and one missed filter would sell a hidden product.
+
+**Cost.** An admin who loses the race has to reload and redo the change. A deleted product cannot be brought back, only added again.

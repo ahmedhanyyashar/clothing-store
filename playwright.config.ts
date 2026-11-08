@@ -31,6 +31,16 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      // these add and delete products, which the catalog tests count
+      testIgnore: /admin-products\.spec/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      // runs only when everything above has finished, so the catalog tests
+      // never see a product that is not part of the sample catalog
+      name: "catalog-writes",
+      testMatch: /admin-products\.spec/,
+      dependencies: ["chromium"],
       use: { ...devices["Desktop Chrome"] },
     },
   ],
