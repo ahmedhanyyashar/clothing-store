@@ -80,3 +80,27 @@ describe("UserMenu", () => {
     expect(refresh).toHaveBeenCalledOnce()
   })
 })
+
+describe("UserMenu and the admin area", () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it("links an admin to the admin area", () => {
+    session({ user: { name: "Ada", role: "ADMIN" } })
+    render(<UserMenu />)
+
+    expect(
+      screen.getByRole("link", { name: "Admin" })
+    ).toHaveAttribute("href", "/admin")
+  })
+
+  it("shows an ordinary user no such link", () => {
+    session({ user: { name: "Bob", role: "USER" } })
+    render(<UserMenu />)
+
+    expect(
+      screen.queryByRole("link", { name: "Admin" })
+    ).not.toBeInTheDocument()
+  })
+})

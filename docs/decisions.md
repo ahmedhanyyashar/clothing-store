@@ -273,3 +273,19 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** A hosted page keeps the app out of card data rules. Building the session from the order means what is charged is what was shown and stored. Trusting the address for payment would let anyone type their way to a paid order.
 
 **Cost.** A card order's confirmation can lag the redirect by a few seconds, and the page polls to cover it. Product images are sent to Stripe only when the site is on https, because Stripe fetches them itself.
+
+## 35. Admins are made by an operator's command, and everyone else sees a 404
+
+**Decision.** An account becomes an admin only when an operator runs `pnpm admin:grant <email>` against the database. The account must exist and have a verified address. `admin:revoke` takes the role away and refuses to remove the last admin unless forced; two revokes at the same moment cannot remove the last two. Every admin page checks the role on the server, and anyone who is not an admin gets the same "page not found" as a missing page. The role shown on the client only decides whether to show the "Admin" link.
+
+**Why.** If the app can create admins, a flaw in the app can too. A command needs access to the database, which is already the real boundary of trust, and it works the same locally and in production. A list of addresses in the environment would tie access to a config value instead of a record, and recycled or mistyped addresses would grant rights. Answering with a 404 does not tell a visitor that an admin area exists.
+
+**Cost.** Making an admin needs someone with database access. A person must sign up and verify their address first.
+
+## 36. Every admin change is recorded in the same transaction
+
+**Decision.** An audit entry says who did what to which record, in a sentence, and is written in the same transaction as the change. The person is stored as text (name and address at the time), so the entry survives deleting their account. Operator commands are recorded as the operator. The log can be read by admins and changed by no one in the app.
+
+**Why.** Admins can refund money and change prices, and "who changed this?" must always have an answer. Writing the entry in the same transaction means a change cannot happen without its record, and a record cannot describe a change that failed.
+
+**Cost.** One more write per admin change, and a table that only grows. Old entries can be archived when the volume calls for it.

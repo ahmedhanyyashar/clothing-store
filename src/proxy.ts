@@ -2,7 +2,7 @@ import { getSessionCookie } from "better-auth/cookies"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-const protectedRoutes = ["/account", "/checkout"]
+const protectedRoutes = ["/account", "/checkout", "/admin"]
 const authRoutes = ["/sign-in", "/sign-up"]
 
 // Only checks that a session cookie exists, to save a round trip. It does not
@@ -35,6 +35,7 @@ export const config = {
   matcher: [
     "/account/:path*",
     "/checkout",
+    "/admin/:path*",
     "/sign-in",
     "/sign-up",
   ],
