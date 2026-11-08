@@ -24,6 +24,17 @@ export const env = createEnv({
     // Leave unset to use Stripe. Set it to talk to a stand-in server instead
     // (the `stripe-mock` service in docker/compose.yaml, used by the tests).
     STRIPE_API_URL: z.url().optional(),
+    // Product photos live in an S3 bucket. Leave the endpoint unset to use AWS;
+    // set it to talk to an S3-compatible stand-in (the `storage` service in
+    // docker/compose.yaml, used by the tests). Without keys, the SDK looks for
+    // credentials the usual AWS way (an instance or task role).
+    S3_BUCKET: z.string().min(3),
+    S3_REGION: z.string().min(1),
+    S3_ENDPOINT_URL: z.url().optional(),
+    S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+    S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    // Where browsers fetch the photos from. Defaults to the bucket's own address.
+    S3_PUBLIC_URL: z.url().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
@@ -39,6 +50,12 @@ export const env = createEnv({
     STRIPE_WEBHOOK_SECRET:
       process.env.STRIPE_WEBHOOK_SECRET,
     STRIPE_API_URL: process.env.STRIPE_API_URL,
+    S3_BUCKET: process.env.S3_BUCKET,
+    S3_REGION: process.env.S3_REGION,
+    S3_ENDPOINT_URL: process.env.S3_ENDPOINT_URL,
+    S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,
+    S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
+    S3_PUBLIC_URL: process.env.S3_PUBLIC_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
   emptyStringAsUndefined: true,
