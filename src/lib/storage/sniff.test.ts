@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { isPhotoKey, newPhotoKey } from "./keys"
+import { newPhotoKey } from "./keys"
+import { isPhotoKey } from "./rules"
 import { sniffPhotoType } from "./sniff"
 
 const bytes = (...values: number[]) =>

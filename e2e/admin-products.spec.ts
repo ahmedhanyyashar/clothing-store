@@ -148,6 +148,83 @@ test("an admin edits a product, the changes are in the shop and the log, and the
   ).toBe(404)
 })
 
+/** A real 1 by 1 PNG, so the shop can resize it like any photo. */
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==",
+  "base64"
+)
+
+test("an admin adds a photo, shoppers see it, and deleting the product deletes the file", async ({
+  page,
+  account,
+}) => {
+  await becomeAdmin(page, account)
+  const name = uniqueName()
+  await open(page, "/admin/products/new")
+  await page.getByLabel("Name", { exact: true }).fill(name)
+  await page.getByLabel("Description").fill("Has a photo.")
+  await page.getByLabel("Price (USD)").fill("12.00")
+  await page.getByLabel("Size 1", { exact: true }).fill("M")
+  await page.getByLabel("Stock of size 1").fill("3")
+
+  // the file goes straight to the bucket, before the product is saved
+  await page.getByLabel("Add photos").setInputFiles({
+    name: "front.png",
+    mimeType: "image/png",
+    buffer: PNG,
+  })
+  await expect(
+    page.getByRole("button", { name: "Remove photo 1" })
+  ).toBeVisible()
+  await page
+    .getByRole("button", { name: "Add product" })
+    .click()
+  await expect(page).toHaveURL("/admin/products")
+
+  // shoppers see the photo, not the placeholder
+  await open(page, `/shop?q=${encodeURIComponent(name)}`)
+  await page.getByRole("link", { name }).click()
+  await expect(
+    page.getByRole("heading", { level: 1, name })
+  ).toBeVisible()
+  await expect(
+    page.getByRole("img", { name: "No image available" })
+  ).toHaveCount(0)
+  const productUrl = page.url()
+
+  // the file's address, from the edit page, then delete the product
+  await open(page, "/admin/products")
+  await page.getByRole("link", { name }).click()
+  await expect(page).toHaveURL(
+    /\/admin\/products\/c[a-z0-9]{20,}$/
+  )
+  await page.waitForLoadState("networkidle")
+  const src = await page
+    .locator("fieldset img")
+    .first()
+    .getAttribute("src")
+  const fileUrl = new URL(
+    src!,
+    page.url()
+  ).searchParams.get("url")!
+  expect((await page.request.get(fileUrl)).status()).toBe(
+    200
+  )
+
+  await page
+    .getByRole("button", { name: "Delete product" })
+    .click()
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Delete product" })
+    .click()
+  await expect(page).toHaveURL("/admin/products")
+  expect((await page.request.get(fileUrl)).status()).toBe(
+    404
+  )
+  expect((await page.goto(productUrl))?.status()).toBe(404)
+})
+
 test("the form says what is wrong and saves nothing", async ({
   page,
   account,

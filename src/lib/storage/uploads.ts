@@ -6,8 +6,12 @@ import {
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post"
 
 import { BUCKET, publicUrl, s3 } from "./client"
-import { isPhotoKey, newPhotoKey } from "./keys"
-import { MAX_PHOTO_BYTES, type PhotoType } from "./rules"
+import { newPhotoKey } from "./keys"
+import {
+  isPhotoKey,
+  MAX_PHOTO_BYTES,
+  type PhotoType,
+} from "./rules"
 import { SNIFF_BYTES, sniffPhotoType } from "./sniff"
 
 const FIVE_MINUTES = 5 * 60
