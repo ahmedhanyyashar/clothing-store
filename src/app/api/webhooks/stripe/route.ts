@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { env } from "@/env"
+import { logger } from "@/lib/logger"
 import { sendOrderConfirmation } from "@/lib/orders/email"
 import { stripe } from "@/lib/payments/stripe"
 import {
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
     if (result.outcome === "paid") {
       void sendOrderConfirmation(result.orderId).catch(
         (error) =>
-          console.error(
+          logger.error(
             "order confirmation email failed",
             error
           )
@@ -51,13 +52,13 @@ export async function POST(request: Request) {
     // Answering with an error makes Stripe send the event again for days. That
     // helps when something was briefly unavailable, never for a wrong amount.
     if (error instanceof PaymentMismatchError) {
-      console.error(
+      logger.error(
         "stripe payment did not match its order",
         error
       )
       return NextResponse.json({ received: true })
     }
-    console.error("stripe webhook failed", error)
+    logger.error("stripe webhook failed", error)
     return NextResponse.json(
       { error: "Failed" },
       { status: 500 }

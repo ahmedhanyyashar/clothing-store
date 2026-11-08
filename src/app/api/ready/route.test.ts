@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 
+import { logger } from "@/lib/logger"
+
 import { GET } from "./route"
 
 vi.mock("@/lib/db/client", () => ({
@@ -10,7 +12,7 @@ vi.mock("@/lib/db/client", () => ({
 
 describe("GET /api/ready", () => {
   it("reports unavailable, without error details, when the database fails", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {})
+    vi.spyOn(logger, "error").mockImplementation(() => {})
 
     const response = await GET()
 

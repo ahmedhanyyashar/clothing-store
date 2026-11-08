@@ -17,6 +17,7 @@ import {
   passwordResetEmail,
   verificationEmail,
 } from "@/lib/email/templates"
+import { logger } from "@/lib/logger"
 import {
   anonymiseOrders,
   hasActiveOrders,
@@ -55,7 +56,7 @@ export const auth = betterAuth({
         to: user.email,
         ...passwordResetEmail({ name: user.name, url }),
       }).catch((error) =>
-        console.error("password reset email failed", error)
+        logger.error("password reset email failed", error)
       )
     },
   },
@@ -69,7 +70,7 @@ export const auth = betterAuth({
         to: user.email,
         ...verificationEmail({ name: user.name, url }),
       }).catch((error) =>
-        console.error("verification email failed", error)
+        logger.error("verification email failed", error)
       )
     },
   },
@@ -148,10 +149,7 @@ export const auth = betterAuth({
           resetUrl: `${env.NEXT_PUBLIC_APP_URL}/forgot-password`,
         }),
       }).catch((error) =>
-        console.error(
-          "password changed email failed",
-          error
-        )
+        logger.error("password changed email failed", error)
       )
     }),
   },

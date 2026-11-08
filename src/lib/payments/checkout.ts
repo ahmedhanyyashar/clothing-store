@@ -2,6 +2,7 @@ import type Stripe from "stripe"
 
 import { env } from "@/env"
 import { prisma } from "@/lib/db/client"
+import { logger } from "@/lib/logger"
 
 import { CURRENCY, stripe } from "./stripe"
 
@@ -158,7 +159,7 @@ export async function paymentUrlFor(
     })
     return { ok: true, url: session.url }
   } catch (error) {
-    console.error("could not start the payment", error)
+    logger.error("could not start the payment", error)
     return { ok: false, reason: "unavailable" }
   }
 }
@@ -172,6 +173,6 @@ export async function expireSession(sessionId: string) {
   try {
     await stripe.checkout.sessions.expire(sessionId)
   } catch (error) {
-    console.error("could not close the payment page", error)
+    logger.error("could not close the payment page", error)
   }
 }

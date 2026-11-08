@@ -31,7 +31,7 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 
 - Strict TypeScript. No `any`, no unused variables (prefix with `_` when intentional).
 - Use the `@/` alias for imports from `src/`. Import order is applied by Prettier, so run `pnpm format` instead of ordering by hand.
-- No `console.log`.
+- No `console.log`. Server code logs through `logger` from `@/lib/logger` (called like `console.error`), not `console`, so every line is JSON.
 - Record a design decision in `docs/decisions.md` in the same pull request that makes it.
 - Add a dependency only when the platform and the existing dependencies do not cover the need.
 

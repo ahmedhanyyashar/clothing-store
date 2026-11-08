@@ -128,6 +128,40 @@ jobs:
           path: .reports/playwright/html
           retention-days: 7
 
+  # Informational for now: not one of the required checks. Accessibility and
+  # best practices fail the job below a score; performance only warns, because
+  # a shared runner's timings are noisy.
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: clothing_store_test
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U root -d clothing_store_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm db:deploy
+      - run: pnpm db:seed
+      - run: pnpm build
+      - run: pnpm exec lhci autorun
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: lighthouse-report
+          path: .reports/lighthouse
+          retention-days: 7
+
   commits:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest

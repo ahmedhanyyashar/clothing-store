@@ -112,6 +112,12 @@ With `DEMO_MODE="true"` (and `DEMO_PASSWORD` set), the sign-in page offers **Use
 - **Consent:** a first visit shows a banner with two equal choices. Nothing is loaded from Google, and no analytics cookie is set, until "Allow analytics". The choice is kept in a cookie of our own for a year and can be changed from "Cookie settings" in the footer. Set `NEXT_PUBLIC_GA_ID` to turn analytics on at all.
 - **Content Security Policy:** every page gets its own policy with a fresh nonce (`src/proxy.ts`, `src/lib/csp.ts`): scripts run only with that nonce, nothing can frame the site, and connections go only to the site, the photo bucket and (when configured) Google Analytics. Because the nonce is per response, pages render per request.
 
+## Logs, errors and quality checks
+
+- **Logs** are one JSON object per line (`logger` in `src/lib/logger.ts`), errors on stderr, so a log service reads them without parsing rules. Every error that escapes a page, a route handler or a server action is logged with its route and request by `onRequestError` (`src/instrumentation.ts`); alert on `"level":"error"`.
+- **Accessibility:** component tests check each piece with axe, and `e2e/a11y.spec.ts` scans the public, account and admin pages (WCAG 2.1 A and AA) in a real browser.
+- **Lighthouse** runs in CI against the production build with the sample catalog (`lighthouserc.json`). Accessibility and best-practices scores fail the job below a threshold; performance only warns, because a shared runner's timings are too noisy to gate on. The report is kept as a build artifact. `pnpm exec lhci autorun` runs it locally.
+
 ## Feedback
 
 - **Toasts** confirm an action that succeeded (added to the cart, saved, cancelled, signed out). They are announced to screen readers and have a close button. Errors stay next to the field or button they belong to, so they can be read and fixed.

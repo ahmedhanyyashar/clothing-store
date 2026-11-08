@@ -2,6 +2,7 @@
 
 import { requireUser } from "@/lib/auth/session"
 import { prisma } from "@/lib/db/client"
+import { logger } from "@/lib/logger"
 import {
   expireSession,
   paymentUrlFor,
@@ -85,7 +86,7 @@ export async function placeOrderAction(
   if (!result.reused) {
     void sendOrderConfirmation(result.orderId).catch(
       (error) =>
-        console.error(
+        logger.error(
           "order confirmation email failed",
           error
         )
