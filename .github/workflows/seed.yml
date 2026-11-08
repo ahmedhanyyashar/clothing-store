@@ -1,0 +1,66 @@
+name: Seed the demo data
+
+# Loads the demo data (14 products, 12 customers, the demo shopper and demo
+# admin, and 72 orders over 60 days) into the production database. Run it by
+# hand, once, after the first deploy.
+#
+# The database can only be reached from inside the network, so this runs the
+# app's own task once with a different command: the bundled seed in the image.
+# The task already has the database address and every secret the seed needs.
+#
+# It REPLACES ALL PRODUCTS. Run it before adding real ones. It touches nothing
+# else apart from the demo accounts and their orders.
+on:
+  workflow_dispatch:
+
+# not at the same time as a deploy
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+      ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+      SUBNET_IDS: ${{ vars.SUBNET_IDS }}
+      SECURITY_GROUP_ID: ${{ vars.SECURITY_GROUP_ID }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Run the seed in the network
+        run: |
+          # the task definition the service runs now, so the image is the one deployed
+          definition=$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
+            --query 'services[0].taskDefinition' --output text)
+          task=$(aws ecs run-task \
+            --cluster "$ECS_CLUSTER" \
+            --launch-type FARGATE \
+            --task-definition "$definition" \
+            --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],securityGroups=[$SECURITY_GROUP_ID],assignPublicIp=DISABLED}" \
+            --overrides '{"containerOverrides":[{"name":"app","command":["node","seed.mjs","--demo"]}]}' \
+            --query 'tasks[0].taskArn' --output text)
+          if [ -z "$task" ] || [ "$task" = "None" ]; then
+            echo "The seed task did not start." >&2
+            exit 1
+          fi
+          aws ecs wait tasks-stopped --cluster "$ECS_CLUSTER" --tasks "$task"
+          code=$(aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$task" \
+            --query 'tasks[0].containers[0].exitCode' --output text)
+          if [ "$code" != "0" ]; then
+            echo "The seed failed with exit code $code (see the task's log in CloudWatch)." >&2
+            exit 1
+          fi
+          echo "The demo data is loaded."

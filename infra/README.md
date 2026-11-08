@@ -154,9 +154,12 @@ The first apply takes about 15 minutes, mostly the database and CloudFront.
    next, drop the old one after that.
 5. **Before you destroy the stack, set `DEPLOY_ENABLED` to anything but
    `true`**, or every merge will try to deploy to something that is gone.
-6. **Fill the database** if you want the demo (a one-off task with the app image
-   is not set up; run `pnpm db:seed:demo` from a machine that can reach the
-   database, or leave the shop empty).
+6. **Fill the shop** with the demo data, if you want it: run the _Seed the demo
+   data_ workflow once from the Actions tab. The database cannot be reached from
+   outside, so it runs the app's own task once inside the network with a different
+   command (the bundled `seed.mjs`). It **replaces all products**, so run it
+   before adding real ones, and it makes the demo accounts the sign-in page's
+   buttons use.
 
 ## Trying it without AWS
 
