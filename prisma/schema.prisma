@@ -154,6 +154,9 @@ model ProductImage {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   url       String
+  // The object in the photo bucket. Empty for the sample catalog, whose pictures
+  // are files of the app itself and are never deleted.
+  key       String? @unique
   position  Int     @default(0)
 
   @@index([productId])

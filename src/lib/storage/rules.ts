@@ -14,3 +14,8 @@ export type PhotoType = keyof typeof PHOTO_TYPES
 export const isPhotoType = (
   type: string
 ): type is PhotoType => Object.hasOwn(PHOTO_TYPES, type)
+
+const KEY = /^products\/[0-9a-f-]{36}\.(jpg|png|webp)$/
+
+/** Whether a key has the shape `newPhotoKey` makes, and nothing else. */
+export const isPhotoKey = (key: string) => KEY.test(key)

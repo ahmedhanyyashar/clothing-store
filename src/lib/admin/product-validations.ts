@@ -4,6 +4,7 @@ import {
   Category,
   ProductType,
 } from "@/generated/prisma/enums"
+import { isPhotoKey, MAX_PHOTOS } from "@/lib/storage/rules"
 
 export const MAX_SIZES = 12
 export const MAX_COLORS = 12
@@ -87,6 +88,36 @@ export const productSchema = z.object({
     .refine(
       (sizes) => unique(sizes.map((size) => size.label)),
       "Each size can only appear once"
+    ),
+  // In display order, the first being the one shown in lists. A photo is either
+  // one the product already has (`id`) or one just uploaded (`key`). `url` is
+  // only for showing it in the form: the server never reads it.
+  photos: z
+    .array(
+      z
+        .object({
+          id: z.string().nullable(),
+          key: z
+            .string()
+            .refine(isPhotoKey, "Invalid photo")
+            .nullable(),
+          url: z.string(),
+        })
+        .refine(
+          (photo) =>
+            (photo.id === null) !== (photo.key === null),
+          "Invalid photo"
+        )
+    )
+    .max(
+      MAX_PHOTOS,
+      `A product has at most ${MAX_PHOTOS} photos`
+    )
+    .refine(
+      (photos) =>
+        new Set(photos.map((p) => p.id ?? p.key)).size ===
+        photos.length,
+      "Each photo can only appear once"
     ),
   colors: z
     .array(

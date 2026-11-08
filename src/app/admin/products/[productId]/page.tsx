@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import Image from "next/image"
 import { notFound } from "next/navigation"
 
 import { DeleteProduct } from "@/components/admin/DeleteProduct"
@@ -43,6 +42,11 @@ export default async function EditProductPage({
       stock: size.stock,
       expectedStock: size.stock,
     })),
+    photos: product.images.map(({ id, url }) => ({
+      id,
+      key: null,
+      url,
+    })),
     colors: product.colors.map(({ name, hex }) => ({
       name,
       hex,
@@ -58,27 +62,6 @@ export default async function EditProductPage({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {product.images.length > 0 && (
-            <ul
-              className="flex flex-wrap gap-2"
-              aria-label="Photos"
-            >
-              {product.images.map((image) => (
-                <li
-                  key={image.id}
-                  className="relative h-20 w-16 overflow-hidden rounded bg-muted"
-                >
-                  <Image
-                    src={image.url}
-                    alt=""
-                    fill
-                    sizes="64px"
-                    className="object-cover"
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
           <ProductForm id={product.id} product={values} />
         </CardContent>
       </Card>

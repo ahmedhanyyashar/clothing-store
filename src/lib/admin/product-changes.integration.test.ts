@@ -5,9 +5,11 @@ import { prisma } from "@/lib/db/client"
 import { placeOrder } from "@/lib/orders/place"
 import {
   createCardOrder,
+  createProduct as createFactoryProduct,
   createSavedAddress,
   createUser,
 } from "@/test/factories"
+import { photoExists, uploadTestPhoto } from "@/test/photos"
 import { resetDb } from "@/test/reset-db"
 
 import type { Admin } from "./order-actions"
@@ -46,6 +48,7 @@ const tee = (
     { label: "S", stock: 5, expectedStock: null },
     { label: "M", stock: 10, expectedStock: null },
   ],
+  photos: [],
   colors: [{ name: "White", hex: "#ffffff" }],
   ...over,
 })
@@ -60,6 +63,7 @@ async function formFor(
     include: {
       sizes: { orderBy: { position: "asc" } },
       colors: true,
+      images: { orderBy: { position: "asc" } },
     },
   })
   return {
@@ -74,6 +78,11 @@ async function formFor(
       stock: s.stock,
       expectedStock: s.stock,
     })),
+    photos: product.images.map(({ id, url }) => ({
+      id,
+      key: null,
+      url,
+    })),
     colors: product.colors.map(({ name, hex }) => ({
       name,
       hex,
@@ -82,8 +91,13 @@ async function formFor(
   }
 }
 
-const created = async (over: Partial<ProductInput> = {}) =>
-  (await createProduct(admin, tee(over))).id
+const created = async (
+  over: Partial<ProductInput> = {}
+) => {
+  const result = await createProduct(admin, tee(over))
+  if (!result.ok) throw new Error(result.reason)
+  return result.id
+}
 const stock = async (id: string, label: string) =>
   (
     await prisma.productSize.findFirstOrThrow({
@@ -461,5 +475,238 @@ describe("deleteProduct", () => {
       ok: false,
       reason: "not-found",
     })
+  })
+})
+
+describe("photos", () => {
+  const onProduct = (id: string) =>
+    prisma.productImage.findMany({
+      where: { productId: id },
+      orderBy: { position: "asc" },
+    })
+  const asNew = (photo: { key: string; url: string }) => ({
+    id: null,
+    ...photo,
+  })
+
+  it("saves uploaded photos with the product, in order", async () => {
+    const [a, b] = [
+      await uploadTestPhoto(),
+      await uploadTestPhoto(),
+    ]
+
+    const id = await created({
+      photos: [asNew(a), asNew(b)],
+    })
+
+    const rows = await onProduct(id)
+    expect(
+      rows.map((r) => [r.key, r.url, r.position])
+    ).toEqual([
+      [a.key, a.url, 0],
+      [b.key, b.url, 1],
+    ])
+    expect(
+      (await audits("product.create"))[0].summary
+    ).toContain("and 2 photos")
+  })
+
+  it("refuses a photo that never arrived, and creates nothing", async () => {
+    const result = await createProduct(
+      admin,
+      tee({
+        photos: [
+          asNew({
+            key: "products/0b1b6f0e-5a3e-4c1f-9d2a-1f0e5a3e4c1f.png",
+            url: "http://example.test/x.png",
+          }),
+        ],
+      })
+    )
+
+    expect(result).toEqual({
+      ok: false,
+      reason: "photos-missing",
+    })
+    expect(await prisma.product.count()).toBe(0)
+  })
+
+  it("refuses a file that is not an image", async () => {
+    const fake = await uploadTestPhoto(
+      new TextEncoder().encode("<script>alert(1)</script>")
+    )
+
+    const result = await createProduct(
+      admin,
+      tee({ photos: [asNew(fake)] })
+    )
+
+    expect(result).toEqual({
+      ok: false,
+      reason: "photos-missing",
+    })
+    expect(await prisma.product.count()).toBe(0)
+  })
+
+  it("adds, reorders and removes photos, deleting the file of a removed one", async () => {
+    const [a, b, c] = [
+      await uploadTestPhoto(),
+      await uploadTestPhoto(),
+      await uploadTestPhoto(),
+    ]
+    const id = await created({
+      photos: [asNew(a), asNew(b)],
+    })
+    const [rowA, rowB] = await onProduct(id)
+
+    // drop a, keep b, put a new c first
+    const result = await updateProduct(
+      admin,
+      id,
+      await formFor(id, {
+        photos: [
+          asNew(c),
+          { id: rowB.id, key: null, url: rowB.url },
+        ],
+      })
+    )
+
+    expect(result).toMatchObject({
+      ok: true,
+      changed: true,
+    })
+    const rows = await onProduct(id)
+    expect(rows.map((r) => [r.key, r.position])).toEqual([
+      [c.key, 0],
+      [b.key, 1],
+    ])
+    expect(await photoExists(a.key)).toBe(false)
+    expect(await photoExists(b.key)).toBe(true)
+    expect(await photoExists(c.key)).toBe(true)
+    expect(rowA.key).toBe(a.key)
+    expect(
+      (await audits("product.update")).at(-1)!.summary
+    ).toContain("1 photo removed; 1 photo added")
+  })
+
+  it("notes a reorder and writes nothing when nothing changed", async () => {
+    const [a, b] = [
+      await uploadTestPhoto(),
+      await uploadTestPhoto(),
+    ]
+    const id = await created({
+      photos: [asNew(a), asNew(b)],
+    })
+    expect(
+      await updateProduct(admin, id, await formFor(id))
+    ).toMatchObject({ ok: true, changed: false })
+
+    const form = await formFor(id)
+    await updateProduct(admin, id, {
+      ...form,
+      photos: [...form.photos].reverse(),
+    })
+
+    expect((await onProduct(id)).map((r) => r.key)).toEqual(
+      [b.key, a.key]
+    )
+    expect(
+      (await audits("product.update")).at(-1)!.summary
+    ).toContain("photos reordered")
+  })
+
+  it("refuses a list that names a photo the product does not have", async () => {
+    const photo = await uploadTestPhoto()
+    const id = await created({ photos: [asNew(photo)] })
+    const other = await created({
+      photos: [asNew(await uploadTestPhoto())],
+    })
+    const [foreign] = await onProduct(other)
+
+    const result = await updateProduct(
+      admin,
+      id,
+      await formFor(id, {
+        name: "Renamed",
+        photos: [
+          { id: foreign.id, key: null, url: foreign.url },
+        ],
+      })
+    )
+
+    expect(result).toEqual({
+      ok: false,
+      reason: "photos-changed",
+    })
+    expect(
+      (
+        await prisma.product.findUniqueOrThrow({
+          where: { id },
+        })
+      ).name
+    ).toBe("Classic Tee")
+    expect(await photoExists(photo.key)).toBe(true)
+  })
+
+  it("keeps the sample pictures, which have no file to delete", async () => {
+    const product = await createFactoryProduct()
+    const form = await formFor(product.id, { photos: [] })
+
+    await updateProduct(admin, product.id, form)
+
+    expect(await onProduct(product.id)).toEqual([])
+  })
+
+  it("deletes a product's files with it", async () => {
+    const [a, b] = [
+      await uploadTestPhoto(),
+      await uploadTestPhoto(),
+    ]
+    const id = await created({
+      photos: [asNew(a), asNew(b)],
+    })
+
+    await deleteProduct(admin, id)
+
+    expect(await photoExists(a.key)).toBe(false)
+    expect(await photoExists(b.key)).toBe(false)
+    expect(await prisma.productImage.count()).toBe(0)
+  })
+
+  it("keeps a file that a placed order still shows, whether the photo is removed or the product deleted", async () => {
+    const [removed, deleted] = [
+      await uploadTestPhoto(),
+      await uploadTestPhoto(),
+    ]
+    const buy = async (productId: string) => {
+      const user = await createUser()
+      const address = await createSavedAddress(user.id)
+      const placed = await placeOrder({
+        userId: user.id,
+        addressId: address.id,
+        idempotencyKey: crypto.randomUUID(),
+        items: [{ productId, size: "M", quantity: 1 }],
+        paymentMethod: "CASH_ON_DELIVERY",
+      })
+      expect(placed.ok).toBe(true)
+    }
+
+    const first = await created({
+      photos: [asNew(removed)],
+    })
+    await buy(first)
+    await updateProduct(
+      admin,
+      first,
+      await formFor(first, { photos: [] })
+    )
+    const second = await created({
+      photos: [asNew(deleted)],
+    })
+    await buy(second)
+    await deleteProduct(admin, second)
+
+    expect(await photoExists(removed.key)).toBe(true)
+    expect(await photoExists(deleted.key)).toBe(true)
   })
 })

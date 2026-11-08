@@ -2,6 +2,8 @@ import { S3Client } from "@aws-sdk/client-s3"
 
 import { env } from "@/env"
 
+import { publicBase } from "./public-base"
+
 export const BUCKET = env.S3_BUCKET
 
 export const s3 = new S3Client({
@@ -20,12 +22,12 @@ export const s3 = new S3Client({
     }),
 })
 
-const publicBase =
-  env.S3_PUBLIC_URL ??
-  (env.S3_ENDPOINT_URL
-    ? `${env.S3_ENDPOINT_URL}/${BUCKET}`
-    : `https://${BUCKET}.s3.${env.S3_REGION}.amazonaws.com`)
+const base = publicBase({
+  bucket: BUCKET,
+  region: env.S3_REGION,
+  endpoint: env.S3_ENDPOINT_URL,
+  publicUrl: env.S3_PUBLIC_URL,
+})
 
 /** The address a browser loads the object from. */
-export const publicUrl = (key: string) =>
-  `${publicBase.replace(/\/$/, "")}/${key}`
+export const publicUrl = (key: string) => `${base}/${key}`

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import { MAX_PHOTOS } from "@/lib/storage/rules"
+
 import {
   MAX_SIZES,
   parsePrice,
@@ -66,6 +68,7 @@ const valid: ProductInput = {
     { label: "S", stock: 5, expectedStock: null },
     { label: "M", stock: 0, expectedStock: null },
   ],
+  photos: [],
   colors: [{ name: "White", hex: "#ffffff" }],
 }
 
@@ -192,6 +195,61 @@ describe("productSchema", () => {
     ).toHaveProperty(
       "colors",
       "Each color can only appear once"
+    )
+  })
+
+  const KEY =
+    "products/0b1b6f0e-5a3e-4c1f-9d2a-1f0e5a3e4c1f.png"
+  const OTHER =
+    "products/1c2c7f1f-6b4f-4d20-8e3b-2a1f6b4f5d2a.png"
+
+  it("accepts photos that are kept or just uploaded, in order", () => {
+    expect(
+      problems({
+        photos: [
+          { id: "img1", key: null, url: "/a.webp" },
+          { id: null, key: KEY, url: "http://s3/a.png" },
+        ],
+      })
+    ).toEqual({})
+  })
+
+  it("refuses a photo that is both or neither, or has a key of another shape", () => {
+    for (const photo of [
+      { id: "img1", key: KEY, url: "x" },
+      { id: null, key: null, url: "x" },
+      { id: null, key: "../secret", url: "x" },
+      { id: null, key: "products/x.svg", url: "x" },
+    ])
+      expect(
+        Object.keys(problems({ photos: [photo] })).some(
+          (path) => path.startsWith("photos.0")
+        )
+      ).toBe(true)
+  })
+
+  it(`allows at most ${MAX_PHOTOS} photos, and none twice`, () => {
+    const many = Array.from(
+      { length: MAX_PHOTOS + 1 },
+      (_, i) => ({
+        id: `img${i}`,
+        key: null,
+        url: "x",
+      })
+    )
+    expect(problems({ photos: many })).toHaveProperty(
+      "photos"
+    )
+    expect(
+      problems({
+        photos: [
+          { id: null, key: OTHER, url: "x" },
+          { id: null, key: OTHER, url: "x" },
+        ],
+      })
+    ).toHaveProperty(
+      "photos",
+      "Each photo can only appear once"
     )
   })
 })

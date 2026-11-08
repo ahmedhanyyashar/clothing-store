@@ -313,3 +313,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Sending files through the app costs memory and request time and puts a size limit in the app's way. A signed PUT cannot limit size, so a huge file would be stored first and removed afterwards; a signed POST makes S3 refuse it. The type a browser reports and the name it gives are claims, so neither is used: the key is generated, and the type is read from the bytes. A mocked client would pass whatever the code asked for and prove nothing about the limits.
 
 **Cost.** One more container in development and CI. A photo uploaded and never attached stays in the bucket until it is swept.
+
+## 40. A file goes when nothing needs it, and an order's picture is something an order needs
+
+**Decision.** Photos are saved with the product in the same transaction as its other changes, and only after the objects are checked (they exist, are within the size limit and are real images). A photo that is removed, or belongs to a product that is deleted, has its file deleted after that change is saved, except when a placed order still shows that file as its picture. The sample catalog's pictures are files of the app, have no key, and are never deleted. A save that lists a photo the product no longer has is refused as a whole, like a stale stock.
+
+**Why.** An order keeps its own copy of what was bought, including the address of its picture. Deleting that file would turn the thumbnail in every past order into a broken image, so a file is kept for as long as an order shows it. Deleting after the commit means a failed deletion can never undo a saved product; a file left behind is harmless and is swept up later.
+
+**Cost.** Photos of products that have been sold stay in storage after the product is gone. Between a delete and its files being removed there is a short time in which a file exists with no row; an order placed in the same instant as a photo is removed could copy an address whose file is then deleted.

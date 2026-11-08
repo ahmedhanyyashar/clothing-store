@@ -19,6 +19,13 @@ export type SaveProductResult =
       fieldErrors?: Record<string, string>
     }
 
+const PHOTO_MESSAGES = {
+  "photos-missing":
+    "A photo did not finish uploading. Remove it and add it again.",
+  "photos-changed":
+    "The photos of this product changed since you opened this page. Nothing was saved: reload the page and make the change again.",
+} as const
+
 // Every action checks the admin itself: calling one is a plain POST that
 // anyone can send, whatever page it was meant for.
 
@@ -44,7 +51,12 @@ export async function saveProductAction(
 
   if (id === null) {
     const created = await createProduct(admin, parsed.data)
-    return { ok: true, id: created.id, changed: true }
+    return created.ok
+      ? { ok: true, id: created.id, changed: true }
+      : {
+          ok: false,
+          message: PHOTO_MESSAGES[created.reason],
+        }
   }
 
   const result = await updateProduct(admin, id, parsed.data)
@@ -54,7 +66,10 @@ export async function saveProductAction(
     message:
       result.reason === "not-found"
         ? "That product no longer exists."
-        : `The stock of ${result.sizes.join(", ")} changed since you opened this page (a sale, or another admin). Nothing was saved: reload the page and make the change again.`,
+        : result.reason === "photos-missing" ||
+            result.reason === "photos-changed"
+          ? PHOTO_MESSAGES[result.reason]
+          : `The stock of ${result.sizes.join(", ")} changed since you opened this page (a sale, or another admin). Nothing was saved: reload the page and make the change again.`,
   }
 }
 

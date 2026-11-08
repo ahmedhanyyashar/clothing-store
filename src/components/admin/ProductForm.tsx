@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation"
 import {
   useFieldArray,
   useForm,
+  useWatch,
   type FieldPath,
 } from "react-hook-form"
 
+import { PhotoFields } from "@/components/admin/PhotoFields"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -48,12 +50,13 @@ const EMPTY: ProductInput = {
   type: "T_SHIRTS",
   bestSeller: false,
   sizes: [{ label: "", stock: 0, expectedStock: null }],
+  photos: [],
   colors: [],
 }
 
 /**
  * Adds a product, or edits `product` (pass its values, with each size's
- * `expectedStock` set to the stock it has now). Photos are not managed here.
+ * `expectedStock` set to the stock it has now).
  */
 export function ProductForm({
   id,
@@ -75,6 +78,11 @@ export function ProductForm({
   const sizes = useFieldArray({
     control: formControl,
     name: "sizes",
+  })
+  // not a field array: a photo has no input of its own to register
+  const photos = useWatch({
+    control: formControl,
+    name: "photos",
   })
   const colors = useFieldArray({
     control: formControl,
@@ -273,6 +281,21 @@ export function ProductForm({
           Add a size
         </Button>
       </fieldset>
+
+      <PhotoFields
+        photos={photos}
+        change={(update) =>
+          form.setValue(
+            "photos",
+            update(form.getValues("photos")),
+            { shouldDirty: true }
+          )
+        }
+        error={
+          errors.photos?.message ??
+          errors.photos?.root?.message
+        }
+      />
 
       <fieldset className="space-y-3">
         <legend className="text-sm font-semibold">

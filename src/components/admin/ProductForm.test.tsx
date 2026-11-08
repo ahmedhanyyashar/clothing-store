@@ -11,6 +11,7 @@ import {
 
 import { saveProductAction } from "@/lib/admin/product-actions"
 import type { ProductInput } from "@/lib/admin/product-validations"
+import { uploadPhotos } from "@/lib/storage/browser"
 
 import { ProductForm } from "./ProductForm"
 
@@ -19,6 +20,9 @@ const refresh = vi.fn()
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, refresh }),
+}))
+vi.mock("@/lib/storage/browser", () => ({
+  uploadPhotos: vi.fn(),
 }))
 vi.mock("@/lib/admin/product-actions", () => ({
   saveProductAction: vi.fn(),
@@ -37,6 +41,7 @@ const existing: ProductInput = {
     { label: "S", stock: 5, expectedStock: 5 },
     { label: "M", stock: 10, expectedStock: 10 },
   ],
+  photos: [],
   colors: [{ name: "White", hex: "#ffffff" }],
 }
 
@@ -168,6 +173,7 @@ describe("ProductForm for a new product", () => {
       sizes: [
         { label: "30", stock: 6, expectedStock: null },
       ],
+      photos: [],
       colors: [],
     })
     expect(refresh).toHaveBeenCalled()
@@ -275,5 +281,149 @@ describe("ProductForm for an existing product", () => {
       await screen.findByRole("alert")
     ).toHaveTextContent("stock of M changed")
     expect(push).not.toHaveBeenCalled()
+  })
+})
+
+describe("ProductForm photos", () => {
+  const withPhotos: ProductInput = {
+    ...existing,
+    photos: [
+      { id: "i1", key: null, url: "/products/a.webp" },
+      { id: "i2", key: null, url: "/products/b.webp" },
+    ],
+  }
+  const png = () =>
+    new File([new Uint8Array(10)], "front.png", {
+      type: "image/png",
+    })
+
+  it("uploads chosen files, shows them, and sends their keys with the save", async () => {
+    vi.mocked(uploadPhotos).mockResolvedValue([
+      {
+        key: "products/0b1b6f0e-5a3e-4c1f-9d2a-1f0e5a3e4c1f.png",
+        url: "/products/new.webp",
+        name: "front.png",
+      },
+    ])
+    save.mockResolvedValue({
+      ok: true,
+      id: "p1",
+      changed: true,
+    })
+    const user = userEvent.setup()
+    render(<ProductForm id="p1" product={withPhotos} />)
+
+    await user.upload(
+      screen.getByLabelText("Add photos"),
+      png()
+    )
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Remove photo 3",
+      })
+    ).toBeInTheDocument()
+    await user.click(
+      screen.getByRole("button", { name: "Save changes" })
+    )
+    await vi.waitFor(() => expect(save).toHaveBeenCalled())
+    expect(
+      (save.mock.calls[0][1] as ProductInput).photos
+    ).toEqual([
+      { id: "i1", key: null, url: "/products/a.webp" },
+      { id: "i2", key: null, url: "/products/b.webp" },
+      {
+        id: null,
+        key: "products/0b1b6f0e-5a3e-4c1f-9d2a-1f0e5a3e4c1f.png",
+        url: "/products/new.webp",
+      },
+    ])
+  })
+
+  it("says why an upload failed and keeps what was there", async () => {
+    vi.mocked(uploadPhotos).mockRejectedValue(
+      new Error("front.png could not be uploaded.")
+    )
+    const user = userEvent.setup()
+    render(<ProductForm id="p1" product={withPhotos} />)
+
+    await user.upload(
+      screen.getByLabelText("Add photos"),
+      png()
+    )
+
+    expect(
+      await screen.findByRole("alert")
+    ).toHaveTextContent("front.png could not be uploaded.")
+    expect(
+      screen.queryByRole("button", {
+        name: "Remove photo 3",
+      })
+    ).not.toBeInTheDocument()
+  })
+
+  it("moves and removes photos", async () => {
+    save.mockResolvedValue({
+      ok: true,
+      id: "p1",
+      changed: true,
+    })
+    const user = userEvent.setup()
+    render(<ProductForm id="p1" product={withPhotos} />)
+
+    expect(
+      screen.getByText("Main photo")
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", {
+        name: "Move photo 1 earlier",
+      })
+    ).toBeDisabled()
+    await user.click(
+      screen.getByRole("button", {
+        name: "Move photo 2 earlier",
+      })
+    )
+    await user.click(
+      screen.getByRole("button", { name: "Remove photo 2" })
+    )
+    await user.click(
+      screen.getByRole("button", { name: "Save changes" })
+    )
+
+    await vi.waitFor(() => expect(save).toHaveBeenCalled())
+    expect(
+      (save.mock.calls[0][1] as ProductInput).photos.map(
+        (p) => p.id
+      )
+    ).toEqual(["i2"])
+  })
+
+  it("stops offering uploads at the limit", () => {
+    render(
+      <ProductForm
+        id="p1"
+        product={{
+          ...existing,
+          photos: Array.from({ length: 4 }, (_, i) => ({
+            id: `i${i}`,
+            key: null,
+            url: "/products/a.webp",
+          })),
+        }}
+      />
+    )
+
+    expect(
+      screen.getByLabelText("Add photos")
+    ).toBeDisabled()
+  })
+
+  it("has no accessibility violations with photos", async () => {
+    const { container } = render(
+      <ProductForm id="p1" product={withPhotos} />
+    )
+
+    expect(await axe(container)).toHaveNoViolations()
   })
 })
