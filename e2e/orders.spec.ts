@@ -88,7 +88,7 @@ test("an account with an order on its way cannot be deleted until the order is d
   await readyToCheckOut(page, account)
   const number = await placeCashOrder(page)
 
-  await open(page, "/account/security")
+  await open(page, "/account/settings")
   await page
     .getByRole("button", { name: "Delete account" })
     .click()
@@ -116,7 +116,7 @@ test("an account with an order on its way cannot be deleted until the order is d
     page.getByText("This order was cancelled.")
   ).toBeVisible()
 
-  await open(page, "/account/security")
+  await open(page, "/account/settings")
   await page
     .getByRole("button", { name: "Delete account" })
     .click()

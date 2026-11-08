@@ -67,7 +67,9 @@ describe("UserMenu", () => {
     const { container } = render(<UserMenu />)
 
     expect(
-      screen.getByRole("link", { name: "Ada Lovelace" })
+      screen.getByRole("link", {
+        name: "Account of Ada Lovelace",
+      })
     ).toHaveAttribute("href", "/account")
     expect(await axe(container)).toHaveNoViolations()
 

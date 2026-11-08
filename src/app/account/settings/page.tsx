@@ -15,10 +15,10 @@ import {
 import { ChangePasswordForm } from "./change-password-form"
 import { DeleteAccount } from "./delete-account"
 
-export const metadata: Metadata = { title: "Security" }
+export const metadata: Metadata = { title: "Settings" }
 
-export default async function SecurityPage() {
-  const user = await requireUser("/account/security")
+export default async function SettingsPage() {
+  const user = await requireUser("/account/settings")
   const withPassword = await hasPassword(user.id)
 
   return (

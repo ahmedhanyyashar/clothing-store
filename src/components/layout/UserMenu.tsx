@@ -1,5 +1,6 @@
 "use client"
 
+import { CircleUser } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -45,9 +46,17 @@ export function UserMenu() {
           <Link href="/admin">Admin</Link>
         </Button>
       )}
-      <Button asChild variant="ghost" className="max-w-40">
-        <Link href="/account" className="truncate">
-          {session.user.name}
+      <Button
+        asChild
+        variant="ghost"
+        size="icon"
+        title={session.user.name}
+      >
+        <Link
+          href="/account"
+          aria-label={`Account of ${session.user.name}`}
+        >
+          <CircleUser aria-hidden="true" />
         </Link>
       </Button>
       <Button
