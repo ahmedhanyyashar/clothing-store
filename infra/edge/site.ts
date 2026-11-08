@@ -11,8 +11,8 @@ const cachingDisabled =
 const allViewer = "216adef6-5c7f-47e4-b989-5492eafa07d3"
 
 // With a domain of our own: a zone, and a certificate proved through it.
-// CloudFront only accepts certificates from us-east-1, which is the region of
-// every stack here.
+// CloudFront only accepts certificates from us-east-1, so a domain of our own
+// needs that region to be usable (some accounts forbid it).
 const zone = domainName
   ? new aws.route53.Zone("main", { name: domainName, tags })
   : undefined

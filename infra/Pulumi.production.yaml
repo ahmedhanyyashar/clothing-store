@@ -1,9 +1,11 @@
 # Settings that are not secret. The secrets are set with
 # `pulumi config set --secret` (see README.md); an encrypted copy is kept here.
 config:
-  aws:region: us-east-1
+  aws:region: eu-north-1
   clothing-store-infra:environment: production
   clothing-store-infra:githubRepo: ahmedhanyyashar/clothing-store
+  # this account's policies do not allow the passwordless sign-in ("oidc")
+  clothing-store-infra:githubAuth: key
   clothing-store-infra:emailFrom: no-reply@CHANGE-ME.example
   clothing-store-infra:googleClientId: CHANGE-ME.apps.googleusercontent.com
   clothing-store-infra:alertEmail: CHANGE-ME@example.com
