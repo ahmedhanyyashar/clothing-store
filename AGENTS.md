@@ -90,6 +90,7 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 
 - Product photos go to S3 by presigned POST (`createUpload` in `@/lib/storage/uploads`), never through a route or action that receives the file. S3 enforces size and type; `inspectUpload` re-checks the existence, size and first bytes of an object before anything refers to it. Keys come only from `newPhotoKey`, and `isPhotoKey` is the only check on a key that arrives from a browser.
 - A product's photos are `ProductImage` rows (`key` set for uploaded ones, empty for the sample catalog). Attach and detach them only inside `createProduct`, `updateProduct` and `deleteProduct`: they check the objects before saving and delete the files after, and `removableKeys` keeps any file a placed order still shows. A photo that no row refers to is garbage; a row whose object is gone is a broken image.
+- `sweepUnusedPhotos` (`pnpm storage:sweep`) deletes unreferenced files older than `SWEEP_AFTER_MS`. Keep `UPLOAD_LIFETIME_MS` (how long `inspectUpload` accepts a file) shorter than it: that gap is what stops the sweep from taking a file as it is attached. Anything that starts to refer to a photo file must be counted by the sweep as in use.
 - Photos in the form are a plain form value (`useWatch`), not a field array, and the form's own check of a key is only a convenience: the server checks it again.
 - Tests use the `storage` service (compose and CI). Create the bucket with `ensureLocalBucket`, never in app code.
 

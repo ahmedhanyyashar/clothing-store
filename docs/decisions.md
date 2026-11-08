@@ -321,3 +321,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** An order keeps its own copy of what was bought, including the address of its picture. Deleting that file would turn the thumbnail in every past order into a broken image, so a file is kept for as long as an order shows it. Deleting after the commit means a failed deletion can never undo a saved product; a file left behind is harmless and is swept up later.
 
 **Cost.** Photos of products that have been sold stay in storage after the product is gone. Between a delete and its files being removed there is a short time in which a file exists with no row; an order placed in the same instant as a photo is removed could copy an address whose file is then deleted.
+
+## 41. Unused files are swept by a command, and a file stops being attachable before it can be swept
+
+**Decision.** `pnpm storage:sweep` lists the bucket's photo files and deletes those older than 24 hours that no product row and no placed order refers to. It is a command an operator runs or schedules, like making an admin, and has a dry-run mode. A just-uploaded file is accepted onto a product for 12 hours only.
+
+**Why.** Uploads that are never saved, and deletions that failed after a product was saved, leave files nothing refers to, and the bucket cannot know which are safe to remove. Doing it in the app on a timer would need a scheduler the app does not have. Checking for references and deleting are two steps, so a file attached between them could be deleted; making the attach window shorter than the sweep's wait means any file the sweep can take is already too old to attach, and no lock is needed.
+
+**Cost.** An admin who leaves a product form open for more than half a day has to add the photos again. Until the sweep is scheduled, unused files stay.

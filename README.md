@@ -61,6 +61,7 @@ The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRE
 | `pnpm db:generate`                          | Generate the Prisma client                   |
 | `pnpm db:migrate` / `pnpm db:deploy`        | Create and apply, or only apply, migrations  |
 | `pnpm admin:grant <email>` / `admin:revoke` | Make an account an admin, or take it away    |
+| `pnpm storage:sweep [--dry-run]`            | Delete photo files nothing uses              |
 | `pnpm db:seed`                              | Replace the dev catalog with sample products |
 | `pnpm db:studio`                            | Browse the database                          |
 
@@ -77,7 +78,7 @@ src/lib/address/  saved addresses: the country rules, validation and the queries
 src/lib/orders/   placing and reading orders, shipping and statuses
 src/lib/payments/ the Stripe client, the webhook and the card payment page
 src/lib/admin/    admin roles, the audit log and the dashboard queries
-scripts/          commands an operator runs (admin:grant, admin:revoke)
+scripts/          commands an operator runs (admin, storage)
 src/lib/auth/     Better Auth setup, server-side guards and form schemas
 src/lib/email/    SMTP mailer and email templates
 src/proxy.ts      redirects for signed-out and signed-in visitors
@@ -147,6 +148,7 @@ public/products/  sample product photos, with their credits
 - **S3 itself refuses** a file that is empty, over 5 MB, or not of the type the form was made for (JPEG, PNG or WebP), so a bad file is never stored. File names are chosen by the server (`products/<random id>.<ext>`), never by the browser.
 - **The first bytes are read again** when a product is saved (`inspectUpload`): what a browser claims about a file is not trusted, so a script renamed `.png` is refused and nothing is saved.
 - **On a product**, up to four photos are added, put in order (the first is the main one) and removed in the product form. A product with none shows a placeholder. Removing a photo or deleting a product deletes its files, except a file that a placed order still shows as its thumbnail. The sample catalog's pictures are files of the app and are never deleted.
+- **Unused files** are cleaned up by `pnpm storage:sweep`, which an operator runs or schedules: it deletes files older than a day that no product and no placed order refers to (uploads that were never saved, files whose deletion failed). `--dry-run` only lists them. A photo can be attached for 12 hours after it is uploaded, half the time the sweep waits, so a file the sweep can take can no longer be saved onto a product.
 - **Locally**, `pnpm compose` starts `storage`, an S3-compatible stand-in, and `pnpm storage:setup` creates the bucket in it. The same stand-in runs in CI. Set `S3_ENDPOINT_URL` to nothing to use AWS.
 
 ## Admin
