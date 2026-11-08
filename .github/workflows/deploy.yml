@@ -117,8 +117,14 @@ jobs:
       # look like a successful deploy.
       - name: Check the new version is the one running
         run: |
-          state=$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
-            --query "services[0].deployments[?status=='PRIMARY'].rolloutState | [0]" --output text)
+          # the service can be "stable" a moment before ECS calls the rollout
+          # finished, so wait for it to be either completed or failed
+          for i in $(seq 1 60); do
+            state=$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
+              --query "services[0].deployments[?status=='PRIMARY'].rolloutState | [0]" --output text)
+            [ "$state" != "IN_PROGRESS" ] && break
+            sleep 10
+          done
           if [ "$state" != "COMPLETED" ]; then
             echo "The new version did not roll out (state: $state); ECS kept the old one." >&2
             exit 1
