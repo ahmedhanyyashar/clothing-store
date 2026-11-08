@@ -10,6 +10,7 @@ import {
   useWatch,
   type FieldPath,
 } from "react-hook-form"
+import { toast } from "sonner"
 
 import { PhotoFields } from "@/components/admin/PhotoFields"
 import { Button } from "@/components/ui/button"
@@ -111,6 +112,7 @@ export function ProductForm({
       }
       return
     }
+    toast.success(id ? "Product saved." : "Product added.")
     router.push(LIST)
     router.refresh()
   }

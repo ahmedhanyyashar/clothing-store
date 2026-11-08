@@ -99,6 +99,10 @@ public/products/  sample product photos, with their credits
 - **Product pages** (`/products/<id>`) show the photos, price, sizes with their availability, and colors.
 - These pages render per request, so stock is always current and the build needs no database.
 
+## Feedback
+
+- **Toasts** confirm an action that succeeded (added to the cart, saved, cancelled, signed out). They are announced to screen readers and have a close button. Errors stay next to the field or button they belong to, so they can be read and fixed.
+
 ## Cart
 
 - A product page has a size picker, a quantity and an add button. Sold-out sizes cannot be chosen, and the quantity never goes past the stock of the chosen size.

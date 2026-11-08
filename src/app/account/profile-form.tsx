@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
 import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -27,10 +27,7 @@ export function ProfileForm({ name }: { name: string }) {
     resolver: zodResolver(updateProfileSchema),
     defaultValues: { name },
   })
-  const [saved, setSaved] = useState(false)
-
   async function onSubmit(values: UpdateProfileInput) {
-    setSaved(false)
     const { error } = await authClient.updateUser(values)
     if (error) {
       form.setError("root", {
@@ -41,7 +38,7 @@ export function ProfileForm({ name }: { name: string }) {
       return
     }
     form.reset(values)
-    setSaved(true)
+    toast.success("Profile saved.")
     // pages rendered on the server pick up the new name
     router.refresh()
   }
@@ -77,10 +74,6 @@ export function ProfileForm({ name }: { name: string }) {
             {form.formState.errors.root.message}
           </p>
         )}
-        <p role="status" className="text-sm">
-          {saved && "Saved."}
-        </p>
-
         <Button
           type="submit"
           disabled={

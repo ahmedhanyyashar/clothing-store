@@ -3,6 +3,7 @@
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
 
 import {
   AlertDialog,
@@ -40,6 +41,7 @@ export function DeleteProduct({
       )
       return
     }
+    toast.success("Product deleted.")
     router.push("/admin/products" as Route)
     router.refresh()
   }

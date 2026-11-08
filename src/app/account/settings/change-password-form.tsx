@@ -1,8 +1,8 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from "react"
 import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -32,10 +32,8 @@ export function ChangePasswordForm() {
     resolver: zodResolver(changePasswordSchema),
     defaultValues: empty,
   })
-  const [done, setDone] = useState(false)
 
   async function onSubmit(values: ChangePasswordInput) {
-    setDone(false)
     const { error } = await authClient.changePassword({
       currentPassword: values.currentPassword,
       newPassword: values.newPassword,
@@ -50,7 +48,7 @@ export function ChangePasswordForm() {
       return
     }
     form.reset(empty)
-    setDone(true)
+    toast.success("Password updated.")
   }
 
   return (
@@ -145,10 +143,6 @@ export function ChangePasswordForm() {
             {form.formState.errors.root.message}
           </p>
         )}
-        <p role="status" className="text-sm">
-          {done && "Password updated."}
-        </p>
-
         <Button
           type="submit"
           disabled={form.formState.isSubmitting}

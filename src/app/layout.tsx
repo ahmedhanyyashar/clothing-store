@@ -8,6 +8,7 @@ import "./globals.css"
 import { CartSession } from "@/components/cart/CartSession"
 import { Footer } from "@/components/layout/Footer"
 import { Header } from "@/components/layout/Header"
+import { Toaster } from "@/components/ui/sonner"
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -45,6 +46,7 @@ export default function RootLayout({
             <Header />
             <main className="flex-1">{children}</main>
             <Footer />
+            <Toaster />
           </NuqsAdapter>
         </ThemeProvider>
       </body>

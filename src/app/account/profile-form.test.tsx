@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { axe } from "jest-axe"
+import { toast } from "sonner"
 import {
   beforeEach,
   describe,
@@ -17,6 +18,13 @@ const refresh = vi.fn()
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh }),
+}))
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    warning: vi.fn(),
+    error: vi.fn(),
+  },
 }))
 vi.mock("@/lib/auth/client", () => ({
   authClient: { updateUser: vi.fn() },
@@ -53,9 +61,11 @@ describe("ProfileForm", () => {
       screen.getByRole("button", { name: "Save changes" })
     )
 
-    expect(
-      await screen.findByRole("status")
-    ).toHaveTextContent("Saved.")
+    await vi.waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith(
+        "Profile saved."
+      )
+    )
     // the schema trims before the name is sent
     expect(authClient.updateUser).toHaveBeenCalledWith({
       name: "Ada King",

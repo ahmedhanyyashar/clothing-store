@@ -5,6 +5,7 @@ import {
 } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { axe } from "jest-axe"
+import { toast } from "sonner"
 import {
   beforeEach,
   describe,
@@ -19,6 +20,13 @@ import { OrderActions } from "./OrderActions"
 
 const refresh = vi.fn()
 
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    warning: vi.fn(),
+    error: vi.fn(),
+  },
+}))
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh }),
 }))
@@ -87,9 +95,11 @@ describe("OrderActions", () => {
       "CS-7K2M9QXD",
       "confirm"
     )
-    expect(
-      await screen.findByRole("status")
-    ).toHaveTextContent("The order is confirmed.")
+    await vi.waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith(
+        "The order is confirmed."
+      )
+    )
     expect(refresh).toHaveBeenCalled()
   })
 
@@ -157,9 +167,12 @@ describe("OrderActions", () => {
       })
     )
 
-    expect(
-      await screen.findByRole("alert")
-    ).toHaveTextContent("cannot be done")
+    await vi.waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "That cannot be done to this order any more.",
+        expect.anything()
+      )
+    )
     expect(refresh).toHaveBeenCalled()
   })
 

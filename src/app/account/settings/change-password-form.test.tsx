@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { axe } from "jest-axe"
+import { toast } from "sonner"
 import {
   beforeEach,
   describe,
@@ -13,6 +14,13 @@ import { authClient } from "@/lib/auth/client"
 
 import { ChangePasswordForm } from "./change-password-form"
 
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    warning: vi.fn(),
+    error: vi.fn(),
+  },
+}))
 vi.mock("@/lib/auth/client", () => ({
   authClient: { changePassword: vi.fn() },
 }))
@@ -58,9 +66,11 @@ describe("ChangePasswordForm", () => {
 
     await submit(await fill(OLD, NEW))
 
-    expect(
-      await screen.findByRole("status")
-    ).toHaveTextContent("Password updated.")
+    await vi.waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith(
+        "Password updated."
+      )
+    )
     expect(authClient.changePassword).toHaveBeenCalledWith({
       currentPassword: OLD,
       newPassword: NEW,
@@ -87,7 +97,9 @@ describe("ChangePasswordForm", () => {
     )
     await submit(user)
 
-    await screen.findByRole("status")
+    await vi.waitFor(() =>
+      expect(toast.success).toHaveBeenCalled()
+    )
     expect(authClient.changePassword).toHaveBeenCalledWith(
       expect.objectContaining({
         revokeOtherSessions: false,
@@ -139,9 +151,7 @@ describe("ChangePasswordForm", () => {
     expect(
       await screen.findByRole("alert")
     ).toHaveTextContent("Invalid password")
-    expect(
-      screen.queryByText("Password updated.")
-    ).not.toBeInTheDocument()
+    expect(toast.success).not.toHaveBeenCalled()
   })
 
   it("has no accessibility violations", async () => {

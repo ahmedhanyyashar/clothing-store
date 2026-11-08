@@ -3,6 +3,7 @@
 import { CircleUser } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth/client"
@@ -33,6 +34,7 @@ export function UserMenu() {
 
   async function signOut() {
     await authClient.signOut()
+    toast.success("Signed out.")
     router.push("/")
     // drop cached pages that were rendered for the previous user
     router.refresh()

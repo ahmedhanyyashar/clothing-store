@@ -5,6 +5,7 @@ import type { Route } from "next"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -102,6 +103,7 @@ export function AddressForm({
       }
       return
     }
+    toast.success("Address saved.")
     router.push(next as Route)
     router.refresh()
   }
