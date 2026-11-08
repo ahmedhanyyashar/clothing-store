@@ -27,6 +27,11 @@ env:
   STRIPE_SECRET_KEY: sk_test_mock
   STRIPE_WEBHOOK_SECRET: whsec_test_secret
   STRIPE_API_URL: http://localhost:12111
+  S3_BUCKET: clothing-store-test
+  S3_REGION: us-east-1
+  S3_ENDPOINT_URL: http://localhost:4566
+  S3_ACCESS_KEY_ID: test
+  S3_SECRET_ACCESS_KEY: test
 
 jobs:
   verify:
@@ -60,6 +65,10 @@ jobs:
         image: stripe/stripe-mock:v0.206.0
         ports:
           - 12111:12111
+      storage:
+        image: floci/floci:2.4.0
+        ports:
+          - 4566:4566
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup

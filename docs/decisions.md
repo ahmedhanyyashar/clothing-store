@@ -305,3 +305,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Stock is also changed by every sale, so an admin form that writes the number it loaded would silently undo purchases made while the page was open, and the shop could then sell what it no longer has. Writing only what was edited, and only against the value that was seen, removes that. A plain delete keeps every catalog, cart and checkout query as it is; an "archived" flag would need a filter in each of them, and one missed filter would sell a hidden product.
 
 **Cost.** An admin who loses the race has to reload and redo the change. A deleted product cannot be brought back, only added again.
+
+## 39. Photos go straight to S3 with a signed form that S3 enforces
+
+**Decision.** An admin asks the app for an upload form per photo. The app picks the key and signs a POST with conditions: size between 1 byte and 5 MB, and the exact content type asked for. The browser posts the file to the bucket directly. A key that comes back from the browser is trusted only after the object is read: it must exist, be within the limit, and begin with the bytes of a JPEG, PNG or WebP. Local development and every automated test run against an S3-compatible stand-in server, not a mock.
+
+**Why.** Sending files through the app costs memory and request time and puts a size limit in the app's way. A signed PUT cannot limit size, so a huge file would be stored first and removed afterwards; a signed POST makes S3 refuse it. The type a browser reports and the name it gives are claims, so neither is used: the key is generated, and the type is read from the bytes. A mocked client would pass whatever the code asked for and prove nothing about the limits.
+
+**Cost.** One more container in development and CI. A photo uploaded and never attached stays in the bucket until it is swept.

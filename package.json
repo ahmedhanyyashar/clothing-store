@@ -26,12 +26,15 @@
     "db:seed": "prisma db seed",
     "admin:grant": "tsx --env-file-if-exists=.env scripts/admin.ts grant",
     "admin:revoke": "tsx --env-file-if-exists=.env scripts/admin.ts revoke",
+    "storage:setup": "tsx --env-file-if-exists=.env scripts/storage-setup.ts",
     "db:studio": "prisma studio",
     "compose": "docker compose -f docker/compose.yaml up -d --wait",
     "compose:down": "docker compose -f docker/compose.yaml down",
     "prepare": "husky"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1164.0",
+    "@aws-sdk/s3-presigned-post": "^3.1164.0",
     "@hookform/resolvers": "^7.0.3",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",

@@ -86,6 +86,12 @@ Run lint, format check, typecheck and tests before declaring a change done. Run 
 - A new payment method is a new `PaymentMethod` value and a new branch in checkout; the order tables do not change.
 - Create users and saved addresses in tests with `createUser` and `createSavedAddress` from `@/test/factories`. Test anything that touches stock with concurrent requests, not only sequential ones.
 
+### Photos
+
+- Product photos go to S3 by presigned POST (`createUpload` in `@/lib/storage/uploads`), never through a route or action that receives the file. S3 enforces size and type; `inspectUpload` re-checks the existence, size and first bytes of an object before anything refers to it. Keys come only from `newPhotoKey`, and `isPhotoKey` is the only check on a key that arrives from a browser.
+- Delete objects with `deleteObjects`. A photo that no row refers to is garbage; a row whose object is gone is a broken image.
+- Tests use the `storage` service (compose and CI). Create the bucket with `ensureLocalBucket`, never in app code.
+
 ### Payments
 
 - Money moves only on a signed Stripe event. `POST /api/webhooks/stripe` verifies the signature over the raw body and passes the event to `handleStripeEvent`. Never treat a redirect, a query string or anything from the browser as proof of payment.

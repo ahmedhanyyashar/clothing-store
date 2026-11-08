@@ -16,6 +16,7 @@ Foundation: project scaffold, quality gates, CI, a PostgreSQL database wired in 
 | Email           | Nodemailer over SMTP, Mailpit locally          |
 | Payments        | Stripe Checkout and signed webhooks            |
 | Database        | PostgreSQL 16, Prisma 7                        |
+| Photos          | S3 with signed uploads, a stand-in locally     |
 | Configuration   | Environment validated at startup (zod)         |
 | Package manager | pnpm                                           |
 | Linting         | ESLint (Next.js config) and Prettier           |
@@ -30,7 +31,8 @@ Requires [Node.js](https://nodejs.org) 24, [pnpm](https://pnpm.io) 12 (`corepack
 ```bash
 pnpm install
 cp .env.example .env
-pnpm compose        # starts the databases and the local mail catcher
+pnpm compose        # starts the databases, mail catcher and photo storage
+pnpm storage:setup  # creates the photo bucket in the local storage
 pnpm db:deploy      # applies the migrations to the development database
 pnpm db:seed        # fills it with sample products
 pnpm dev
@@ -138,6 +140,13 @@ public/products/  sample product photos, with their credits
 - **The webhook** (`POST /api/webhooks/stripe`) is the only thing that marks an order paid. It checks Stripe's signature first, applies each event once however often Stripe sends it, and refuses a payment whose amount does not match the order. A payment that arrives after the order was cancelled is refunded automatically.
 - **Trying it by hand:** put a Stripe test secret key in `.env`, run `stripe listen --forward-to localhost:3000/api/webhooks/stripe` (the Stripe CLI) and copy the `whsec_` secret it prints into `STRIPE_WEBHOOK_SECRET`. Pay with the test card 4242 4242 4242 4242, any future date and any CVC.
 - **Tests** never reach Stripe: `pnpm compose` starts `stripe-mock`, a server generated from Stripe's own API description, and the webhook is tested with events signed by the test secret.
+
+## Photos
+
+- **Storage** is an S3 bucket. The browser sends each photo straight to it with a one-time signed form (`POST /api/uploads/presign`), so image data never passes through the app. Only an admin can ask for a form; anyone else gets a 404.
+- **S3 itself refuses** a file that is empty, over 5 MB, or not of the type the form was made for (JPEG, PNG or WebP), so a bad file is never stored. File names are chosen by the server (`products/<random id>.<ext>`), never by the browser.
+- **The first bytes are read again** before a photo is accepted (`inspectUpload`): what a browser claims about a file is not trusted, so a script renamed `.png` is refused.
+- **Locally**, `pnpm compose` starts `storage`, an S3-compatible stand-in, and `pnpm storage:setup` creates the bucket in it. The same stand-in runs in CI. Set `S3_ENDPOINT_URL` to nothing to use AWS.
 
 ## Admin
 
