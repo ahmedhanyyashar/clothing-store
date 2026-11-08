@@ -11,6 +11,8 @@ An online clothing store built end to end with Next.js and TypeScript: a shop, a
   <img src="docs/screenshots/admin-orders.png" alt="The admin order list, sorted by total" width="49%">
 </p>
 
+**Live demo:** https://d2fwmgwpk5bmxk.cloudfront.net, served from AWS while the stack is applied. On the sign-in page, "Use the demo shopper" and "Use the demo admin" open it with sample data; the demo admin sees everything and changes nothing.
+
 ## What it demonstrates
 
 - **A checkout that cannot oversell or double-charge.** Stock is taken with a guarded update inside one transaction, orders are idempotent, and a payment is believed only when Stripe's signed webhook says so.
@@ -92,6 +94,7 @@ A short list; [docs/features.md](docs/features.md) has the detail of each.
 - **`Dockerfile`** builds two images from one commit: the app (a Next.js standalone server) and a one-off migration job (`--target migrate`).
 - **`infra/`** is the AWS setup as a Pulumi program: a VPC with public, app and data tiers over two zones, ECS Fargate behind a load balancer and CloudFront, RDS Postgres in the data tier, a private S3 bucket for photos served through its own CloudFront address, Secrets Manager, and a monthly budget alert. [infra/README.md](infra/README.md) shows the topology, the cost, and how to apply and remove it.
 - **Deploy** is continuous delivery to production (`.github/workflows/deploy.yml`): when CI passes on `main`, the commit that passed is built, its migration runs first (and stops everything if it fails), the service rolls onto the new image, and the workflow checks the rollout really completed and the site answers. There are two environments, local and production. A repository variable, `DEPLOY_ENABLED`, switches it on and off so merges do not deploy to a stack that is not running. GitHub signs in to AWS either with a short-lived token for this repository and environment, or (where an organisation forbids that, as for this account) with the key of a deploy-only user kept as a secret.
+- **The demo data** reaches the production database, which can only be reached from inside the network, through a second manual workflow (`.github/workflows/seed.yml`): it runs the app's own task once with the demo seed, which the image carries as a single bundled file.
 
 ## Quality
 
