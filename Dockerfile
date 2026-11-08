@@ -86,6 +86,11 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 
+# The certificate authority that signed the database's certificate. Node does not
+# trust it by default, and the connection asks for a verified TLS connection.
+ADD --chmod=644 https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /etc/ssl/rds-global-bundle.pem
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/rds-global-bundle.pem
+
 WORKDIR /app
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
