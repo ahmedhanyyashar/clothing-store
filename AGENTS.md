@@ -1,156 +1,102 @@
 # AGENTS.md
 
-Guidance for AI coding agents working in this repository. Human contributors should read [CONTRIBUTING.md](CONTRIBUTING.md), which this file builds on.
+Guidance for AI coding agents. This file holds only the rules that are easy to break and not obvious from the code; the rest lives elsewhere, so read there first:
 
-## Project
+- [CONTRIBUTING.md](CONTRIBUTING.md): workflow, commits, general code conventions (strict TypeScript, `@/` alias, Prettier import order, no `console.log`).
+- [README.md](README.md): stack, layout and commands (`package.json` has every script).
+- [docs/features.md](docs/features.md): what each feature does. [docs/decisions.md](docs/decisions.md): why, as numbered decisions ("decision N" below). [docs/known-limitations.md](docs/known-limitations.md): known gaps.
 
-A clothing store built with Next.js (App Router), React and TypeScript, backed by PostgreSQL through Prisma, styled with Tailwind CSS 4 and shadcn/ui, with Better Auth for authentication, Stripe for card payments, S3 for product photos and SMTP for email. Routes are in `src/app/`; the logic is in `src/lib/` by area (catalog, cart, address, orders, payments, admin, auth, storage, email, demo); components are in `src/components/`; the validated environment is in `src/env.ts`. The AWS infrastructure is a Pulumi program in `infra/`, the container image is the `Dockerfile`, and `.github/workflows/` holds CI and the deploy. `README.md` is the front page, `docs/features.md` the detail of each feature, and `docs/decisions.md` the reasoning.
+Record a design decision in `docs/decisions.md` in the same pull request that makes it. Add a dependency only when the platform and the existing dependencies do not cover the need.
 
-## Commands
-
-| Command                 | Use                                                |
-| ----------------------- | -------------------------------------------------- |
-| `pnpm dev`              | Development server on port 3000                    |
-| `pnpm lint`             | ESLint                                             |
-| `pnpm format:check`     | Prettier check (`pnpm format` to fix)              |
-| `pnpm typecheck`        | Route type generation and `tsc --noEmit`           |
-| `pnpm test`             | Unit and component tests, single run               |
-| `pnpm test:integration` | Integration tests (databases must be up)           |
-| `pnpm test:e2e`         | Browser tests (databases and mail catcher up)      |
-| `pnpm compose`          | Start the development and test databases           |
-| `pnpm db:generate`      | Generate the Prisma client after a schema change   |
-| `pnpm db:migrate`       | Create and apply a migration after a schema change |
-| `pnpm db:deploy`        | Apply existing migrations                          |
-| `pnpm db:seed`          | Replace the dev catalog with sample products       |
-| `pnpm db:seed:demo`     | The catalog plus demo accounts, orders and log     |
-| `pnpm build`            | Production build                                   |
-
-Run lint, format check, typecheck and tests before declaring a change done. Run the integration tests whenever the change touches the database.
+Run lint, format check, typecheck and tests before declaring a change done, and the integration tests whenever the change touches the database. Never run integration and end-to-end tests at the same time: they share the test database.
 
 ## Conventions
 
-- Strict TypeScript. No `any`, no unused variables (prefix with `_` when intentional).
-- Use the `@/` alias for imports from `src/`. Import order is applied by Prettier, so run `pnpm format` instead of ordering by hand.
-- No `console.log`. Server code logs through `logger` from `@/lib/logger` (called like `console.error`), not `console`, so every line is JSON.
-- Record a design decision in `docs/decisions.md` in the same pull request that makes it.
-- Add a dependency only when the platform and the existing dependencies do not cover the need.
-
-### Environment
-
-- Read configuration only through `env` from `@/env`, never `process.env`.
-- Add a new variable in the same change in three places: the schema and `runtimeEnv` in `src/env.ts`, `.env.example`, and `.env.test` when tests need it.
-
-### Database
-
-- Use the shared client from `@/lib/db/client`. Do not create another `PrismaClient`.
-- A schema change needs a migration (`pnpm db:migrate`), committed with the change. The generated client in `src/generated` is never committed.
-
-### Email
-
-- Send email only through `sendEmail` from `@/lib/email/mailer`, with a template from `@/lib/email/templates`. Locally every message lands in Mailpit at http://localhost:8025.
+- Server code logs through `logger` from `@/lib/logger` (called like `console.error`), so every line is JSON.
+- **Environment:** read configuration only through `env` from `@/env`, never `process.env`. A new variable goes in the schema and `runtimeEnv` of `src/env.ts`, `.env.example`, and `.env.test` when tests need it (decision 5).
+- **Database:** use the shared client from `@/lib/db/client`, never another `PrismaClient`. A schema change is committed with its migration (`pnpm db:migrate`); `src/generated` is never committed.
+- **Email:** only through `sendEmail` from `@/lib/email/mailer` with a template from `@/lib/email/templates` (decision 13). Locally it lands in Mailpit at http://localhost:8025.
 
 ### Catalog
 
-- Money is whole cents everywhere (`priceCents`). Turn it into text only with `formatPrice` from `@/lib/catalog/format`. Never store, add or compare prices as floating-point numbers.
-- Read products only through `@/lib/catalog/queries`. The shop's URL is read with the shared parsers in `@/lib/catalog/search-params`, so a link and the filter controls always agree.
-- Stock is per size (`ProductSize.stock`), not per product. A product is in stock while any size has stock.
-- A new category or product type needs an entry in `src/lib/catalog/taxonomy.ts`; the compiler rejects an enum value without one.
-- Create products in tests with `createProduct` from `@/test/factories`.
-- A page that reads the database must render per request: call `await connection()` from `next/server` before the first query. Otherwise Next prerenders it at build time and freezes whatever the database held then.
-- Shop filters live in the URL. Add a filter to `shopParsers` and read it with the same parsers on the server and the client. Build links with `shopHref` so they keep the current view, and reset `page` whenever a filter changes.
+- Money is whole cents (`priceCents`), shown only through `formatPrice` from `@/lib/catalog/format`. Never store, add or compare prices as floats (decision 20).
+- Read products only through `@/lib/catalog/queries`. Stock is per size (`ProductSize.stock`); a product is in stock while any size has stock. A new category or product type needs an entry in `src/lib/catalog/taxonomy.ts` (decision 21).
+- A page that reads the database calls `await connection()` from `next/server` before the first query, or Next prerenders it at build time (decision 23).
+- Shop filters live in the URL: add one to `shopParsers`, read it with the same parsers on server and client, build links with `shopHref`, and reset `page` when a filter changes (decision 24).
 - Product cards have one link each, with the image marked decorative (`alt=""`).
 
-### Cart
+### Cart (decision 25)
 
-- The cart is client state (`useCartStore` in `@/lib/cart/store`, persisted in `localStorage`). A line holds only `productId`, `size` and `quantity`. Never store a name, an image or a price in it: they are read from the server with `useCart` and priced by `buildCart`, which is the only place that decides what a line is worth.
-- Whatever comes back from `localStorage` is untrusted and validated with zod. The cart is not an authority on prices or stock: checkout must read both from the database again.
-- Add to a line only through `add(item, quantity, limit)`, passing the stock as `limit`. Show cart state only after `useHydrated()`, because the server cannot know what the browser holds.
-- `CartSession` empties the cart when the signed-in person changes. A visitor who signs in keeps theirs.
+- A line holds only `productId`, `size` and `quantity`; `buildCart` is the only place that prices a line. Validate whatever comes back from `localStorage` with zod, and read prices and stock again at checkout.
+- Add only through `add(item, quantity, limit)` with the stock as `limit`. Show cart state only after `useHydrated()`.
 - `loadCartProducts` is a server action without `requireUser`, on purpose: it returns only what the shop pages already show.
 
-### Addresses
+### Addresses (decision 27)
 
-- A user's saved addresses are read and written only through `@/lib/address/queries`, and every function takes the user's id and filters by it. Someone else's address is "not found", never "forbidden". Server actions in `@/lib/address/actions` call `requireUser` and validate again with `addressSchema`.
-- The countries we deliver to, and their postal code, region and phone rules, are one table in `@/lib/address/countries`. A new country is a new entry there; the compiler rejects a code without one. Do not write country rules in a component.
-- Store addresses with `normalizeAddress` (phone in international form, postal code upper-cased, empty optionals as null). Print them with `addressLines`.
-- A user has at most one default address. The database enforces it with a partial unique index, and the queries take a per-user advisory lock so two requests cannot break the address limit or the "one default" rule. Do not bypass `queries.ts` with raw Prisma calls.
-- An order must copy the address it ships to, not point at the saved row, which the user can edit or delete.
+- Read and write only through `@/lib/address/queries`; every function takes the user's id and filters by it, and someone else's address is "not found", never "forbidden". Do not bypass `queries.ts` with raw Prisma: it holds the per-user advisory lock behind the address limit and the one-default rule. Actions call `requireUser` and re-validate with `addressSchema`.
+- Country rules are one table in `@/lib/address/countries`; never write them in a component. Store with `normalizeAddress`, print with `addressLines`.
 
-### Orders
+### Orders (decisions 28, 29, 31)
 
-- Place orders only through `placeOrder` in `@/lib/orders/place`, called from the `placeOrderAction` server action. It takes ids, sizes and quantities from the browser and nothing else: names, prices and stock are read inside its transaction. Never accept a price from a client.
-- Stock leaves a size only through the guarded update (`stock >= quantity` in the UPDATE itself) inside that transaction, and goes back only in `cancelOrder`, guarded by the status change. A check followed by a write is not safe: two buyers pass the check together.
-- Lock lines in a fixed order (the lines are sorted) so two orders over the same sizes cannot deadlock.
-- An order copies the product name, size, image and unit price, and the address, at purchase. Do not point an order at a saved address or read a price from the product afterwards.
-- Totals come from `computeTotals` in `@/lib/orders/pricing`; the cart, the checkout and the order all use it. Status rules are `ORDER_TRANSITIONS` in `@/lib/orders/status`: add a transition there, never an ad-hoc status update.
-- Every order query takes the user's id and filters by it; someone else's order is "not found". A checkout attempt has one idempotency key (a uuid made in the browser); the same key returns the same order.
-- A new payment method is a new `PaymentMethod` value and a new branch in checkout; the order tables do not change.
-- Create users and saved addresses in tests with `createUser` and `createSavedAddress` from `@/test/factories`. Test anything that touches stock with concurrent requests, not only sequential ones.
+- Place orders only through `placeOrder` in `@/lib/orders/place` (via `placeOrderAction`). The browser sends ids, sizes and quantities and nothing else; never accept a price.
+- Stock leaves a size only through the guarded UPDATE (`stock >= quantity`) inside that transaction, and returns only in `cancelOrder`, guarded by the status change. Lock lines in sorted order. Test anything touching stock with concurrent requests.
+- An order copies the product name, size, image, unit price and the address; never point it at the saved address or read a price from the product afterwards.
+- Totals come from `computeTotals` in `@/lib/orders/pricing`. Status moves are `ORDER_TRANSITIONS` in `@/lib/orders/status`: add a transition there, never an ad-hoc status update.
+- Every order query takes the user's id and filters by it. A new payment method is a new `PaymentMethod` value and a branch in checkout.
 
-### Photos
+### Photos (decisions 39-41)
 
-- Product photos go to S3 by presigned POST (`createUpload` in `@/lib/storage/uploads`), never through a route or action that receives the file. S3 enforces size and type; `inspectUpload` re-checks the existence, size and first bytes of an object before anything refers to it. Keys come only from `newPhotoKey`, and `isPhotoKey` is the only check on a key that arrives from a browser.
-- A product's photos are `ProductImage` rows (`key` set for uploaded ones, empty for the sample catalog). Attach and detach them only inside `createProduct`, `updateProduct` and `deleteProduct`: they check the objects before saving and delete the files after, and `removableKeys` keeps any file a placed order still shows. A photo that no row refers to is garbage; a row whose object is gone is a broken image.
-- `sweepUnusedPhotos` (`pnpm storage:sweep`) deletes unreferenced files older than `SWEEP_AFTER_MS`. Keep `UPLOAD_LIFETIME_MS` (how long `inspectUpload` accepts a file) shorter than it: that gap is what stops the sweep from taking a file as it is attached. Anything that starts to refer to a photo file must be counted by the sweep as in use.
-- Photos in the form are a plain form value (`useWatch`), not a field array, and the form's own check of a key is only a convenience: the server checks it again.
-- Tests use the `storage` service (compose and CI). Create the bucket with `ensureLocalBucket`, never in app code.
+- Uploads use the presigned POST from `createUpload` in `@/lib/storage/uploads`, never a route or action that receives the file. Keys come only from `newPhotoKey`; `isPhotoKey` is the only check on a key from the browser; `inspectUpload` re-checks the object before anything refers to it.
+- Attach and detach `ProductImage` rows only inside `createProduct`, `updateProduct` and `deleteProduct`; `removableKeys` keeps any file a placed order still shows.
+- Keep `UPLOAD_LIFETIME_MS` shorter than `SWEEP_AFTER_MS`, and make anything that starts to refer to a photo file count as "in use" for `sweepUnusedPhotos`.
+- Photos in the product form are a plain form value (`useWatch`), not a field array. Tests create the bucket with `ensureLocalBucket`, never app code.
 
-### Payments
+### Payments (decisions 32-34)
 
-- Money moves only on a signed Stripe event. `POST /api/webhooks/stripe` verifies the signature over the raw body and passes the event to `handleStripeEvent`. Never treat a redirect, a query string or anything from the browser as proof of payment.
-- `handleStripeEvent` must stay idempotent: the event id is stored with its effects in one transaction, and the order row is locked (`FOR UPDATE`) while it is read and changed. A new event type is a new case there, with tests for a duplicate and for copies arriving together. Nothing that calls Stripe goes inside the transaction; the refund is the one exception and marks the event handled only after it succeeded.
-- A payment for an order that is cancelled is refunded, never ignored. An amount or currency that does not match the order is an error, not a payment.
-- Tests never reach Stripe. `STRIPE_API_URL` points the client at the `stripe-mock` service (compose and CI), and webhooks are tested by calling `handleStripeEvent` or by posting events signed with the test secret. Build orders in tests with `createCardOrder` from `@/test/factories`.
-- Amounts, names and images sent to Stripe come from the order's own copies (`OrderItem`), never from the product.
-- A card order is made first and holds its stock; `paymentUrlFor` then makes or finds its Stripe session (one idempotency key per order). If no payment page can be opened, release the order with `abandonCardOrder`. Whatever cancels a card order also closes its session with `expireSession`.
-- The order page shows what the database says. After Stripe it waits for the webhook (`ConfirmingPayment`); it must never read `?paid=1` as "paid".
+- Money moves only on a signed Stripe event: `POST /api/webhooks/stripe` verifies the signature and calls `handleStripeEvent`. Never treat a redirect, query string or `?paid=1` as proof of payment; the order page shows what the database says.
+- `handleStripeEvent` stays idempotent (event id stored with its effects, order row `FOR UPDATE`). A new event type is a new case with tests for a duplicate and for copies arriving together. Nothing that calls Stripe goes in the transaction, except the refund, which marks the event handled only after it succeeds.
+- A payment for a cancelled order is refunded; a mismatched amount or currency is an error. Amounts, names and images sent to Stripe come from `OrderItem`, never the product.
+- A card order holds its stock; `paymentUrlFor` makes or finds its session. If no payment page opens, call `abandonCardOrder`; whatever cancels a card order also calls `expireSession`.
+- Tests never reach Stripe: `STRIPE_API_URL` points at `stripe-mock`. Build orders with `createCardOrder`.
 
-### Admin
+### Admin (decisions 35-38, 42, 43)
 
-- Every page and action under `/admin` calls `requireRole("ADMIN", <path>)` from `@/lib/auth/session` itself; the admin layout does not, because a layout is not re-rendered when moving between its pages. A non-admin gets a 404. The role on the client session only decides whether to show the "Admin" link.
-- An admin is made only by the operator commands in `scripts/admin.ts` (`@/lib/admin/roles`). Never add a route, action or screen that sets a role.
-- Every change an admin makes calls `recordAudit(tx, ...)` with the same transaction as the change, naming the admin with `actorOf(user)`. A change without its audit entry is a bug. Write the summary as a sentence a person can read without looking anything up.
-- Dashboard numbers come from `getDashboard`: whole cents, paid orders by `paidAt` in UTC, refunded orders excluded. A failed query must raise an error, not show zero.
-- Change an order's status only through `advanceOrder`, `cancelAsAdmin` and `retryRefund` in `@/lib/admin/order-actions`. They lock the order row, check `availableActions` (the single source for both the buttons and the server), write the audit entry in the same transaction, and email the customer after the commit. Never update `Order.status` directly from an admin screen.
-- A refund is a call to Stripe and cannot sit inside the transaction: save the cancel first, then refund with `refundPayment` (one idempotency key per order). A cancelled order whose `paymentStatus` is still `PAID` is a refund owed, never a finished order.
-- Change products only through `createProduct`, `updateProduct` and `deleteProduct` in `@/lib/admin/product-changes`. Prices are typed as text and read with `parsePrice` (never `parseFloat` or a multiplication). A size is known by its label, so the form does not rename one. Never write a size's stock from the form without the compare-and-set on `expectedStock`: stock also changes whenever someone buys.
-- End-to-end specs that add or delete products belong in `e2e/admin-products.spec.ts`, which runs in its own Playwright project after the others: the catalog tests count the sample catalog.
-- Confirm what just happened with a toast (`toast.success` from `sonner`; the one `<Toaster />` is in the root layout), and keep anything the user must read or fix inline: field errors, refusals and failures are `role="alert"` text next to the thing that failed, because a toast disappears. Toasts need no markup in a component, only the call.
-- Use the UI primitives (`Card`, `Table`, `Badge`, `Button`) in admin screens; show order and payment status with `OrderStatusBadge` and `PaymentStatusBadge`. Escape user search text with `escapeLike` from `@/lib/db/like`.
-- Admin lists are a `DataTable` with a `Pagination`. Sort through the address only: read `?sort=&dir=` with `parseSort` and a fixed list of columns, map each column to a database field in the query (never pass the visitor's text to `orderBy`), and always add the id as the last tie-breaker so pages never repeat or lose a row. A heading's link goes through `sortHref` and resets to page 1.
-- A demo account (`user.isDemo`) is shared by every visitor and must stay harmless. Every admin action or route that changes something checks `admin.isDemo` right after `requireRole` and returns `DEMO_READ_ONLY`; a new one needs the same check and a case in `demo-admin.integration.test.ts`. Better Auth endpoints that change an account are listed in `DEMO_BLOCKED` in `@/lib/auth/auth`; add any new one there.
-- Every response carries a nonce-based Content-Security-Policy from `src/proxy.ts`. A new script needs the nonce (`headers().get("x-nonce")`, as the layout does); do not add `'unsafe-inline'` for scripts. A new origin the browser must reach (an API, an image host) is added in `buildCsp`. Load any third-party script only after consent (`useConsent`).
-- Admin menus use `SectionNav` and keep a section highlighted on its sub-pages.
+- Every page and action under `/admin` calls `requireRole("ADMIN", <path>)` itself (layouts do not re-render between pages); a non-admin gets a 404. Never add a route, action or screen that sets a role: admins are made by `scripts/admin.ts` (`@/lib/admin/roles`).
+- Every change calls `recordAudit(tx, ...)` in the same transaction, naming the admin with `actorOf(user)`, with a summary a person can read unaided.
+- Change order status only through `advanceOrder`, `cancelAsAdmin` and `retryRefund` in `@/lib/admin/order-actions`, never `Order.status` directly. Refunds go through `refundPayment` after the cancel is saved; a cancelled order whose `paymentStatus` is still `PAID` is a refund owed.
+- Change products only through `createProduct`, `updateProduct` and `deleteProduct` in `@/lib/admin/product-changes`. Read prices with `parsePrice` (never `parseFloat`). Never write a size's stock without the compare-and-set on `expectedStock`. A size is known by its label; the form does not rename one.
+- Dashboard numbers come from `getDashboard`; a failed query must raise an error, not show zero.
+- Admin lists are a `DataTable` with `Pagination`. Read `?sort=&dir=` with `parseSort` and a fixed column list, map columns to fields in the query (never pass visitor text to `orderBy`), add the id as the last tie-breaker, and build heading links with `sortHref`. Escape search text with `escapeLike` from `@/lib/db/like`.
+- A demo account (`user.isDemo`) is shared and must stay harmless: every admin action or route that changes something checks `admin.isDemo` right after `requireRole` and returns `DEMO_READ_ONLY`, with a case in `demo-admin.integration.test.ts`. New Better Auth endpoints that change an account go in `DEMO_BLOCKED` in `@/lib/auth/auth`.
+- Use `Card`, `Table`, `Badge` and `Button`, with `OrderStatusBadge` and `PaymentStatusBadge`. Admin menus use `SectionNav`. End-to-end specs that add or delete products belong in `e2e/admin-products.spec.ts`, which runs last because the catalog tests count the sample catalog.
 
-### Auth
+### Auth (decisions 14-17, 26)
 
-- Protect every page, route handler and action by calling `requireUser` or `requireRole` from `@/lib/auth/session` inside it. The proxy is only an early redirect and is never the access check.
-- The role on the client session is for display. Never authorize from it in the browser.
-- Responses must not reveal whether an email address has an account.
-- Do not await `sendEmail` inside an auth callback: a slow mail server would make the response time reveal whether an address is registered.
-- A page under `/account` calls `requireUser` itself; the account layout does not, because a layout is not re-rendered when moving between its pages. Password screens render only when `hasPassword(user.id)` is true: Google-only users have none.
-- Password changes and account deletion go through Better Auth (`changePassword`, `deleteUser`), never directly through Prisma. The email address cannot be changed.
-- Forms use react-hook-form with a zod schema from `@/lib/auth/validations`, set `noValidate`, and show server errors in a `role="alert"` element.
+- Protect every page, route handler and action by calling `requireUser` or `requireRole` from `@/lib/auth/session` inside it; the proxy is only an early redirect. The client session's role is for display, never authorization. `/account` pages call `requireUser` themselves.
+- Responses must not reveal whether an email has an account, so never await `sendEmail` in an auth callback.
+- Password changes and account deletion go through Better Auth (`changePassword`, `deleteUser`), not Prisma; the email address cannot be changed. Password screens render only when `hasPassword(user.id)` is true.
+- Forms use react-hook-form with a zod schema from `@/lib/auth/validations`, `noValidate`, and server errors in a `role="alert"` element.
+
+### Security headers (decision 44)
+
+- Every response carries the nonce-based CSP from `src/proxy.ts`. A new script takes the nonce (`headers().get("x-nonce")`); never add `'unsafe-inline'` for scripts. A new origin the browser must reach goes in `buildCsp`. Load third-party scripts only after consent (`useConsent`).
 
 ### UI
 
-- Style with Tailwind utilities and the tokens from `src/app/globals.css` (`bg-background`, `text-muted-foreground`, and so on). Never use raw colors; every color must work in light and dark mode.
-- Add a primitive with the shadcn CLI only when a feature needs it, so `src/components/ui/` holds nothing unused. Do not edit it for feature styling; compose it instead.
-- Join class names with `cn()` from `@/lib/utils`. Prettier sorts Tailwind classes.
-- Compose pages inside `Container`. Interactive elements need an accessible name.
+- Tailwind utilities and the tokens in `src/app/globals.css`; never raw colors, each must work in light and dark (decision 10). Join classes with `cn()` from `@/lib/utils`. Compose pages in `Container`; interactive elements need an accessible name.
+- Add a shadcn primitive only when a feature needs it, and compose instead of editing `src/components/ui/` (decision 9).
+- Confirm success with `toast.success` from `sonner`; failures and refusals stay inline as `role="alert"` text.
 
-### Tests
+### Tests (decisions 6, 7, 11, 19)
 
-- Tests sit next to the code. `*.test.ts` is a unit test: fast, isolated, no database. `*.test.tsx` is a component test: it runs in jsdom and should include an axe accessibility check for new UI. `*.integration.test.ts` talks to the real test database.
-- `e2e/*.spec.ts` are Playwright tests against a production build on port 3100. Import `test` and `expect` from `e2e/support/test`: its fixtures give every test a new user and its own client address, so tests share no state and never trip the rate limiter. Navigate with `open()` from `e2e/support/flows`, which waits for hydration; typing into a form earlier is lost. Read emails through `waitForLink` from `e2e/support/mailpit`. The global setup migrates the test database and loads the sample catalog, which the catalog tests rely on.
-- Do not run integration and end-to-end tests at the same time: they share the test database, and the integration helper empties it.
-- The tests rely on `pnpm db:seed` loading only the catalog. Put anything else in the demo seed (`prisma/demo.ts`), which has its own test. Orders it makes follow the same rules as real ones (totals from `computeTotals`, cash paid only on delivery, a paid card order confirmed); change both together.
-- Integration tests that write data call `resetDb()` from `@/test/reset-db` in `beforeEach`.
+- `*.test.ts` is a unit test (no database), `*.test.tsx` a jsdom component test with an axe check for new UI, `*.integration.test.ts` uses the real test database and calls `resetDb()` from `@/test/reset-db` in `beforeEach`.
+- Create data with `createProduct`, `createUser` and `createSavedAddress` from `@/test/factories`.
+- `e2e/*.spec.ts` import `test` and `expect` from `e2e/support/test`, navigate with `open()` from `e2e/support/flows`, and read email with `waitForLink` from `e2e/support/mailpit`.
+- `pnpm db:seed` loads only the catalog, which the tests rely on; anything else goes in the demo seed (`prisma/demo.ts`), whose orders follow the real rules (totals from `computeTotals`, cash paid only on delivery, a paid card order confirmed).
 
 ## Git
 
-- Conventional Commits, small pull requests, squash merge. Details are in [CONTRIBUTING.md](CONTRIBUTING.md).
-- Never bypass the hooks (`--no-verify`).
+- Conventional Commits, small pull requests, squash merge ([CONTRIBUTING.md](CONTRIBUTING.md)). Never bypass the hooks (`--no-verify`).
 - Do not commit environment files other than `.env.example` and `.env.test`, and do not edit `pnpm-lock.yaml` by hand.
 
 ## Next.js
