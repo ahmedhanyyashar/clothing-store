@@ -36,6 +36,33 @@ env:
   DEMO_PASSWORD: demo-test-password
 
 jobs:
+  # Text-only changes (Markdown and docs/) do not need the slow jobs. A job
+  # skipped by its `if` counts as passed for the required checks, which a
+  # workflow-level paths-ignore would not: those checks would never report and
+  # a docs pull request could not merge. verify still runs, so Prettier checks
+  # the Markdown.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          # when the range cannot be read (a new branch, a force push), assume code
+          if git diff --name-only "$BASE...$HEAD" > changed.txt 2>/dev/null; then
+            if grep -qvE '\.md$|^docs/' changed.txt; then code=true; else code=false; fi
+          else
+            code=true
+          fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -51,6 +78,8 @@ jobs:
         working-directory: infra
 
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -82,6 +111,8 @@ jobs:
       - run: pnpm test:integration
 
   build:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -90,6 +121,8 @@ jobs:
       - run: pnpm build
 
   e2e:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
@@ -136,6 +169,8 @@ jobs:
   # best practices fail the job below a score; performance only warns, because
   # a shared runner's timings are noisy.
   lighthouse:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
