@@ -24,12 +24,32 @@ permissions:
   id-token: write # lets the workflow use a short-lived token, when the account allows it
 
 jobs:
+  # A squash merge is one commit, so its own diff says what changed. A merge of
+  # only Markdown and docs/ changes nothing that runs, so it is not deployed.
+  changes:
+    if: github.event_name == 'workflow_run'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
+      - id: diff
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qvE '\.md$|^docs/'; then code=true; else code=false; fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
   deploy:
+    needs: changes
     # Only main is ever deployed, and only after its checks passed. A manual
     # run is allowed from main only.
     if: >-
-      vars.DEPLOY_ENABLED == 'true' &&
-      ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      !cancelled() && vars.DEPLOY_ENABLED == 'true' &&
+      ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+        needs.changes.outputs.code == 'true') ||
        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
     runs-on: ubuntu-latest
     timeout-minutes: 45
