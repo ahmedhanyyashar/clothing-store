@@ -18,12 +18,22 @@ export async function generateMetadata({
 }: Props): Promise<Metadata> {
   const { productId } = await params
   const product = await loadProduct(productId)
-  return product
-    ? {
-        title: product.name,
-        description: product.description,
-      }
-    : {}
+  if (!product) return {}
+  const image = product.images[0]?.url
+  return {
+    title: product.name,
+    description: product.description,
+    alternates: { canonical: `/products/${product.id}` },
+    openGraph: {
+      siteName: "Clothing Store",
+      type: "website",
+      images: image ? [image] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      images: image ? [image] : undefined,
+    },
+  }
 }
 
 export default async function ProductPage({

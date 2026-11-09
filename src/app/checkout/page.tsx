@@ -5,7 +5,10 @@ import { Container } from "@/components/layout/Container"
 import { listAddresses } from "@/lib/address/queries"
 import { requireUser } from "@/lib/auth/session"
 
-export const metadata: Metadata = { title: "Checkout" }
+export const metadata: Metadata = {
+  title: "Checkout",
+  robots: { index: false },
+}
 
 export default async function CheckoutPage() {
   const user = await requireUser("/checkout")

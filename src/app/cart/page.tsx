@@ -3,7 +3,10 @@ import type { Metadata } from "next"
 import { CartView } from "@/components/cart/CartView"
 import { Container } from "@/components/layout/Container"
 
-export const metadata: Metadata = { title: "Cart" }
+export const metadata: Metadata = {
+  title: "Cart",
+  robots: { index: false },
+}
 
 export default function CartPage() {
   return (

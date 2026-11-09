@@ -22,7 +22,14 @@ import {
   toShopQuery,
 } from "@/lib/catalog/search-params"
 
-export const metadata: Metadata = { title: "Shop" }
+// filters, search, sort and pages are all views of one list: they share its
+// canonical address
+export const metadata: Metadata = {
+  title: "Shop",
+  description:
+    "Browse the full catalog and filter by category, type or search.",
+  alternates: { canonical: "/shop" },
+}
 
 export default async function ShopPage({
   searchParams,

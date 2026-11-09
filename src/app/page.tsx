@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { connection } from "next/server"
 import { Suspense } from "react"
 
@@ -9,6 +10,10 @@ import {
   getBestSellers,
   getLatestProducts,
 } from "@/lib/catalog/queries"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+}
 
 export default async function HomePage() {
   // reads the database, so it must render per request and never at build time
