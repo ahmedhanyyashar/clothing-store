@@ -1,5 +1,11 @@
+import type { Metadata } from "next"
+
 import { AdminNav } from "@/components/admin/AdminNav"
 import { Container } from "@/components/layout/Container"
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 // No access check here: a layout does not re-render when moving between its
 // pages, so every page below calls requireRole itself.

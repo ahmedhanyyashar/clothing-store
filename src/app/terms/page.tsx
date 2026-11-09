@@ -2,7 +2,11 @@ import type { Metadata } from "next"
 
 import { LegalPage } from "@/components/layout/LegalPage"
 
-export const metadata: Metadata = { title: "Terms of sale" }
+export const metadata: Metadata = {
+  title: "Terms of sale",
+  description:
+    "How an order, payment, delivery and cancellation work at Clothing Store.",
+}
 
 export default function TermsPage() {
   return (

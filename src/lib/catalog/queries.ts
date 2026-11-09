@@ -152,3 +152,11 @@ export async function getProduct(
     },
   })
 }
+
+/** Every product's id and last change, for the sitemap. */
+export async function listProductsForSitemap() {
+  return prisma.product.findMany({
+    orderBy: { id: "asc" },
+    select: { id: true, updatedAt: true },
+  })
+}

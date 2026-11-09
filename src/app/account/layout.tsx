@@ -1,5 +1,11 @@
+import type { Metadata } from "next"
+
 import { AccountNav } from "@/components/account/AccountNav"
 import { Container } from "@/components/layout/Container"
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 // No access check here: a layout does not re-render when the shopper moves
 // between its pages, so every page below calls requireUser itself.

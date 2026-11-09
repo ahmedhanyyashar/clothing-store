@@ -21,11 +21,20 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
+  // makes every relative canonical and social-image URL absolute
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   title: {
     default: "Clothing Store",
     template: "%s | Clothing Store",
   },
-  description: "An online clothing store.",
+  description:
+    "Shop men's, women's and kids' clothing: tees, shirts, jeans, jackets, hoodies and sneakers.",
+  openGraph: {
+    siteName: "Clothing Store",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: { card: "summary_large_image" },
 }
 
 export default async function RootLayout({

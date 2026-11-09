@@ -2,7 +2,11 @@ import type { Metadata } from "next"
 
 import { LegalPage } from "@/components/layout/LegalPage"
 
-export const metadata: Metadata = { title: "Cookie policy" }
+export const metadata: Metadata = {
+  title: "Cookie policy",
+  description:
+    "Which cookies Clothing Store uses and how to change your choice.",
+}
 
 export default function CookiesPage() {
   return (

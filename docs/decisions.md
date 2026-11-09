@@ -409,3 +409,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** It is the topology most teams start from, so it shows the usual decisions rather than a clever one: isolation by tier, no stored credentials, least-privilege roles, migrations before code, and a budget alert. Managed services replace a self-run database and a hand-built server. Photos get their own CloudFront address because the site already uses `/products/<id>` for pages and the photo keys share that prefix, and so the bucket can stay private.
 
 **Cost.** It costs real money while it runs (roughly $70 to $80 a month for the smallest sizes, most of it the NAT gateway and the load balancer), so it is meant to be applied for a demonstration and removed with `pulumi destroy`; high availability and data protection are settings, off by default, so that teardown stays easy. Nothing here has been applied to an account yet: `pulumi preview` and a first `pulumi up` are the real test of it.
+
+## 46. Search engines see the catalog, not the private areas or every filter
+
+**Decision.** `robots.ts` and `sitemap.ts` publish the crawl rules and the public pages (home, shop, the legal pages and every product). Admin, account, cart, checkout and the sign-in screens are listed in robots.txt and also carry `noindex`, set once on their layout where there is one. Every view of the shop (filters, search, sort, page) has the canonical address `/shop`, and each product has its own. The site address comes from `NEXT_PUBLIC_APP_URL` through `metadataBase`, so canonicals and social images are absolute.
+
+**Why.** Filters multiply one list into thousands of near-duplicate URLs, so they point at the list instead of competing with it; products are the pages worth ranking and have a stable address. robots.txt saves crawling, but only `noindex` keeps a linked URL out of results, so private pages get both.
+
+**Cost.** Filtered and paginated views cannot rank on their own, and a product reachable only through page 2 depends on the sitemap to be found. There is no default social image yet: pages without a product photo share without a picture. The sitemap is one file read from the database on every request, which holds up to 50,000 URLs; past that it needs `generateSitemaps` to split it, and a cache if crawler traffic matters.

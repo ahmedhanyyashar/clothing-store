@@ -4,6 +4,8 @@ import { LegalPage } from "@/components/layout/LegalPage"
 
 export const metadata: Metadata = {
   title: "Privacy policy",
+  description:
+    "What personal data Clothing Store keeps, why, and how to delete it.",
 }
 
 export default function PrivacyPage() {
