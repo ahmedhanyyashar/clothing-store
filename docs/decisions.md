@@ -49,6 +49,7 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 43. [A demo shopper and a read-only demo admin, limited on the server](#43-a-demo-shopper-and-a-read-only-demo-admin-limited-on-the-server)
 44. [A nonce-based CSP, and Google Analytics only after consent](#44-a-nonce-based-csp-and-google-analytics-only-after-consent)
 45. [The default AWS topology, written as code and applied on demand](#45-the-default-aws-topology-written-as-code-and-applied-on-demand)
+46. [Search engines see the catalog, not the private areas or every filter](#46-search-engines-see-the-catalog-not-the-private-areas-or-every-filter)
 
 ## 1. One pull request, one squashed commit, Conventional Commits
 
