@@ -18,14 +18,11 @@ vi.mock("@/lib/storage/uploads", () => ({
   createUpload: vi.fn(),
 }))
 
-const asRole = (
-  role: "ADMIN" | "USER" | null,
-  isDemo = false
-) =>
+const asRole = (role: "ADMIN" | "USER" | null) =>
   vi
     .mocked(getSession)
     .mockResolvedValue(
-      role ? ({ user: { role, isDemo } } as never) : null
+      role ? ({ user: { role } } as never) : null
     )
 
 const post = (body: unknown) =>
@@ -55,15 +52,6 @@ describe("POST /api/uploads/presign", () => {
       })
       expect(response.status).toBe(404)
     }
-    expect(createUpload).not.toHaveBeenCalled()
-  })
-
-  it("refuses the demo admin, which may look but not change", async () => {
-    asRole("ADMIN", true)
-    const response = await post({
-      files: [{ type: "image/png", size: 10 }],
-    })
-    expect(response.status).toBe(403)
     expect(createUpload).not.toHaveBeenCalled()
   })
 

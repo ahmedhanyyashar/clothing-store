@@ -11,8 +11,8 @@ import { signInAsDemoAction } from "@/lib/demo/actions"
 
 /**
  * Two buttons for visitors who only want to look around. They are shown only
- * where the demo accounts exist (the page decides), and the accounts are
- * limited on the server: the admin can see everything and change nothing.
+ * where the demo accounts exist (the page decides). They are ordinary seeded
+ * accounts, so the admin can do everything an admin can.
  */
 export function DemoSignIn({
   redirectTo,
@@ -52,9 +52,9 @@ export function DemoSignIn({
         Just looking?
       </h2>
       <p className="text-sm text-muted-foreground">
-        Use a demo account with sample orders. Demo accounts
-        cannot be changed, and the demo admin can see
-        everything but change nothing.
+        Use a demo account with sample orders. The demo
+        admin is a real admin, so changes made there are
+        real.
       </p>
       <div className="flex flex-wrap gap-2">
         <Button

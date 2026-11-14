@@ -14,7 +14,3 @@ export const isDemoKind = (
   value: unknown
 ): value is DemoKind =>
   value === "customer" || value === "admin"
-
-/** What a demo account is told when it tries to change something it must not. */
-export const DEMO_READ_ONLY =
-  "This is a demo account, so it cannot make changes. Everything else works."

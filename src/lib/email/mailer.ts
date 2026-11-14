@@ -29,12 +29,16 @@ const send = createMailer(
 
 /**
  * Whether a message is for a demo account. Those addresses do not exist, so a
- * real mail server would only bounce them.
+ * real mail server would only bounce them (Amazon SES in its sandbox refuses
+ * unverified recipients, which would also show up as errors in the logs).
  */
 export const isDemoRecipient = (to: string) =>
   to.toLowerCase().endsWith(DEMO_DOMAIN)
 
 export async function sendEmail(message: EmailMessage) {
-  if (env.DEMO_MODE && isDemoRecipient(message.to)) return
+  // Nothing is sent to the demo domain, in any environment: it is ours and no
+  // one reads it, so mailing it can only fail. The demo users therefore never
+  // receive order or status emails, locally too.
+  if (isDemoRecipient(message.to)) return
   await send(message)
 }
