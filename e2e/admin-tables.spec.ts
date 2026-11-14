@@ -1,14 +1,10 @@
 import type { Page } from "@playwright/test"
 
-import { adminCommand } from "./support/admin"
 import { createSignedInUser, open } from "./support/flows"
 import { expect, test, type Account } from "./support/test"
 
 async function becomeAdmin(page: Page, account: Account) {
-  await createSignedInUser(page, account)
-  expect(adminCommand("grant", account.email).status).toBe(
-    0
-  )
+  await createSignedInUser(page, account, { admin: true })
 }
 
 /** The prices in the table, top to bottom, in dollars. */
@@ -25,7 +21,6 @@ test("an admin sorts the product list by clicking a heading", async ({
 }) => {
   await becomeAdmin(page, account)
   await open(page, "/admin/products")
-  await page.waitForLoadState("networkidle")
 
   await page.getByRole("link", { name: /^Price/ }).click()
   await expect(page).toHaveURL(/sort=price&dir=asc/)

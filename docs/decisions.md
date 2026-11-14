@@ -51,6 +51,7 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 45. [The default AWS topology, written as code and applied on demand](#45-the-default-aws-topology-written-as-code-and-applied-on-demand)
 46. [Search engines see the catalog, not the private areas or every filter](#46-search-engines-see-the-catalog-not-the-private-areas-or-every-filter)
 47. [Configuration follows the Twelve-Factor rules, and a test keeps its copies in step](#47-configuration-follows-the-twelve-factor-rules-and-a-test-keeps-its-copies-in-step)
+48. [End-to-end tests start from a signed-in user and wait for hydration](#48-end-to-end-tests-start-from-a-signed-in-user-and-wait-for-hydration)
 
 ## 1. One pull request, one squashed commit, Conventional Commits
 
@@ -427,3 +428,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** The variable list is written in several places, and drift between them shows up only as a failed deploy. A test and a lint rule find it at review time.
 
 **Cost.** The test reads `src/env.ts` and `infra/compute/service.ts` as text, so it breaks if their layout changes. It checks that a variable is wired, not that it sits in the right group, so a secret set as a plain value is still caught only in review.
+
+## 48. End-to-end tests start from a signed-in user and wait for hydration
+
+**Decision.** An end-to-end test that needs a user writes the verified user to the database, grants the admin role through `grantAdmin` when asked, and signs in over `/api/auth/sign-in/email`, so the session cookie is already in the browser. Only the specs about signing up use the form and the email link. A full page load waits for `HydrationMarker`, an attribute the root layout sets once React has taken over, and no test waits for `networkidle`.
+
+**Why.** Every test used to sign up through the form, which cost about two seconds and a mail round trip, and spawned `pnpm admin:grant` to become admin. `networkidle` adds at least half a second to every navigation and is a guess about the network, where the marker is a fact about the page. Together they took the suite from 4m56s to under 2 minutes on one worker.
+
+**Cost.** The production layout carries a component that exists for the tests. A test that signs in this way no longer proves the sign-up form works, so `auth.spec.ts` must keep covering it. After a click that loads a new page, a test must call `hydrated(page)` before using a client component, or it can act on a page that ignores it.

@@ -2,9 +2,9 @@ import { randomUUID } from "node:crypto"
 
 import type { Page } from "@playwright/test"
 
-import { adminCommand } from "./support/admin"
 import {
   createSignedInUser,
+  hydrated,
   open,
   signOut,
 } from "./support/flows"
@@ -31,8 +31,7 @@ async function switchToAdmin(
     name: "Ada Admin",
     email: `e2e-admin-${randomUUID().slice(0, 8)}@example.com`,
   }
-  await createSignedInUser(page, admin)
-  expect(adminCommand("grant", admin.email).status).toBe(0)
+  await createSignedInUser(page, admin, { admin: true })
   return admin
 }
 
@@ -43,6 +42,9 @@ async function openInAdmin(page: Page, number: string) {
     .getByLabel("Order number, name or email")
     .fill(number)
   await page.getByRole("button", { name: "Filter" }).click()
+  // the filter loads a new page, so wait for that one to take over: a link
+  // clicked before then is a full page load, whose buttons do nothing yet
+  await hydrated(page)
   await expect(
     page.getByRole("row", { name: new RegExp(number) })
   ).toBeVisible()
@@ -50,8 +52,6 @@ async function openInAdmin(page: Page, number: string) {
   await expect(
     page.getByRole("heading", { name: `Order ${number}` })
   ).toBeVisible()
-  // the buttons only work once the page has loaded its scripts
-  await page.waitForLoadState("networkidle")
 }
 
 test("an admin takes a cash order from confirmation to delivery, and the customer is told", async ({

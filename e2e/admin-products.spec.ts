@@ -2,15 +2,11 @@ import { randomUUID } from "node:crypto"
 
 import type { Page } from "@playwright/test"
 
-import { adminCommand } from "./support/admin"
 import { createSignedInUser, open } from "./support/flows"
 import { expect, test, type Account } from "./support/test"
 
 async function becomeAdmin(page: Page, account: Account) {
-  await createSignedInUser(page, account)
-  expect(adminCommand("grant", account.email).status).toBe(
-    0
-  )
+  await createSignedInUser(page, account, { admin: true })
 }
 
 /** A name no other test uses, so the shop search finds exactly this product. */
@@ -105,7 +101,6 @@ test("an admin edits a product, the changes are in the shop and the log, and the
   await expect(page).toHaveURL(
     /\/admin\/products\/c[a-z0-9]{20,}$/
   )
-  await page.waitForLoadState("networkidle")
   const editUrl = page.url()
   const id = editUrl.split("/").pop()!
   await page.getByLabel("Price (USD)").fill("21.50")
@@ -198,7 +193,6 @@ test("an admin adds a photo, shoppers see it, and deleting the product deletes t
   await expect(page).toHaveURL(
     /\/admin\/products\/c[a-z0-9]{20,}$/
   )
-  await page.waitForLoadState("networkidle")
   const src = await page
     .locator("fieldset img")
     .first()
