@@ -48,8 +48,9 @@ export function Pagination({
   return (
     <nav aria-label="Pagination" className="mt-10">
       <ul className="flex flex-wrap items-center justify-center gap-2">
-        {page > 1 && (
-          <li>
+        {/* the arrows keep their place at the ends, so the numbers do not move */}
+        <li>
+          {page > 1 ? (
             <Link
               href={hrefFor(page - 1)}
               className={linkClass}
@@ -57,8 +58,15 @@ export function Pagination({
             >
               <ChevronLeft className="size-4" />
             </Link>
-          </li>
-        )}
+          ) : (
+            <span
+              aria-hidden="true"
+              className={cn(linkClass, "invisible")}
+            >
+              <ChevronLeft className="size-4" />
+            </span>
+          )}
+        </li>
         {visiblePages(page, pageCount).map((target) => (
           <li key={target}>
             <Link
@@ -77,8 +85,8 @@ export function Pagination({
             </Link>
           </li>
         ))}
-        {page < pageCount && (
-          <li>
+        <li>
+          {page < pageCount ? (
             <Link
               href={hrefFor(page + 1)}
               className={linkClass}
@@ -86,8 +94,15 @@ export function Pagination({
             >
               <ChevronRight className="size-4" />
             </Link>
-          </li>
-        )}
+          ) : (
+            <span
+              aria-hidden="true"
+              className={cn(linkClass, "invisible")}
+            >
+              <ChevronRight className="size-4" />
+            </span>
+          )}
+        </li>
       </ul>
     </nav>
   )

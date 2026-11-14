@@ -41,7 +41,12 @@ test("an operator makes someone an admin with a command, and can take it away", 
 
   // the next page load shows the link, and the area opens
   await open(page, "/")
-  await page.getByRole("link", { name: "Admin" }).click()
+  await page
+    .getByRole("button", { name: /^Account of / })
+    .click()
+  await page
+    .getByRole("menuitem", { name: "Admin" })
+    .click()
   await expect(page).toHaveURL("/admin")
   await expect(
     page.getByRole("heading", { name: "Admin", level: 1 })

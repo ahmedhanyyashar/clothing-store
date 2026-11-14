@@ -11,7 +11,7 @@ test("a visitor tries the shop as the demo shopper, who cannot be changed", asyn
 
   // signed in, without typing anything
   await expect(
-    page.getByRole("link", {
+    page.getByRole("button", {
       name: "Account of Demo Shopper",
     })
   ).toBeVisible()

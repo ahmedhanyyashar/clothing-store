@@ -33,7 +33,7 @@ export function SectionNav({
 
   return (
     <nav aria-label={label}>
-      <ul className="flex gap-2 md:flex-col">
+      <ul className="flex gap-2 overflow-x-auto md:flex-col">
         {sections.map(({ href, label }) => {
           const current = isCurrent(pathname, href)
           return (
