@@ -1,7 +1,6 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 
-import { adminCommand } from "./support/admin"
 import { createSignedInUser, open } from "./support/flows"
 import { expect, test } from "./support/test"
 
@@ -21,24 +20,29 @@ async function expectNoViolations(page: Page) {
   ).toEqual([])
 }
 
-test("the public pages have no accessibility violations", async ({
-  page,
-}) => {
-  for (const path of [
-    "/",
-    "/shop",
-    "/cart",
-    "/sign-in",
-    "/sign-up",
-    "/privacy",
-    "/terms",
-    "/cookies",
-  ]) {
+// One test per page: the scans run side by side, and a failure names its page.
+for (const path of [
+  "/",
+  "/shop",
+  "/cart",
+  "/sign-in",
+  "/sign-up",
+  "/privacy",
+  "/terms",
+  "/cookies",
+]) {
+  test(`${path} has no accessibility violations`, async ({
+    page,
+  }) => {
     await open(page, path)
     await expectNoViolations(page)
-  }
+  })
+}
 
-  // a product page, reached the way a shopper reaches it
+test("a product page has no accessibility violations", async ({
+  page,
+}) => {
+  // reached the way a shopper reaches it
   await open(page, "/shop")
   await page
     .getByRole("link", { name: /Tee/ })
@@ -62,27 +66,30 @@ test("the cookie banner has no accessibility violations", async ({
   await expectNoViolations(page)
 })
 
-test("the account and admin pages have no accessibility violations", async ({
-  page,
-  account,
-}) => {
-  await createSignedInUser(page, account)
-  for (const path of ["/account", "/account/settings"]) {
+for (const path of ["/account", "/account/settings"]) {
+  test(`${path} has no accessibility violations`, async ({
+    page,
+    account,
+  }) => {
+    await createSignedInUser(page, account)
     await open(page, path)
     await expectNoViolations(page)
-  }
+  })
+}
 
-  expect(adminCommand("grant", account.email).status).toBe(
-    0
-  )
-  for (const path of [
-    "/admin",
-    "/admin/orders",
-    "/admin/products",
-    "/admin/products/new",
-    "/admin/audit",
-  ]) {
+for (const path of [
+  "/admin",
+  "/admin/orders",
+  "/admin/products",
+  "/admin/products/new",
+  "/admin/audit",
+]) {
+  test(`${path} has no accessibility violations`, async ({
+    page,
+    account,
+  }) => {
+    await createSignedInUser(page, account, { admin: true })
     await open(page, path)
     await expectNoViolations(page)
-  }
-})
+  })
+}

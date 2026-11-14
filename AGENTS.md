@@ -91,7 +91,7 @@ Run lint, format check, typecheck and tests before declaring a change done, and 
 
 - `*.test.ts` is a unit test (no database), `*.test.tsx` a jsdom component test with an axe check for new UI, `*.integration.test.ts` uses the real test database and calls `resetDb()` from `@/test/reset-db` in `beforeEach`.
 - Create data with `createProduct`, `createUser` and `createSavedAddress` from `@/test/factories`.
-- `e2e/*.spec.ts` import `test` and `expect` from `e2e/support/test`, navigate with `open()` from `e2e/support/flows`, and read email with `waitForLink` from `e2e/support/mailpit`.
+- `e2e/*.spec.ts` import `test` and `expect` from `e2e/support/test`, navigate with `open()` from `e2e/support/flows`, and read email with `waitForLink` from `e2e/support/mailpit`. Start from `createSignedInUser(page, account, { admin })`, which writes the user to the database and signs in over the endpoint; only specs about signing up use the form. After a click that loads a whole new page, wait with `hydrated(page)`; never `networkidle` (decision 48).
 - `pnpm db:seed` loads only the catalog, which the tests rely on; anything else goes in the demo seed (`prisma/demo.ts`), whose orders follow the real rules (totals from `computeTotals`, cash paid only on delivery, a paid card order confirmed).
 
 ## Git

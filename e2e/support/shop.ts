@@ -16,8 +16,6 @@ export async function openTee(page: Page) {
       name: "Classic White Tee",
     })
   ).toBeVisible()
-  // the product page is server-rendered; wait for its scripts before using the form
-  await page.waitForLoadState("networkidle")
 }
 
 /** On a product page: choose a size and quantity and add it to the cart. */

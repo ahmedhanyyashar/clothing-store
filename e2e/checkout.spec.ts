@@ -91,7 +91,6 @@ test("a shopper with no address adds one and comes straight back to the checkout
   await page
     .getByRole("link", { name: "Add an address" })
     .click()
-  await page.waitForLoadState("networkidle")
   await fillAddress(page, homeAddress)
   await page
     .getByRole("button", { name: "Save address" })
