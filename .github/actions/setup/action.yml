@@ -14,3 +14,6 @@ runs:
     # the client is generated, not committed, and typecheck, tests and build all import it
     - run: pnpm db:generate
       shell: bash
+    # build, migrate, seed and the tests all read .env; only CI uses this action
+    - run: cp .env.test .env
+      shell: bash

@@ -50,6 +50,7 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 44. [A nonce-based CSP, and Google Analytics only after consent](#44-a-nonce-based-csp-and-google-analytics-only-after-consent)
 45. [The default AWS topology, written as code and applied on demand](#45-the-default-aws-topology-written-as-code-and-applied-on-demand)
 46. [Search engines see the catalog, not the private areas or every filter](#46-search-engines-see-the-catalog-not-the-private-areas-or-every-filter)
+47. [Configuration follows the Twelve-Factor rules, and a test keeps its copies in step](#47-configuration-follows-the-twelve-factor-rules-and-a-test-keeps-its-copies-in-step)
 
 ## 1. One pull request, one squashed commit, Conventional Commits
 
@@ -418,3 +419,11 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 **Why.** Filters multiply one list into thousands of near-duplicate URLs, so they point at the list instead of competing with it; products are the pages worth ranking and have a stable address. robots.txt saves crawling, but only `noindex` keeps a linked URL out of results, so private pages get both.
 
 **Cost.** Filtered and paginated views cannot rank on their own, and a product reachable only through page 2 depends on the sitemap to be found. There is no default social image yet: pages without a product photo share without a picture. The sitemap is one file read from the database on every request, which holds up to 50,000 URLs; past that it needs `generateSitemaps` to split it, and a cache if crawler traffic matters.
+
+## 47. Configuration follows the Twelve-Factor rules, and a test keeps its copies in step
+
+**Decision.** Configuration follows factor III of the [Twelve-Factor App](https://12factor.net/config): it lives in environment variables, one per value, read only through `env` (decision 5), with secrets in Secrets Manager and only throwaway values committed. One image is built and released everywhere (factor V); only the public values the build reads are build arguments. ESLint forbids `process.env` outside a short allowlist, and `src/env.test.ts` fails when `.env.example`, `.env.test` or the production wiring drift from the schema. The README lists every variable.
+
+**Why.** The variable list is written in several places, and drift between them shows up only as a failed deploy. A test and a lint rule find it at review time.
+
+**Cost.** The test reads `src/env.ts` and `infra/compute/service.ts` as text, so it breaks if their layout changes. It checks that a variable is wired, not that it sits in the right group, so a secret set as a plain value is still caught only in review.
