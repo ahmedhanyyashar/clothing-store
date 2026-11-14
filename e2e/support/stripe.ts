@@ -6,6 +6,8 @@ import type {
 } from "@playwright/test"
 import Stripe from "stripe"
 
+import { env } from "@/env"
+
 import { open } from "./flows"
 import { expect } from "./test"
 
@@ -55,7 +57,7 @@ export async function sendStripeEvent(
   const signature =
     signer.webhooks.generateTestHeaderString({
       payload,
-      secret: process.env.STRIPE_WEBHOOK_SECRET!,
+      secret: env.STRIPE_WEBHOOK_SECRET,
     })
   return request.post("/api/webhooks/stripe", {
     data: payload,

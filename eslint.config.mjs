@@ -69,6 +69,35 @@ const eslintConfig = [
   },
 
   {
+    // Config is read through `env` from @/env (validated at boot). NODE_ENV is
+    // set by Node and Next, so it is fine. The files below run outside the app
+    // or are test tooling, and read process.env on purpose.
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "MemberExpression[object.object.name='process'][object.property.name='env']:not([property.name='NODE_ENV'])",
+          message:
+            "Read configuration through `env` from @/env.",
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      "src/env.ts",
+      "next.config.ts",
+      "prisma.config.ts",
+      "playwright.config.ts",
+      "e2e/support/**",
+      "scripts/**",
+    ],
+    rules: { "no-restricted-syntax": "off" },
+  },
+
+  {
     // a command-line script reports its result on the console
     files: ["prisma/seed.ts", "scripts/**/*.ts"],
     rules: { "no-console": "off" },

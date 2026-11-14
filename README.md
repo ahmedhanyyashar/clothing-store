@@ -71,12 +71,59 @@ pnpm db:seed        # fills it with sample products
 pnpm dev
 ```
 
-The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) the Google credentials and, for card payments, the Stripe test keys (see the comments in `.env.example` and Payments below). Every email the app sends, such as verification and password-reset links, lands in Mailpit at http://localhost:8025.
+The app runs on http://localhost:3000. Edit `.env` first: set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) the Google credentials and, for card payments, the Stripe test keys (see Environment variables below, the comments in `.env.example` and Payments below).
 
 | Endpoint          | Meaning                                                        |
 | ----------------- | -------------------------------------------------------------- |
 | `GET /api/health` | Liveness: the process is running                               |
 | `GET /api/ready`  | Readiness: the database answers (`503` with no details if not) |
+
+## Environment variables
+
+[`src/env.ts`](src/env.ts) is the source of truth: it validates every variable with zod when the app boots, so a missing or malformed value stops the start with a readable error (decision 5). [`.env.example`](.env.example) is the template for a local `.env`.
+
+### Where values come from
+
+| Place                 | Source                                                                                                    |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| Local development     | `.env`, copied from `.env.example` (gitignored)                                                           |
+| Tests and CI          | `.env.test`, committed because it holds only throwaway values; CI copies it to `.env`                     |
+| Container image build | `Dockerfile` placeholders, plus build arguments for the `NEXT_PUBLIC_*` and `S3_*` values the build reads |
+| Production (AWS)      | `infra/compute/service.ts`: plain values as container environment, secrets from Secrets Manager           |
+
+The image is built once and the same image runs in production. Only the public values the build reads (`NEXT_PUBLIC_*`, inlined into the browser bundle, and `S3_*` for the photo host in `next.config.ts`) are build arguments, passed by `deploy.yml` from the values infra exports, so they match the runtime values. Everything else is a placeholder in the build stage only and arrives when the container starts; the runtime stages do not inherit it, and `.dockerignore` keeps `.env` files out of the build.
+
+### Variables
+
+| Variable                | Required | Secret | Production source         | Purpose                                                     |
+| ----------------------- | -------- | ------ | ------------------------- | ----------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`   | yes      | no     | plain, and build argument | Public URL of the app                                       |
+| `NEXT_PUBLIC_GA_ID`     | no       | no     | build argument            | Google Analytics ID; no analytics code without it           |
+| `DATABASE_URL`          | yes      | yes    | secret                    | PostgreSQL connection                                       |
+| `SMTP_URL`              | yes      | yes    | secret                    | Outgoing email                                              |
+| `EMAIL_FROM`            | yes      | no     | plain                     | Sender address                                              |
+| `BETTER_AUTH_SECRET`    | yes      | yes    | secret                    | Signs and encrypts sessions and tokens (32+ characters)     |
+| `GOOGLE_CLIENT_ID`      | yes      | no     | plain                     | Google sign-in                                              |
+| `GOOGLE_CLIENT_SECRET`  | yes      | yes    | secret                    | Google sign-in                                              |
+| `STRIPE_SECRET_KEY`     | yes      | yes    | secret                    | Stripe API key                                              |
+| `STRIPE_WEBHOOK_SECRET` | yes      | yes    | secret                    | Verifies Stripe webhook signatures                          |
+| `STRIPE_API_URL`        | no       | no     | unset                     | Points at `stripe-mock` instead of Stripe (tests)           |
+| `S3_BUCKET`             | yes      | no     | plain, and build argument | Product photo bucket                                        |
+| `S3_REGION`             | yes      | no     | plain, and build argument | Bucket region                                               |
+| `S3_ENDPOINT_URL`       | no       | no     | unset                     | S3-compatible stand-in (local and tests)                    |
+| `S3_ACCESS_KEY_ID`      | no       | yes    | unset (task role)         | Static credentials; without them the SDK uses the AWS chain |
+| `S3_SECRET_ACCESS_KEY`  | no       | yes    | unset (task role)         | See above                                                   |
+| `S3_PUBLIC_URL`         | no       | no     | plain, and build argument | Where browsers fetch photos (CloudFront in production)      |
+| `DEMO_PASSWORD`         | no       | yes    | secret, when demo is on   | Password of the demo accounts made by `pnpm db:seed:demo`   |
+| `DEMO_MODE`             | no       | no     | plain, when demo is on    | Shows "use a demo account" on the sign-in page              |
+
+### Read outside `src/env.ts`
+
+Only a few places read `process.env` directly, each for a reason:
+
+- `next.config.ts` and `prisma.config.ts` run before or outside the app.
+- `playwright.config.ts`, `e2e/support` and `scripts/screenshots.ts` read test tooling settings: `CI`, `MAILPIT_URL`, `BASE_URL` and `NEXT_DIST_DIR`.
+- `NODE_ENV` is set by Node and Next.
 
 ## What the shop does
 

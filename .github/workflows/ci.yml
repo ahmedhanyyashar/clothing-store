@@ -14,26 +14,8 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# Values for the throwaway database below. src/env.ts validates them at build
-# and test time, so CI declares them itself. Nothing here is a real credential.
-env:
-  NEXT_PUBLIC_APP_URL: http://localhost:3000
-  DATABASE_URL: postgresql://root:password@localhost:5433/clothing_store_test
-  SMTP_URL: smtp://localhost:1025
-  EMAIL_FROM: no-reply@clothing-store.example
-  BETTER_AUTH_SECRET: ci-only-secret-at-least-32-characters-long
-  GOOGLE_CLIENT_ID: ci-client.apps.googleusercontent.com
-  GOOGLE_CLIENT_SECRET: ci-client-secret
-  STRIPE_SECRET_KEY: sk_test_mock
-  STRIPE_WEBHOOK_SECRET: whsec_test_secret
-  STRIPE_API_URL: http://localhost:12111
-  S3_BUCKET: clothing-store-test
-  S3_REGION: us-east-1
-  S3_ENDPOINT_URL: http://localhost:4566
-  S3_ACCESS_KEY_ID: test
-  S3_SECRET_ACCESS_KEY: test
-  DEMO_MODE: "true"
-  DEMO_PASSWORD: demo-test-password
+# The environment for the throwaway services below comes from .env.test, which
+# the setup action copies to .env.
 
 jobs:
   # Text-only changes (Markdown and docs/) do not need the slow jobs. A job
