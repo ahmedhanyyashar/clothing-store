@@ -8,14 +8,17 @@ import { UserMenu } from "@/components/layout/UserMenu"
 export function Header() {
   return (
     <header className="border-b border-border">
-      <Container className="flex h-16 items-center justify-between">
+      <Container className="flex h-16 items-center justify-between gap-2">
         <Link
           href="/"
-          className="text-lg font-semibold tracking-tight"
+          className="text-base font-semibold tracking-tight sm:text-lg"
         >
           Clothing Store
         </Link>
-        <nav aria-label="Main" className="mr-auto ml-8">
+        <nav
+          aria-label="Main"
+          className="mr-auto ml-2 sm:ml-8"
+        >
           <Link
             href="/shop"
             className="text-sm font-medium hover:underline"
@@ -23,7 +26,7 @@ export function Header() {
             Shop
           </Link>
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <UserMenu />
           <CartButton />
           <ThemeToggle />

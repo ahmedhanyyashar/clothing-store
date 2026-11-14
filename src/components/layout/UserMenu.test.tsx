@@ -66,15 +66,18 @@ describe("UserMenu", () => {
     )
     const { container } = render(<UserMenu />)
 
-    expect(
-      screen.getByRole("link", {
+    await userEvent.click(
+      screen.getByRole("button", {
         name: "Account of Ada Lovelace",
       })
+    )
+    expect(
+      screen.getByRole("menuitem", { name: "Account" })
     ).toHaveAttribute("href", "/account")
     expect(await axe(container)).toHaveNoViolations()
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Sign out" })
+      screen.getByRole("menuitem", { name: "Sign out" })
     )
 
     expect(authClient.signOut).toHaveBeenCalledOnce()
@@ -88,21 +91,27 @@ describe("UserMenu and the admin area", () => {
     vi.resetAllMocks()
   })
 
-  it("links an admin to the admin area", () => {
+  it("links an admin to the admin area", async () => {
     session({ user: { name: "Ada", role: "ADMIN" } })
     render(<UserMenu />)
+    await userEvent.click(
+      screen.getByRole("button", { name: "Account of Ada" })
+    )
 
     expect(
-      screen.getByRole("link", { name: "Admin" })
+      screen.getByRole("menuitem", { name: "Admin" })
     ).toHaveAttribute("href", "/admin")
   })
 
-  it("shows an ordinary user no such link", () => {
+  it("shows an ordinary user no such link", async () => {
     session({ user: { name: "Bob", role: "USER" } })
     render(<UserMenu />)
+    await userEvent.click(
+      screen.getByRole("button", { name: "Account of Bob" })
+    )
 
     expect(
-      screen.queryByRole("link", { name: "Admin" })
+      screen.queryByRole("menuitem", { name: "Admin" })
     ).not.toBeInTheDocument()
   })
 })

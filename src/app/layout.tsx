@@ -52,7 +52,7 @@ export default async function RootLayout({
       className={poppins.variable}
       suppressHydrationWarning
     >
-      <body className="flex min-h-screen flex-col bg-background font-sans text-foreground antialiased">
+      <body className="flex min-h-dvh flex-col bg-background font-sans text-foreground antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

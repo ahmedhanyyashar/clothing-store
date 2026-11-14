@@ -6,8 +6,8 @@ afterEach(() => vi.restoreAllMocks())
 
 function lastLine(stream: "stdout" | "stderr") {
   const write = vi
-    .spyOn(process[stream], "write")
-    .mockImplementation(() => true)
+    .spyOn(console, stream === "stderr" ? "error" : "log")
+    .mockImplementation(() => undefined)
   return () =>
     JSON.parse(String(write.mock.calls.at(-1)?.[0]))
 }

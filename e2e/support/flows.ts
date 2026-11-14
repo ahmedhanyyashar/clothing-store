@@ -37,7 +37,9 @@ export async function verifyEmail(
   await open(page, link)
   await expect(page).toHaveURL("/")
   await expect(
-    page.getByRole("link", { name: account.name })
+    page.getByRole("button", {
+      name: `Account of ${account.name}`,
+    })
   ).toBeVisible()
 }
 
@@ -55,7 +57,10 @@ export async function signIn(
 
 export async function signOut(page: Page) {
   await page
-    .getByRole("button", { name: "Sign out" })
+    .getByRole("button", { name: /^Account of / })
+    .click()
+  await page
+    .getByRole("menuitem", { name: "Sign out" })
     .click()
   await expect(
     page.getByRole("link", { name: "Sign in" })

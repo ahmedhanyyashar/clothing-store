@@ -21,17 +21,26 @@ export function Pagination({
       aria-label={label}
       className="flex items-center gap-3 text-sm"
     >
-      {page > 1 && (
+      {/* disabled, not removed, so "Page x of y" does not move */}
+      {page > 1 ? (
         <Button asChild variant="outline" size="sm">
           <Link href={href(page - 1)}>Previous</Link>
+        </Button>
+      ) : (
+        <Button variant="outline" size="sm" disabled>
+          Previous
         </Button>
       )}
       <span>
         Page {page} of {pageCount}
       </span>
-      {page < pageCount && (
+      {page < pageCount ? (
         <Button asChild variant="outline" size="sm">
           <Link href={href(page + 1)}>Next</Link>
+        </Button>
+      ) : (
+        <Button variant="outline" size="sm" disabled>
+          Next
         </Button>
       )}
     </nav>

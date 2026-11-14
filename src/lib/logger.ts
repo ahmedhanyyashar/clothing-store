@@ -35,10 +35,10 @@ function write(
       details: "unserialisable",
     })
   }
-  ;(level === "error"
-    ? process.stderr
-    : process.stdout
-  ).write(`${line}\n`)
+  // console, not process.stdout: it exists in the Edge runtime too, and in Node
+  // it writes the same line to the same stream
+  if (level === "error") console.error(line)
+  else console.log(line)
 }
 
 /**

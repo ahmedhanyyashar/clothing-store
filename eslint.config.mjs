@@ -99,7 +99,11 @@ const eslintConfig = [
 
   {
     // a command-line script reports its result on the console
-    files: ["prisma/seed.ts", "scripts/**/*.ts"],
+    files: [
+      "prisma/seed.ts",
+      "scripts/**/*.ts",
+      "src/lib/logger.ts",
+    ],
     rules: { "no-console": "off" },
   },
 

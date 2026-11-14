@@ -75,6 +75,26 @@ describe("Pagination", () => {
     expect(numbers).toEqual(["8", "9", "10", "11", "12"])
   })
 
+  it("keeps the row the same size on the first and last page", () => {
+    const rows = [1, 3].map((page) => {
+      const { container, unmount } = render(
+        <Pagination page={page} pageCount={3} view={view} />
+      )
+      const items = container.querySelectorAll("li").length
+      unmount()
+      return items
+    })
+
+    // three numbers and both arrows, whether or not an arrow links anywhere
+    expect(rows).toEqual([5, 5])
+    render(
+      <Pagination page={1} pageCount={3} view={view} />
+    )
+    expect(
+      screen.queryByRole("link", { name: "Previous page" })
+    ).not.toBeInTheDocument()
+  })
+
   it("has no accessibility violations", async () => {
     const { container } = render(
       <Pagination page={2} pageCount={4} view={view} />
