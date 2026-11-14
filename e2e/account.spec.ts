@@ -35,7 +35,9 @@ test("a user changes their name and sees it everywhere", async ({
     page.getByText("Profile saved.")
   ).toBeVisible()
   await expect(
-    page.getByRole("link", { name: "Ada King" })
+    page.getByRole("button", {
+      name: "Account of Ada King",
+    })
   ).toBeVisible()
 })
 

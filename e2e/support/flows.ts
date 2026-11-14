@@ -37,7 +37,9 @@ export async function verifyEmail(
   await open(page, link)
   await expect(page).toHaveURL("/")
   await expect(
-    page.getByRole("link", { name: account.name })
+    page.getByRole("button", {
+      name: `Account of ${account.name}`,
+    })
   ).toBeVisible()
 }
 
