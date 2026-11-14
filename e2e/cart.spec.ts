@@ -1,5 +1,6 @@
 import {
   createSignedInUser,
+  hydrated,
   open,
   signOut,
   signUp,
@@ -56,7 +57,8 @@ test("a visitor fills a cart, changes it, and it survives a reload", async ({
     page.getByText("$74.97").first()
   ).toBeVisible()
 
-  await page.reload({ waitUntil: "networkidle" })
+  await page.reload()
+  await hydrated(page)
   await expect(
     page.getByRole("button", { name: "Cart, 3 items" })
   ).toBeVisible()

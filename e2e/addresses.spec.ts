@@ -50,7 +50,6 @@ test("a user saves addresses, picks a default and deletes one", async ({
   await page
     .getByRole("link", { name: "Add address" })
     .click()
-  await page.waitForLoadState("networkidle")
   await expect(
     page.getByRole("checkbox", { name: "Default address" })
   ).toBeChecked()
@@ -71,7 +70,6 @@ test("a user saves addresses, picks a default and deletes one", async ({
   await page
     .getByRole("link", { name: "Add address" })
     .click()
-  await page.waitForLoadState("networkidle")
   await fillAddress(page, office)
   await page
     .getByLabel("Make this my default address")
@@ -118,7 +116,6 @@ test("a user edits an address", async ({
   await page
     .getByRole("link", { name: "Edit Home" })
     .click()
-  await page.waitForLoadState("networkidle")
   await page.getByLabel("City").fill("Dallas")
   await save(page)
 

@@ -99,8 +99,7 @@ test("the command says what is wrong instead of failing silently", async ({
   )
 
   // an account that never verified its address is not made an admin
-  await page.goto("/sign-up")
-  await page.waitForLoadState("networkidle")
+  await open(page, "/sign-up")
   await page.getByLabel("Name").fill(account.name)
   await page.getByLabel("Email").fill(account.email)
   await page.getByLabel("Password").fill(account.password)

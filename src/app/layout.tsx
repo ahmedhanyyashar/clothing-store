@@ -11,6 +11,7 @@ import { Analytics } from "@/components/consent/Analytics"
 import { ConsentBanner } from "@/components/consent/ConsentBanner"
 import { Footer } from "@/components/layout/Footer"
 import { Header } from "@/components/layout/Header"
+import { HydrationMarker } from "@/components/layout/HydrationMarker"
 import { Toaster } from "@/components/ui/sonner"
 import { env } from "@/env"
 
@@ -62,6 +63,7 @@ export default async function RootLayout({
         >
           <NuqsAdapter>
             <CartSession />
+            <HydrationMarker />
             <Header />
             <main className="flex-1">{children}</main>
             <Footer />
