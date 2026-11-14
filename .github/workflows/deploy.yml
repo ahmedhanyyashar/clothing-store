@@ -74,7 +74,7 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           # either a role GitHub is trusted to assume (AWS_ROLE_ARN), or the
           # deploy user's key (githubAuth: key in infra/); see infra/README.md
