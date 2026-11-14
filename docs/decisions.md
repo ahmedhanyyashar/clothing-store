@@ -46,7 +46,7 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 40. [A file goes when nothing needs it, and an order's picture is something an order needs](#40-a-file-goes-when-nothing-needs-it-and-an-orders-picture-is-something-an-order-needs)
 41. [Unused files are swept by a command, and a file stops being attachable before it can be swept](#41-unused-files-are-swept-by-a-command-and-a-file-stops-being-attachable-before-it-can-be-swept)
 42. [Lists sort through the address, on a fixed list of columns](#42-lists-sort-through-the-address-on-a-fixed-list-of-columns)
-43. [A demo shopper and a read-only demo admin, limited on the server](#43-a-demo-shopper-and-a-read-only-demo-admin-limited-on-the-server)
+43. [The demo buttons sign in as ordinary seeded accounts](#43-the-demo-buttons-sign-in-as-ordinary-seeded-accounts)
 44. [A nonce-based CSP, and Google Analytics only after consent](#44-a-nonce-based-csp-and-google-analytics-only-after-consent)
 45. [The default AWS topology, written as code and applied on demand](#45-the-default-aws-topology-written-as-code-and-applied-on-demand)
 46. [Search engines see the catalog, not the private areas or every filter](#46-search-engines-see-the-catalog-not-the-private-areas-or-every-filter)
@@ -389,13 +389,13 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 
 **Cost.** A sort is a page load, not an instant reorder. A column that is not stored in the database (for example the total stock of a product, which is a sum over sizes) cannot be sorted without extra work, so it is not offered.
 
-## 43. A demo shopper and a read-only demo admin, limited on the server
+## 43. The demo buttons sign in as ordinary seeded accounts
 
-**Decision.** With demo mode on, the sign-in page offers two buttons that sign a visitor in as a demo shopper or a demo admin, using a password kept in the server's environment. The two accounts (and the other seeded customers) carry an `isDemo` flag. The server refuses, for any account with the flag: changing the password, name or email, deleting the account, ending sessions, and, for the admin, every action that changes an order, a product or a photo. The admin pages themselves open normally. No email is sent to the demo addresses.
+**Decision.** When `DEMO_PASSWORD` is set, the sign-in page offers two buttons that sign a visitor in as the demo shopper or the demo admin, using a password kept in the server's environment. Both are ordinary users made by the demo seed: no flag in the database, no read-only rules in the code. The only demo-specific behavior left is that nothing is mailed to the demo domain, whatever the environment: those addresses do not exist, and a real mail server would reject them (Amazon SES in its sandbox) or bounce them.
 
-**Why.** Visitors should see the admin side, which is most of what the project does, without the risk of a public sign-in as an admin: anyone could delete the catalog, fill the bucket or read other people's data. Hiding the buttons would protect nothing, because an action is a plain request anyone can send, so each one refuses on the server. Ending sessions is blocked as well, because the account is shared and one visitor would sign the others out. The demo addresses do not exist, so mailing them would only produce bounces.
+**Why.** The project is a showcase, and the visitor should see the admin side working, not a refused action. Special rules for one kind of account add a code path to every admin action and a test for each, and they are easy to miss in the next one. Seeded data is enough.
 
-**Cost.** A demo shopper can still place and cancel orders, so stock and the order list change as visitors try the shop; the demo seed restores them. The demo admin cannot show what a change looks like.
+**Cost.** The demo admin is a real admin: a visitor can edit or delete products, cancel orders and fill the bucket, and the demo shopper can change its own password. The demo users never receive order or status emails. The shared data stays as visitors leave it until the demo seed is run again.
 
 ## 44. A nonce-based CSP, and Google Analytics only after consent
 

@@ -33,12 +33,10 @@ export const env = createEnv({
     S3_ENDPOINT_URL: z.url().optional(),
     S3_ACCESS_KEY_ID: z.string().min(1).optional(),
     S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
-    // The password of the demo accounts made by `pnpm db:seed:demo`. Only that
-    // command reads it; leave it unset anywhere the demo data is not wanted.
+    // The password of the demo accounts made by `pnpm db:seed:demo`. When it is
+    // set, the sign-in page also offers "use a demo account"; leave it unset
+    // anywhere the demo data is not wanted.
     DEMO_PASSWORD: z.string().min(8).optional(),
-    // Shows "use a demo account" on the sign-in page. Needs DEMO_PASSWORD, and the
-    // demo accounts made by the demo seed. Leave it off anywhere else.
-    DEMO_MODE: z.stringbool().optional(),
     // Where browsers fetch the photos from. Defaults to the bucket's own address.
     S3_PUBLIC_URL: z.url().optional(),
   },
@@ -68,7 +66,6 @@ export const env = createEnv({
     S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
     S3_PUBLIC_URL: process.env.S3_PUBLIC_URL,
     DEMO_PASSWORD: process.env.DEMO_PASSWORD,
-    DEMO_MODE: process.env.DEMO_MODE,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
   },

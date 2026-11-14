@@ -1,7 +1,6 @@
 "use server"
 
 import { requireRole } from "@/lib/auth/session"
-import { DEMO_READ_ONLY } from "@/lib/demo/accounts"
 
 import {
   createProduct,
@@ -39,10 +38,6 @@ export async function saveProductAction(
     "ADMIN",
     id ? `/admin/products/${id}` : "/admin/products/new"
   )
-  // the demo admin looks but does not touch
-  if (admin.isDemo)
-    return { ok: false, message: DEMO_READ_ONLY }
-
   // the form's own check is for convenience; this is the one that counts
   const parsed = productSchema.safeParse(input)
   if (!parsed.success) {
@@ -84,8 +79,6 @@ export async function deleteProductAction(
     "ADMIN",
     `/admin/products/${id}`
   )
-  if (admin.isDemo)
-    return { ok: false, message: DEMO_READ_ONLY }
   const result = await deleteProduct(admin, id)
   return result.ok
     ? { ok: true }

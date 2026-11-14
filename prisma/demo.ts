@@ -167,7 +167,6 @@ export async function seedDemo() {
       email: DEMO_ADMIN_EMAIL,
       emailVerified: true,
       role: "ADMIN",
-      isDemo: true,
       createdAt: new Date(now - 90 * DAY),
       accounts: {
         create: {
@@ -191,7 +190,6 @@ export async function seedDemo() {
         name,
         email: `${handle}${DEMO_DOMAIN}`,
         emailVerified: true,
-        isDemo: true,
         createdAt: new Date(now - (85 - index * 6) * DAY),
         accounts: {
           create: {
@@ -471,7 +469,6 @@ export async function seedDemoCustomer() {
       name: "Demo Shopper",
       email: DEMO_CUSTOMER_EMAIL,
       emailVerified: true,
-      isDemo: true,
       accounts: {
         create: {
           id: "demo-user-0-credential",

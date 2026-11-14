@@ -11,7 +11,7 @@ An online clothing store built end to end with Next.js and TypeScript: a shop, a
   <img src="docs/screenshots/admin-orders.png" alt="The admin order list, sorted by total" width="49%">
 </p>
 
-**Live demo:** https://d2fwmgwpk5bmxk.cloudfront.net, served from AWS while the stack is applied. On the sign-in page, "Use the demo shopper" and "Use the demo admin" open it with sample data; the demo admin sees everything and changes nothing.
+**Live demo:** https://d2fwmgwpk5bmxk.cloudfront.net, served from AWS while the stack is applied. On the sign-in page, "Use the demo shopper" and "Use the demo admin" open it with sample data; the demo admin can manage the shop.
 
 ## What it demonstrates
 
@@ -115,7 +115,6 @@ The image is built once and the same image runs in production. Only the public v
 | `S3_SECRET_ACCESS_KEY`  | no       | yes    | unset (task role)         | See above                                                   |
 | `S3_PUBLIC_URL`         | no       | no     | plain, and build argument | Where browsers fetch photos (CloudFront in production)      |
 | `DEMO_PASSWORD`         | no       | yes    | secret, when demo is on   | Password of the demo accounts made by `pnpm db:seed:demo`   |
-| `DEMO_MODE`             | no       | no     | plain, when demo is on    | Shows "use a demo account" on the sign-in page              |
 
 ### Read outside `src/env.ts`
 
@@ -133,7 +132,7 @@ A short list; [docs/features.md](docs/features.md) has the detail of each.
 - **Accounts:** verified email or Google sign-in, saved addresses, order history.
 - **Checkout and payments:** card (Stripe) or cash on delivery, with stock held from the moment the order is made.
 - **Admin:** a dashboard, sortable order and product lists, order handling with refunds, product editing with photos, an audit log.
-- **Demo mode:** demo accounts and 72 sample orders (`pnpm db:seed:demo`), with a read-only demo admin.
+- **Demo mode:** demo accounts and 72 sample orders (`pnpm db:seed:demo`), with a demo admin.
 - **Privacy and security:** legal pages, cookie consent, a Content-Security-Policy.
 
 ## Infrastructure and deployment

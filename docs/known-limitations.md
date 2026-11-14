@@ -5,7 +5,7 @@ What the project does not do, stated as plain facts so nobody has to find them o
 ## Accounts and access
 
 - **Admins sign in with one factor.** There is no two-step sign-in. An admin is made only by an operator command, never from the web, and the audit log records everything an admin does.
-- **Demo accounts are shared.** They are limited on the server (no changes to the account, and the demo admin changes nothing), but everyone who uses them sees, and affects, the same data.
+- **Demo accounts are shared.** They are ordinary accounts, so everyone who uses them sees, and affects, the same data.
 
 ## Orders and payments
 

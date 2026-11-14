@@ -8,9 +8,8 @@ export type DemoSignIn =
 
 /** Whether this server offers the demo accounts at all. */
 export const demoAvailable = (config: {
-  DEMO_MODE?: boolean
   DEMO_PASSWORD?: string
-}) => Boolean(config.DEMO_MODE && config.DEMO_PASSWORD)
+}) => Boolean(config.DEMO_PASSWORD)
 
 /**
  * Signs the visitor in as a demo account. The password comes from the server's
@@ -20,10 +19,7 @@ export const demoAvailable = (config: {
 export async function signInAsDemo(
   kind: DemoKind,
   headers: Headers,
-  config: {
-    DEMO_MODE?: boolean
-    DEMO_PASSWORD?: string
-  } = env
+  config: { DEMO_PASSWORD?: string } = env
 ): Promise<DemoSignIn> {
   if (!demoAvailable(config) || !config.DEMO_PASSWORD)
     return {

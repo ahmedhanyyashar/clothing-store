@@ -80,9 +80,6 @@ export const service = new awsx.ecs.FargateService("app", {
         { name: "S3_BUCKET", value: photosBucket.bucket },
         // photos are read through CloudFront, not from the bucket
         { name: "S3_PUBLIC_URL", value: photosUrl },
-        ...(demoPasswordSecret
-          ? [{ name: "DEMO_MODE", value: "true" }]
-          : []),
       ],
       secrets: [
         secret("DATABASE_URL", databaseUrlSecret),

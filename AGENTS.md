@@ -67,7 +67,6 @@ Run lint, format check, typecheck and tests before declaring a change done, and 
 - Change products only through `createProduct`, `updateProduct` and `deleteProduct` in `@/lib/admin/product-changes`. Read prices with `parsePrice` (never `parseFloat`). Never write a size's stock without the compare-and-set on `expectedStock`. A size is known by its label; the form does not rename one.
 - Dashboard numbers come from `getDashboard`; a failed query must raise an error, not show zero.
 - Admin lists are a `DataTable` with `Pagination`. Read `?sort=&dir=` with `parseSort` and a fixed column list, map columns to fields in the query (never pass visitor text to `orderBy`), add the id as the last tie-breaker, and build heading links with `sortHref`. Escape search text with `escapeLike` from `@/lib/db/like`.
-- A demo account (`user.isDemo`) is shared and must stay harmless: every admin action or route that changes something checks `admin.isDemo` right after `requireRole` and returns `DEMO_READ_ONLY`, with a case in `demo-admin.integration.test.ts`. New Better Auth endpoints that change an account go in `DEMO_BLOCKED` in `@/lib/auth/auth`.
 - Use `Card`, `Table`, `Badge` and `Button`, with `OrderStatusBadge` and `PaymentStatusBadge`. Admin menus use `SectionNav`. End-to-end specs that add or delete products belong in `e2e/admin-products.spec.ts`, which runs last because the catalog tests count the sample catalog.
 
 ### Auth (decisions 14-17, 26)

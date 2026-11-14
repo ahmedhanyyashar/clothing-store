@@ -56,7 +56,7 @@ await page.waitForLoadState("networkidle")
 await page.screenshot({ path: `${out}/product.png` })
 console.log("product.png")
 
-// the admin side, as the read-only demo admin
+// the admin side, as the demo admin
 await page.goto(`${base}/sign-in`, {
   waitUntil: "networkidle",
 })
