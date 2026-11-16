@@ -1,7 +1,6 @@
 import nodemailer, { type Transporter } from "nodemailer"
 
 import { env } from "@/env"
-import { DEMO_DOMAIN } from "@/lib/demo/accounts"
 
 export type EmailMessage = {
   to: string
@@ -27,18 +26,10 @@ const send = createMailer(
   `Clothing Store <${env.EMAIL_FROM}>`
 )
 
-/**
- * Whether a message is for a demo account. Those addresses do not exist, so a
- * real mail server would only bounce them (Amazon SES in its sandbox refuses
- * unverified recipients, which would also show up as errors in the logs).
- */
-export const isDemoRecipient = (to: string) =>
-  to.toLowerCase().endsWith(DEMO_DOMAIN)
-
 export async function sendEmail(message: EmailMessage) {
-  // Nothing is sent to the demo domain, in any environment: it is ours and no
-  // one reads it, so mailing it can only fail. The demo users therefore never
-  // receive order or status emails, locally too.
-  if (isDemoRecipient(message.to)) return
+  // `.example` is a reserved name that never reaches a real inbox, and the demo
+  // accounts use it: mailing them can only bounce (or fail in the SES sandbox),
+  // so nothing is sent, in any environment.
+  if (message.to.toLowerCase().endsWith(".example")) return
   await send(message)
 }

@@ -23,7 +23,7 @@ What the project does not do, stated as plain facts so nobody has to find them o
 
 ## Operations
 
-- **Nothing runs the clean-up commands on a schedule.** `pnpm storage:sweep` (unused photo files) and `pnpm db:seed:demo` (restoring the demo) are commands an operator runs.
+- **Nothing runs the clean-up commands on a schedule.** `pnpm storage:sweep` (unused photo files) and `pnpm db:seed` (restoring the demo) are commands an operator runs.
 - **There is one AWS environment**, production, sized small by default. High availability and data protection are settings, off by default so that the stack can be removed with one command.
 - **The site uses CloudFront's own address.** A domain of your own needs a certificate in `us-east-1`, which not every account may use.
 - **Nothing is known about behaviour under load.** The checkout is tested for races between buyers, not for throughput.

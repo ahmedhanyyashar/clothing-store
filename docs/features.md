@@ -75,9 +75,9 @@ What each part of the shop does and why, in the order a customer meets it. The r
 
 ## Demo data
 
-`pnpm db:seed:demo` loads the sample catalog and then a demo shop on top of it: twelve customers, a demo admin, and 72 orders over the last 60 days in every state (delivered, shipped, confirmed, pending, cancelled, refunded), with the admin log that goes with them and a few sizes running low or sold out. It uses fixed numbers, so it looks the same every time, and running it again replaces the previous demo data without touching other accounts. The demo accounts are `demo@clothing-store.example` and `demo-admin@clothing-store.example`, with the password in `DEMO_PASSWORD` (`demo-password` if it is not set). `pnpm db:seed` loads only the catalog, which is what the tests use.
+`pnpm db:seed` loads the sample catalog and a demo shop on top of it: twelve customers, a demo admin, and 72 orders over the last 60 days in every state (delivered, shipped, confirmed, pending, cancelled, refunded), with the admin log that goes with them and a few sizes running low or sold out. It uses fixed numbers, so it looks the same every time, and running it again replaces the previous demo data without touching other accounts. The demo accounts are `demo@clothing-store.example` and `demo-admin@clothing-store.example`, and the password is `demo-password`.
 
-With `DEMO_PASSWORD` set, the sign-in page offers **Use the demo shopper** and **Use the demo admin**, so a visitor can look around without an account. The password stays on the server. They are ordinary seeded accounts, so the demo admin can do everything an admin can. No email is sent to demo addresses, in any environment, so the demo users never receive order or status emails.
+The sign-in page offers **Use the demo shopper** and **Use the demo admin**, so a visitor can look around without an account. They are ordinary seeded accounts, so the demo admin can do everything an admin can. No email is sent to demo addresses, in any environment, so the demo users never receive order or status emails.
 
 ## Feedback
 

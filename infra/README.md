@@ -107,8 +107,6 @@ pulumi config set --secret googleClientSecret <from the Google console>
 pulumi config set --secret stripeSecretKey <sk_test_... from Stripe>
 pulumi config set --secret stripeWebhookSecret <whsec_... see below>
 pulumi config set --secret smtpUrl "smtps://USER:PASSWORD@email-smtp.eu-north-1.amazonaws.com"
-# optional, for a public demo (shows the "use a demo account" buttons):
-pulumi config set --secret demoPassword <at least 8 characters>
 ```
 
 The email address in `emailFrom` must be verified in Amazon SES, and the SMTP

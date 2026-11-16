@@ -50,11 +50,6 @@ export const smtpUrlSecret = appSecret(
   "smtp-url",
   config.requireSecret("smtpUrl")
 )
-// only for a public demo: lets visitors sign in as the demo accounts
-const demoPassword = config.getSecret("demoPassword")
-export const demoPasswordSecret = demoPassword
-  ? appSecret("demo-password", demoPassword)
-  : undefined
 
 export const appSecrets = [
   databaseUrlSecret,
@@ -63,5 +58,4 @@ export const appSecrets = [
   stripeSecretKey,
   stripeWebhookSecret,
   smtpUrlSecret,
-  ...(demoPasswordSecret ? [demoPasswordSecret] : []),
 ]

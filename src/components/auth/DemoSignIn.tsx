@@ -6,13 +6,20 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth/client"
-import type { DemoKind } from "@/lib/demo/accounts"
-import { signInAsDemoAction } from "@/lib/demo/actions"
+
+// The accounts `pnpm db:seed` creates (prisma/seed.ts has the same values). The
+// password is public on purpose: the buttons give everyone this access anyway.
+const DEMO_PASSWORD = "demo-password"
+const DEMO_EMAIL = {
+  customer: "demo@clothing-store.example",
+  admin: "demo-admin@clothing-store.example",
+}
+type DemoKind = keyof typeof DEMO_EMAIL
 
 /**
- * Two buttons for visitors who only want to look around. They are shown only
- * where the demo accounts exist (the page decides). They are ordinary seeded
- * accounts, so the admin can do everything an admin can.
+ * Two buttons for visitors who only want to look around. They sign in with the
+ * seeded demo accounts, which are ordinary users, so the admin can do
+ * everything an admin can.
  */
 export function DemoSignIn({
   redirectTo,
@@ -26,14 +33,19 @@ export function DemoSignIn({
   async function enter(kind: DemoKind) {
     setBusy(kind)
     setError(undefined)
-    const result = await signInAsDemoAction(kind)
-    if (!result.ok) {
+    const { error: failed } = await authClient.signIn.email(
+      {
+        email: DEMO_EMAIL[kind],
+        password: DEMO_PASSWORD,
+      }
+    )
+    if (failed) {
       setBusy(undefined)
-      setError(result.message)
+      setError(
+        "The demo account could not be opened. Try again, or sign in with your own account."
+      )
       return
     }
-    // the sign-in happened on the server, so tell the header
-    authClient.$store.notify("$sessionSignal")
     router.push(
       (kind === "admin" ? "/admin" : redirectTo) as Route
     )

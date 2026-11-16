@@ -56,7 +56,7 @@ ENV DATABASE_URL=postgresql://build:build@localhost:5432/build \
 COPY . .
 RUN pnpm db:generate && pnpm build
 
-# The demo seed as one file, so the running image can load the demo data.
+# The seed as one file, so the running image can load the sample data.
 RUN node scripts/bundle-seed.mjs
 
 # Pin the migration tooling to exactly the versions the app was built with.

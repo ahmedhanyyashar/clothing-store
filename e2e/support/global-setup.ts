@@ -10,7 +10,7 @@ export default async function globalSetup() {
   execSync("pnpm exec prisma migrate deploy", {
     stdio: "inherit",
   })
-  execSync("pnpm exec tsx prisma/seed.ts --demo-customer", {
+  execSync("pnpm exec tsx prisma/seed.ts", {
     stdio: "inherit",
   })
   await ensureLocalBucket()
