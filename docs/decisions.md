@@ -391,11 +391,13 @@ Short records of the choices that shaped the code: what was chosen, why, and wha
 
 ## 43. The demo buttons sign in as ordinary seeded accounts
 
-**Decision.** When `DEMO_PASSWORD` is set, the sign-in page offers two buttons that sign a visitor in as the demo shopper or the demo admin, using a password kept in the server's environment. Both are ordinary users made by the demo seed: no flag in the database, no read-only rules in the code. The only demo-specific behavior left is that nothing is mailed to the demo domain, whatever the environment: those addresses do not exist, and a real mail server would reject them (Amazon SES in its sandbox) or bounce them.
+**Decision.** The seed always creates a demo shopper and a demo admin with a fixed, public password, and the sign-in page offers two buttons that sign a visitor in as either one through the normal sign-in. Both are ordinary users: no flag in the database, no read-only rules in the code, no server-side secret or special sign-in path. The only demo-specific behavior left is that nothing is mailed to an address ending in `.example` (the demo accounts), whatever the environment: those addresses do not exist, and a real mail server would reject them (Amazon SES in its sandbox) or bounce them.
 
 **Why.** The project is a showcase, and the visitor should see the admin side working, not a refused action. Special rules for one kind of account add a code path to every admin action and a test for each, and they are easy to miss in the next one. Seeded data is enough.
 
-**Cost.** The demo admin is a real admin: a visitor can edit or delete products, cancel orders and fill the bucket, and the demo shopper can change its own password. The demo users never receive order or status emails. The shared data stays as visitors leave it until the demo seed is run again.
+A hidden password would protect nothing: the buttons give the same access to everyone, so the password is public and no secret has to be configured anywhere.
+
+**Cost.** The demo admin is a real admin: a visitor can edit or delete products, cancel orders and fill the bucket, and the demo shopper can change its own password. The password is in the source, so it must never be used for anything else. The demo users never receive order or status emails. The shared data stays as visitors leave it until the seed is run again.
 
 ## 44. A nonce-based CSP, and Google Analytics only after consent
 

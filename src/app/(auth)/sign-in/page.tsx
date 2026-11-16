@@ -9,8 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { env } from "@/env"
-import { demoAvailable } from "@/lib/demo/sign-in"
 import { getSafeRedirect } from "@/lib/utils"
 
 import { SignInForm } from "./form"
@@ -45,11 +43,9 @@ export default async function SignInPage({
               : undefined
           }
         />
-        {demoAvailable(env) && (
-          <DemoSignIn
-            redirectTo={getSafeRedirect(redirect)}
-          />
-        )}
+        <DemoSignIn
+          redirectTo={getSafeRedirect(redirect)}
+        />
         <p className="mt-6 text-center text-sm text-muted-foreground">
           New here?{" "}
           <Link href="/sign-up" className="underline">

@@ -12,7 +12,6 @@ import {
 import {
   betterAuthSecret,
   databaseUrlSecret,
-  demoPasswordSecret,
   googleClientSecret,
   smtpUrlSecret,
   stripeSecretKey,
@@ -91,9 +90,6 @@ export const service = new awsx.ecs.FargateService("app", {
           stripeWebhookSecret
         ),
         secret("SMTP_URL", smtpUrlSecret),
-        ...(demoPasswordSecret
-          ? [secret("DEMO_PASSWORD", demoPasswordSecret)]
-          : []),
       ],
     },
   },

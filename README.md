@@ -11,7 +11,7 @@ An online clothing store built end to end with Next.js and TypeScript: a shop, a
   <img src="docs/screenshots/admin-orders.png" alt="The admin order list, sorted by total" width="49%">
 </p>
 
-**Live demo:** https://d2fwmgwpk5bmxk.cloudfront.net, served from AWS while the stack is applied. On the sign-in page, "Use the demo shopper" and "Use the demo admin" open it with sample data; the demo admin can manage the shop.
+**Demo:** not hosted right now (the AWS stack is applied only when needed). See the [screenshots](docs/screenshots), or run it locally: `pnpm db:seed` loads the demo data, then use "Use the demo shopper" or "Use the demo admin" on the sign-in page.
 
 ## What it demonstrates
 
@@ -67,7 +67,7 @@ cp .env.example .env
 pnpm compose        # starts the databases, mail catcher and photo storage
 pnpm storage:setup  # creates the photo bucket in the local storage
 pnpm db:deploy      # applies the migrations to the development database
-pnpm db:seed        # fills it with sample products
+pnpm db:seed        # fills it with the sample catalog and the demo accounts and orders
 pnpm dev
 ```
 
@@ -114,7 +114,6 @@ The image is built once and the same image runs in production. Only the public v
 | `S3_ACCESS_KEY_ID`      | no       | yes    | unset (task role)         | Static credentials; without them the SDK uses the AWS chain |
 | `S3_SECRET_ACCESS_KEY`  | no       | yes    | unset (task role)         | See above                                                   |
 | `S3_PUBLIC_URL`         | no       | no     | plain, and build argument | Where browsers fetch photos (CloudFront in production)      |
-| `DEMO_PASSWORD`         | no       | yes    | secret, when demo is on   | Password of the demo accounts made by `pnpm db:seed:demo`   |
 
 ### Read outside `src/env.ts`
 
@@ -132,7 +131,7 @@ A short list; [docs/features.md](docs/features.md) has the detail of each.
 - **Accounts:** verified email or Google sign-in, saved addresses, order history.
 - **Checkout and payments:** card (Stripe) or cash on delivery, with stock held from the moment the order is made.
 - **Admin:** a dashboard, sortable order and product lists, order handling with refunds, product editing with photos, an audit log.
-- **Demo mode:** demo accounts and 72 sample orders (`pnpm db:seed:demo`), with a demo admin.
+- **Demo mode:** demo accounts and 72 sample orders (`pnpm db:seed`), with a demo admin.
 - **Privacy and security:** legal pages, cookie consent, a Content-Security-Policy.
 
 ## Infrastructure and deployment
@@ -140,7 +139,7 @@ A short list; [docs/features.md](docs/features.md) has the detail of each.
 - **`Dockerfile`** builds two images from one commit: the app (a Next.js standalone server) and a one-off migration job (`--target migrate`).
 - **`infra/`** is the AWS setup as a Pulumi program: a VPC with public, app and data tiers over two zones, ECS Fargate behind a load balancer and CloudFront, RDS Postgres in the data tier, a private S3 bucket for photos served through its own CloudFront address, Secrets Manager, and a monthly budget alert. [infra/README.md](infra/README.md) shows the topology, the cost, and how to apply and remove it.
 - **Deploy** is continuous delivery to production (`.github/workflows/deploy.yml`): when CI passes on `main`, the commit that passed is built, its migration runs first (and stops everything if it fails), the service rolls onto the new image, and the workflow checks the rollout really completed and the site answers. There are two environments, local and production. A repository variable, `DEPLOY_ENABLED`, switches it on and off so merges do not deploy to a stack that is not running. GitHub signs in to AWS either with a short-lived token for this repository and environment, or (where an organisation forbids that, as for this account) with the key of a deploy-only user kept as a secret.
-- **The demo data** reaches the production database, which can only be reached from inside the network, through a second manual workflow (`.github/workflows/seed.yml`): it runs the app's own task once with the demo seed, which the image carries as a single bundled file.
+- **The demo data** reaches the production database, which can only be reached from inside the network, through a second manual workflow (`.github/workflows/seed.yml`): it runs the app's own task once with the seed, which the image carries as a single bundled file.
 
 ## Quality
 
@@ -177,8 +176,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow, and [docs/decisions.md]
 | `pnpm db:migrate` / `pnpm db:deploy`        | Create and apply, or only apply, migrations                         |
 | `pnpm admin:grant <email>` / `admin:revoke` | Make an account an admin, or take it away                           |
 | `pnpm storage:sweep [--dry-run]`            | Delete photo files nothing uses                                     |
-| `pnpm db:seed`                              | Replace the dev catalog with sample products                        |
-| `pnpm db:seed:demo`                         | The sample catalog plus demo accounts and orders                    |
+| `pnpm db:seed`                              | Seed the database                                                   |
 | `pnpm screenshots`                          | Take the pictures in `docs/screenshots` from a running, seeded copy |
 | `pnpm db:studio`                            | Browse the database                                                 |
 

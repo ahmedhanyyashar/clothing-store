@@ -1,7 +1,7 @@
 // pnpm screenshots
 //
 // Takes the pictures in docs/screenshots from a running copy of the shop that
-// has the demo data (`pnpm db:seed:demo`), signing in with the demo buttons.
+// has the demo data (`pnpm db:seed`), signing in with the demo buttons.
 // BASE_URL says where the shop is (default http://localhost:3100).
 import { chromium } from "@playwright/test"
 
