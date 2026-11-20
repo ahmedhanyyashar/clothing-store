@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import { LegalPage } from "@/components/layout/LegalPage"
+import { assistantEnabled } from "@/lib/assistant/model"
 
 export const metadata: Metadata = {
   title: "Privacy policy",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default function PrivacyPage() {
+  const assistant = assistantEnabled()
   return (
     <LegalPage title="Privacy policy">
       <p>
@@ -41,6 +43,14 @@ export default function PrivacyPage() {
           <strong>Your cart:</strong> kept in your own
           browser only, until you check out.
         </li>
+        {assistant && (
+          <li>
+            <strong>Assistant chats:</strong> if you use the
+            shopping assistant while signed in, your last 20
+            conversations are saved to your account. A
+            visitor&apos;s chat is not saved.
+          </li>
+        )}
         <li>
           <strong>Sign-in records:</strong> a session
           cookie, and the address your requests come from,
@@ -101,6 +111,18 @@ export default function PrivacyPage() {
               device details for analytics
             </td>
           </tr>
+          {assistant && (
+            <tr>
+              <td>Google (Gemini)</td>
+              <td>The shopping assistant</td>
+              <td>
+                What you type, and the product, cart and
+                order details needed to answer: for an
+                order, its status, items and totals, never
+                an address or email
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
       <p>
@@ -121,6 +143,12 @@ export default function PrivacyPage() {
         <li>
           Sessions: until they expire or you sign out.
         </li>
+        {assistant && (
+          <li>
+            Assistant conversations: until you delete them
+            or your account.
+          </li>
+        )}
       </ul>
 
       <h2>Your rights</h2>

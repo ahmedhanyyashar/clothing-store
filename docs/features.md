@@ -79,6 +79,14 @@ What each part of the shop does and why, in the order a customer meets it. The r
 
 The sign-in page offers **Use the demo shopper** and **Use the demo admin**, so a visitor can look around without an account. They are ordinary seeded accounts, so the demo admin can do everything an admin can. No email is sent to demo addresses, in any environment, so the demo users never receive order or status emails.
 
+## Shopping assistant
+
+- **Off unless configured.** With `AI_PROVIDER` set (`google` with an API key, or `mock` for tests and demos), a chat button opens a panel that answers questions about the catalog. Without it there is no button and `/api/chat` answers 404.
+- **What it can do:** search the catalog, show product details, best sellers and new arrivals, and add, change and remove cart lines. A signed-in shopper can also ask about their own orders (status, items, totals). Results appear as cards with links.
+- **The cart stays in the browser.** The model's cart tools run there, with the stock read fresh from the server, and a successful add shows a toast.
+- **Conversations:** a signed-in shopper's last 20 are saved, can be reopened from History and deleted, and go when the account is deleted. A visitor's chat is not saved, and closing the panel keeps it until the page is reloaded.
+- **Limits:** a signed-in shopper is limited per account and a visitor per address, in the shared `rate_limit` table; messages, history, reply length and tool steps are capped. The privacy policy names the provider and what it receives.
+
 ## Feedback
 
 - **Toasts** confirm an action that succeeded (added to the cart, saved, cancelled, signed out). They are announced to screen readers and have a close button. Errors stay next to the field or button they belong to, so they can be read and fixed.

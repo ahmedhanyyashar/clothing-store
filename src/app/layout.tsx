@@ -6,6 +6,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app"
 
 import "./globals.css"
 
+import { ChatWidget } from "@/components/assistant/ChatWidget"
 import { CartSession } from "@/components/cart/CartSession"
 import { Analytics } from "@/components/consent/Analytics"
 import { ConsentBanner } from "@/components/consent/ConsentBanner"
@@ -14,6 +15,7 @@ import { Header } from "@/components/layout/Header"
 import { HydrationMarker } from "@/components/layout/HydrationMarker"
 import { Toaster } from "@/components/ui/sonner"
 import { env } from "@/env"
+import { assistantEnabled } from "@/lib/assistant/model"
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -67,6 +69,7 @@ export default async function RootLayout({
             <Header />
             <main className="flex-1">{children}</main>
             <Footer />
+            {assistantEnabled() && <ChatWidget />}
             <Toaster />
             <ConsentBanner />
             <Analytics
