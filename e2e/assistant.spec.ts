@@ -85,3 +85,16 @@ test("a signed-in shopper's chat is kept, can be reopened and deleted", async ({
     panel.getByText("No saved conversations yet.")
   ).toBeVisible()
 })
+
+test("on a first visit the assistant opens above the cookie banner", async ({
+  context,
+  page,
+}) => {
+  await context.clearCookies()
+  await open(page, "/")
+  await expect(
+    page.getByRole("region", { name: "Cookie consent" })
+  ).toBeVisible()
+
+  await ask(page)
+})

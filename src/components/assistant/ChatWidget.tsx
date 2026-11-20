@@ -5,6 +5,8 @@ import { useState } from "react"
 
 import { ChatPanel } from "@/components/assistant/ChatPanel"
 import { Button } from "@/components/ui/button"
+import { useConsent } from "@/lib/consent"
+import { cn } from "@/lib/utils"
 
 /**
  * The launcher and the chat panel. The panel stays mounted while closed, so
@@ -13,11 +15,20 @@ import { Button } from "@/components/ui/button"
  */
 export function ChatWidget() {
   const [open, setOpen] = useState(false)
+  // the cookie banner sits along the bottom edge until the visitor answers
+  const bannerShown = useConsent() === null
 
   return (
     <>
       {!open && (
-        <div className="fixed right-4 bottom-4 z-40">
+        <div
+          className={cn(
+            "fixed right-4 z-40",
+            bannerShown
+              ? "bottom-28 sm:bottom-24"
+              : "bottom-4"
+          )}
+        >
           <Button
             size="icon-lg"
             title="Open the shopping assistant"
@@ -34,7 +45,7 @@ export function ChatWidget() {
         onKeyDown={(event) => {
           if (event.key === "Escape") setOpen(false)
         }}
-        className="fixed inset-x-0 bottom-0 z-40 flex h-[min(36rem,100dvh)] flex-col border border-border bg-background shadow-lg sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-96 sm:rounded-2xl"
+        className="fixed inset-x-0 bottom-0 z-[60] flex h-[min(36rem,100dvh)] flex-col border border-border bg-background shadow-lg sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-96 sm:rounded-2xl"
       >
         <header className="flex items-center justify-between border-b border-border px-4 py-2">
           <h2 className="font-semibold">
