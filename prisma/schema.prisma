@@ -48,6 +48,7 @@ model User {
   addresses     Address[]
   orders        Order[]
   auditEntries  AuditLog[]
+  conversations Conversation[]
 
   @@unique([email])
   @@map("user")
@@ -303,4 +304,20 @@ model AuditLog {
   @@index([createdAt])
   @@index([targetType, targetId])
   @@map("audit_log")
+}
+
+// A signed-in shopper's chat with the assistant. The messages are the AI SDK's
+// UI messages, replaced as a whole after each reply. The newest few are kept
+// per shopper and all go with the account.
+model Conversation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  messages  Json     @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+  @@map("conversation")
 }
