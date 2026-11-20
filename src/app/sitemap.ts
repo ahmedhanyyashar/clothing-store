@@ -7,6 +7,8 @@ import { listProductsForSitemap } from "@/lib/catalog/queries"
 const STATIC_PATHS = [
   "/",
   "/shop",
+  "/about",
+  "/contact",
   "/terms",
   "/privacy",
   "/cookies",

@@ -27,6 +27,8 @@ for (const path of [
   "/cart",
   "/sign-in",
   "/sign-up",
+  "/about",
+  "/contact",
   "/privacy",
   "/terms",
   "/cookies",

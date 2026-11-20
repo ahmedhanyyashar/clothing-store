@@ -11,9 +11,21 @@ export function Footer() {
           &copy; {new Date().getFullYear()} Clothing Store
         </span>
         <nav
-          aria-label="Legal"
+          aria-label="Footer"
           className="flex flex-wrap gap-4"
         >
+          <Link
+            href="/about"
+            className="underline underline-offset-4"
+          >
+            About
+          </Link>
+          <Link
+            href="/contact"
+            className="underline underline-offset-4"
+          >
+            Contact
+          </Link>
           <Link
             href="/privacy"
             className="underline underline-offset-4"
