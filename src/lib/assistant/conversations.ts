@@ -95,3 +95,14 @@ export async function deleteConversation(
   })
   return count === 1
 }
+
+export async function conversationExists(
+  userId: string,
+  id: string
+) {
+  return (
+    (await prisma.conversation.count({
+      where: { id, userId },
+    })) === 1
+  )
+}
