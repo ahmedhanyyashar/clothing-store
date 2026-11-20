@@ -87,7 +87,7 @@ test("every page has its own policy, with no violation, and the legal pages are 
   ]) {
     await open(page, "/shop")
     await page
-      .getByRole("navigation", { name: "Legal" })
+      .getByRole("navigation", { name: "Footer" })
       .getByRole("link", { name: link })
       .click()
     await expect(

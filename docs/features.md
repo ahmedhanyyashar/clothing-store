@@ -85,6 +85,7 @@ The sign-in page offers **Use the demo shopper** and **Use the demo admin**, so 
 
 ## Privacy and security headers
 
+- **About and contact:** `/about` and `/contact` say plainly that the shop is a demonstration; the contact page gives a placeholder email and a link to the shopper's orders. Both are linked from the footer and listed in the sitemap.
 - **Legal pages:** the privacy policy, terms of sale and cookie policy (`/privacy`, `/terms`, `/cookies`) are linked from the footer, and the terms and privacy policy from checkout. They describe what the shop actually stores, who receives it and how long it is kept.
 - **Consent:** a first visit shows a banner with two equal choices. Nothing is loaded from Google, and no analytics cookie is set, until "Allow analytics". The choice is kept in a cookie of our own for a year and can be changed from "Cookie settings" in the footer. Set `NEXT_PUBLIC_GA_ID` to turn analytics on at all.
 - **Content Security Policy:** every page gets its own policy with a fresh nonce (`src/proxy.ts`, `src/lib/csp.ts`): scripts run only with that nonce, nothing can frame the site, and connections go only to the site, the photo bucket and (when configured) Google Analytics. Because the nonce is per response, pages render per request.
