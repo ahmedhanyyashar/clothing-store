@@ -35,6 +35,14 @@ export const env = createEnv({
     S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
     // Where browsers fetch the photos from. Defaults to the bucket's own address.
     S3_PUBLIC_URL: z.url().optional(),
+    // The shopping assistant is off unless a provider is chosen. `google` also
+    // needs the API key; `mock` answers with a fixed reply (tests and demos).
+    AI_PROVIDER: z.enum(["google", "mock"]).optional(),
+    AI_MODEL: z.string().min(1).optional(),
+    GOOGLE_GENERATIVE_AI_API_KEY: z
+      .string()
+      .min(1)
+      .optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
@@ -61,6 +69,10 @@ export const env = createEnv({
     S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,
     S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
     S3_PUBLIC_URL: process.env.S3_PUBLIC_URL,
+    AI_PROVIDER: process.env.AI_PROVIDER,
+    AI_MODEL: process.env.AI_MODEL,
+    GOOGLE_GENERATIVE_AI_API_KEY:
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
   },

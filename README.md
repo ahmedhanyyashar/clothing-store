@@ -95,25 +95,28 @@ The image is built once and the same image runs in production. Only the public v
 
 ### Variables
 
-| Variable                | Required | Secret | Production source         | Purpose                                                     |
-| ----------------------- | -------- | ------ | ------------------------- | ----------------------------------------------------------- |
-| `NEXT_PUBLIC_APP_URL`   | yes      | no     | plain, and build argument | Public URL of the app                                       |
-| `NEXT_PUBLIC_GA_ID`     | no       | no     | build argument            | Google Analytics ID; no analytics code without it           |
-| `DATABASE_URL`          | yes      | yes    | secret                    | PostgreSQL connection                                       |
-| `SMTP_URL`              | yes      | yes    | secret                    | Outgoing email                                              |
-| `EMAIL_FROM`            | yes      | no     | plain                     | Sender address                                              |
-| `BETTER_AUTH_SECRET`    | yes      | yes    | secret                    | Signs and encrypts sessions and tokens (32+ characters)     |
-| `GOOGLE_CLIENT_ID`      | yes      | no     | plain                     | Google sign-in                                              |
-| `GOOGLE_CLIENT_SECRET`  | yes      | yes    | secret                    | Google sign-in                                              |
-| `STRIPE_SECRET_KEY`     | yes      | yes    | secret                    | Stripe API key                                              |
-| `STRIPE_WEBHOOK_SECRET` | yes      | yes    | secret                    | Verifies Stripe webhook signatures                          |
-| `STRIPE_API_URL`        | no       | no     | unset                     | Points at `stripe-mock` instead of Stripe (tests)           |
-| `S3_BUCKET`             | yes      | no     | plain, and build argument | Product photo bucket                                        |
-| `S3_REGION`             | yes      | no     | plain, and build argument | Bucket region                                               |
-| `S3_ENDPOINT_URL`       | no       | no     | unset                     | S3-compatible stand-in (local and tests)                    |
-| `S3_ACCESS_KEY_ID`      | no       | yes    | unset (task role)         | Static credentials; without them the SDK uses the AWS chain |
-| `S3_SECRET_ACCESS_KEY`  | no       | yes    | unset (task role)         | See above                                                   |
-| `S3_PUBLIC_URL`         | no       | no     | plain, and build argument | Where browsers fetch photos (CloudFront in production)      |
+| Variable                       | Required | Secret | Production source         | Purpose                                                         |
+| ------------------------------ | -------- | ------ | ------------------------- | --------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`          | yes      | no     | plain, and build argument | Public URL of the app                                           |
+| `NEXT_PUBLIC_GA_ID`            | no       | no     | build argument            | Google Analytics ID; no analytics code without it               |
+| `DATABASE_URL`                 | yes      | yes    | secret                    | PostgreSQL connection                                           |
+| `SMTP_URL`                     | yes      | yes    | secret                    | Outgoing email                                                  |
+| `EMAIL_FROM`                   | yes      | no     | plain                     | Sender address                                                  |
+| `BETTER_AUTH_SECRET`           | yes      | yes    | secret                    | Signs and encrypts sessions and tokens (32+ characters)         |
+| `GOOGLE_CLIENT_ID`             | yes      | no     | plain                     | Google sign-in                                                  |
+| `GOOGLE_CLIENT_SECRET`         | yes      | yes    | secret                    | Google sign-in                                                  |
+| `STRIPE_SECRET_KEY`            | yes      | yes    | secret                    | Stripe API key                                                  |
+| `STRIPE_WEBHOOK_SECRET`        | yes      | yes    | secret                    | Verifies Stripe webhook signatures                              |
+| `STRIPE_API_URL`               | no       | no     | unset                     | Points at `stripe-mock` instead of Stripe (tests)               |
+| `S3_BUCKET`                    | yes      | no     | plain, and build argument | Product photo bucket                                            |
+| `S3_REGION`                    | yes      | no     | plain, and build argument | Bucket region                                                   |
+| `S3_ENDPOINT_URL`              | no       | no     | unset                     | S3-compatible stand-in (local and tests)                        |
+| `S3_ACCESS_KEY_ID`             | no       | yes    | unset (task role)         | Static credentials; without them the SDK uses the AWS chain     |
+| `S3_SECRET_ACCESS_KEY`         | no       | yes    | unset (task role)         | See above                                                       |
+| `S3_PUBLIC_URL`                | no       | no     | plain, and build argument | Where browsers fetch photos (CloudFront in production)          |
+| `AI_PROVIDER`                  | no       | no     | unset (assistant off)     | `google` or `mock`; the shopping assistant exists only when set |
+| `AI_MODEL`                     | no       | no     | unset                     | Gemini model name; defaults to `gemini-2.5-flash`               |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | no       | yes    | unset                     | Gemini API key, needed when `AI_PROVIDER` is `google`           |
 
 ### Read outside `src/env.ts`
 
